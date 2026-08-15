@@ -43,9 +43,12 @@
         <div class="group-title">检验报告 / 检查报告</div>
         <div class="grid">
           <div class="field span-2">
-            <input type="file" id="report-files" name="report-files" accept="image/*,.pdf" multiple hidden>
-            <button type="button" class="upload-btn" id="upload-trigger">＋ 选择报告文件（图片 / PDF）</button>
-            <small class="hint" id="upload-hint">支持 jpg / png / webp / gif / pdf，单个文件不超过 2MB</small>
+            <div class="upload-toolbar">
+              <div class="kind-select" id="report-kind-slot"></div>
+              <input type="file" id="report-files" name="report-files" accept="image/*,.pdf" multiple hidden>
+              <button type="button" class="upload-btn" id="upload-trigger">＋ 选择报告文件（图片 / PDF）</button>
+            </div>
+            <small class="hint" id="upload-hint">先选择报告类型，再添加文件；支持 jpg / png / webp / gif / pdf，单个文件不超过 2MB</small>
             <div class="upload-preview" id="upload-preview"></div>
           </div>
         </div>

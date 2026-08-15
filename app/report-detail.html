@@ -18,16 +18,49 @@
     </nav>
 
     <header>
-      <h1>报告详情</h1>
-      <p class="sub" id="report-meta"></p>
+      <div class="header-row">
+        <div>
+          <h1>报告详情</h1>
+          <p class="sub" id="report-meta"></p>
+        </div>
+        <button type="button" class="btn-edit-detail" id="btn-ocr">OCR 识别</button>
+      </div>
     </header>
 
     <!-- 报告查看区 -->
     <section class="card report-view">
       <div id="report-content"></div>
     </section>
+
+    <!-- OCR 识别区 -->
+    <section class="card ocr-section" id="ocr-section" hidden>
+      <div class="section-title">检验报告识别</div>
+      <div class="ocr-note">目前仅支持血常规识别，其他报告可查看下方识别原文。</div>
+      <div id="ocr-status" class="ocr-status" hidden></div>
+
+      <div id="ocr-table-wrap" hidden>
+        <table class="ocr-table">
+          <thead>
+            <tr>
+              <th>项目</th>
+              <th>结果</th>
+              <th>单位</th>
+              <th>参考范围</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="ocr-tbody"></tbody>
+        </table>
+      </div>
+
+      <div id="ocr-raw-wrap" hidden>
+        <div class="ocr-raw-title">识别原文</div>
+        <pre class="ocr-raw" id="ocr-raw"></pre>
+      </div>
+    </section>
   </main>
 
+  <script src="assets/ocr/tesseract.min.js"></script>
   <script src="js/report-detail.js"></script>
 </body>
 </html>

@@ -330,6 +330,34 @@ a.btn-add {
 }
 
 /* ---------- 影像上传 ---------- */
+/* ---------- 检验/检查报告上传 ---------- */
+.upload-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.kind-select {
+  flex: 0 0 200px;
+  min-width: 0;
+}
+
+.upload-toolbar .upload-btn {
+  flex: 1;
+  width: auto;
+}
+
+@media (max-width: 640px) {
+  .upload-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kind-select {
+    flex-basis: auto;
+  }
+}
+
 .upload-btn {
   width: 100%;
   padding: 1.2rem;
@@ -584,6 +612,35 @@ a.btn-add {
   background: var(--accent-soft);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.btn-danger {
+  padding: 0.7rem 1.5rem;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--danger);
+  font-size: 0.95rem;
+  font-family: inherit;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-danger:hover {
+  background: rgba(185, 28, 28, 0.08);
+}
+
+.btn-danger:active {
+  transform: scale(0.98);
+}
+
 .detail-card {
   padding: 2.6rem 2.6rem 3rem; /* 适中留白 */
 }
@@ -760,11 +817,280 @@ a.btn-add {
   white-space: nowrap;
 }
 
+/* 报告类型标签（检验报告 / 检查报告） */
+.report-kind-chip {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  white-space: nowrap;
+}
+
 .report-arrow {
   flex-shrink: 0;
   font-size: 1.3rem;
   color: var(--ink-3);
   line-height: 1;
+}
+
+/* ---------- 删除确认弹窗 ---------- */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 70;
+  animation: fade 0.18s ease both;
+}
+
+.modal-mask[hidden] {
+  display: none;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(28, 25, 23, 0.22);
+  animation: modal-in 0.2s ease both;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.4rem 1.6rem 0;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink-2);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.modal-close:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.modal-body {
+  padding: 1.2rem 1.6rem 1.6rem;
+}
+
+.modal-warn {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--ink);
+}
+
+.modal-warn strong {
+  color: var(--danger);
+}
+
+.modal-hint {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  margin-top: 0.6rem;
+}
+
+.modal-field {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.modal-field label {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.modal-field input {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfcfa;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+}
+
+.modal-btn-cancel {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.modal-btn-cancel:hover {
+  background: var(--bg);
+}
+
+.modal-btn-danger {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.modal-btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.modal-btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- OCR 识别区 ---------- */
+.ocr-section {
+  margin-top: 1.4rem;
+  padding: 1.6rem 2rem 2rem;
+}
+
+.ocr-note {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.ocr-status {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+}
+
+.ocr-status.err {
+  color: var(--danger);
+}
+
+.ocr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.ocr-table th,
+.ocr-table td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.ocr-table th {
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.ocr-table .status {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ocr-table .status.ok {
+  color: var(--accent);
+}
+
+.ocr-table .status.up {
+  color: var(--danger);
+}
+
+.ocr-table .status.down {
+  color: #b45309;
+}
+
+.ocr-raw-title {
+  margin-top: 1.4rem;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+}
+
+.ocr-raw {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  font-family: inherit;
+}
+
+@media (max-width: 640px) {
+  .ocr-table th,
+  .ocr-table td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.82rem;
+  }
 }
 
 /* ---------- 报告详情页 ---------- */

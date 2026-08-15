@@ -60,6 +60,86 @@
   var editBtn = $("btn-edit-case");
   if (editBtn) editBtn.href = "case.html?id=" + c.id;
 
+  // 删除病例（自定义确认弹窗：遮罩变暗 + 5 秒倒计时 + 输入「我确认删除」）
+  var deleteBtn = $("btn-delete-case");
+  var deleteMask = $("delete-mask");
+  var deleteConfirm = $("delete-confirm");
+  var deleteCancel = $("delete-cancel");
+  var deleteCancelX = $("delete-cancel-x");
+  var deleteVerify = $("delete-verify");
+  var COUNTDOWN = 5;
+  var countdownTimer = null;
+  var countdownDone = false;
+
+  function updateConfirmState() {
+    var typed = deleteVerify && deleteVerify.value.trim() === "我确认删除";
+    deleteConfirm.disabled = !(countdownDone && typed);
+  }
+
+  function openDeleteModal() {
+    deleteMask.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    if (deleteVerify) deleteVerify.value = "";
+    countdownDone = false;
+    updateConfirmState();
+
+    var left = COUNTDOWN;
+    deleteConfirm.textContent = "确认删除（" + left + "s）";
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(function () {
+      left--;
+      if (left <= 0) {
+        clearInterval(countdownTimer);
+        countdownDone = true;
+        deleteConfirm.textContent = "确认删除";
+        updateConfirmState();
+      } else {
+        deleteConfirm.textContent = "确认删除（" + left + "s）";
+      }
+    }, 1000);
+  }
+
+  function closeDeleteModal() {
+    clearInterval(countdownTimer);
+    deleteMask.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function doDelete() {
+    var list = readCases();
+    var idx = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (String(list[i].id) === String(c.id)) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx === -1) return;
+    list.splice(idx, 1);
+    localStorage.setItem(CASES_KEY, JSON.stringify(list));
+    window.location.href = "dashboard.html?deleted=1";
+  }
+
+  if (deleteVerify) deleteVerify.addEventListener("input", updateConfirmState);
+  if (deleteBtn) deleteBtn.addEventListener("click", openDeleteModal);
+  if (deleteCancel) deleteCancel.addEventListener("click", closeDeleteModal);
+  if (deleteCancelX) deleteCancelX.addEventListener("click", closeDeleteModal);
+  if (deleteMask) {
+    deleteMask.addEventListener("click", function (e) {
+      if (e.target === deleteMask) closeDeleteModal();
+    });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && deleteMask && !deleteMask.hidden) closeDeleteModal();
+  });
+  if (deleteConfirm) {
+    deleteConfirm.addEventListener("click", function () {
+      if (deleteConfirm.disabled) return;
+      doDelete();
+    });
+  }
+
   // 下拉病情类型
   var illnessEl = $("detail-illness");
   if (c.illness && c.illness !== "未分类") {
@@ -97,12 +177,18 @@
       name.className = "report-name";
       name.textContent = img.name || "报告 " + (idx + 1);
 
+      // 报告类型标签
+      var kind = document.createElement("span");
+      kind.className = "report-kind-chip";
+      kind.textContent = img.kind || "检验报告";
+
       var arrow = document.createElement("span");
       arrow.className = "report-arrow";
       arrow.textContent = "›";
 
       a.appendChild(thumb);
       a.appendChild(name);
+      a.appendChild(kind);
       a.appendChild(arrow);
       listEl.appendChild(a);
     });

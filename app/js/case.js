@@ -409,6 +409,19 @@
   });
   document.getElementById("illness-slot").appendChild(illness.root);
 
+  /* ---------- 报告类型（检验 / 检查） ---------- */
+
+  var reportKind = createSelect({
+    placeholder: "报告类型",
+    value: "检验报告",
+    options: [
+      { value: "检验报告", label: "检验报告" },
+      { value: "检查报告", label: "检查报告" }
+    ],
+    onChange: function () {}
+  });
+  document.getElementById("report-kind-slot").appendChild(reportKind.root);
+
   /* ---------- 影像上传 ---------- */
 
   uploadTrigger.addEventListener("click", function () {
@@ -429,7 +442,12 @@
       }
       var reader = new FileReader();
       reader.onload = function (e) {
-        files.push({ name: f.name, type: f.type, dataUrl: e.target.result });
+        files.push({
+          name: f.name,
+          type: f.type,
+          dataUrl: e.target.result,
+          kind: reportKind.getValue() || "检验报告"
+        });
         renderPreview();
       };
       reader.onerror = function () {
@@ -465,6 +483,11 @@
       name.className = "report-name";
       name.textContent = f.name;
 
+      // 报告类型标签
+      var kind = document.createElement("span");
+      kind.className = "report-kind-chip";
+      kind.textContent = f.kind || "检验报告";
+
       // 移除按钮
       var del = document.createElement("button");
       del.type = "button";
@@ -475,6 +498,7 @@
 
       row.appendChild(thumb);
       row.appendChild(name);
+      row.appendChild(kind);
       row.appendChild(del);
       uploadPreview.appendChild(row);
     });

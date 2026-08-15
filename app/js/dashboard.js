@@ -141,5 +141,10 @@
     showToast("病例已保存 ✓");
   }
 
+  // 删除病例后跳转回来时提示
+  if (/[?&]deleted=1/.test(window.location.search)) {
+    showToast("病例已删除");
+  }
+
   renderCases();
 })();

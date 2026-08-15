@@ -23,7 +23,10 @@
           <h1>病例详情</h1>
           <p class="sub" id="detail-date"></p>
         </div>
-        <a class="btn-edit-detail" id="btn-edit-case" href="#">编辑病例</a>
+        <div class="header-actions">
+          <a class="btn-edit-detail" id="btn-edit-case" href="#">编辑病例</a>
+          <button type="button" class="btn-danger" id="btn-delete-case">删除病例</button>
+        </div>
       </div>
     </header>
 
@@ -46,6 +49,30 @@
       </div>
     </section>
   </main>
+
+  <!-- 删除病例确认弹窗（必须在 script 之前，JS 才能绑定事件） -->
+  <div class="modal-mask" id="delete-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="删除病例确认">
+      <div class="modal-head">
+        <div class="modal-title">删除病例</div>
+        <button type="button" class="modal-close" id="delete-cancel-x" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-warn">
+          删除后将<strong>永久移除</strong>这条病例的病情描述、检验 / 检查报告与药物记录，且<strong>无法恢复</strong>。
+        </p>
+        <p class="modal-hint">请确认是否继续删除？</p>
+        <div class="modal-field">
+          <label for="delete-verify">请输入「我确认删除」以启用删除按钮</label>
+          <input type="text" id="delete-verify" placeholder="我确认删除" autocomplete="off">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn-cancel" id="delete-cancel">取消</button>
+          <button type="button" class="modal-btn-danger" id="delete-confirm" disabled>确认删除（5s）</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="js/case-detail.js"></script>
 </body>
