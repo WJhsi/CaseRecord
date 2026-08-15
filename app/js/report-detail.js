@@ -81,11 +81,10 @@
   }
 
   /* ==========================================================
-     OCR 识别（Tesseract.js 本地版）
-     图片报告才可用；file:// 直开受限，需本地服务器
+     OCR 自动识别（打开页面即开始）
+     图片报告才可识别；file:// 直开受限，需本地服务器
      ========================================================== */
 
-  var btnOcr = document.getElementById("btn-ocr");
   var ocrSection = document.getElementById("ocr-section");
   var ocrStatus = document.getElementById("ocr-status");
   var ocrTableWrap = document.getElementById("ocr-table-wrap");
@@ -112,54 +111,65 @@
     return window.location.protocol === "file:";
   }
 
-  // PDF 报告不支持 OCR，隐藏按钮
-  if (img.type && img.type.indexOf("image/") !== 0) {
-    btnOcr.style.display = "none";
-  }
-
-  btnOcr.addEventListener("click", function () {
+  // 打开页面自动识别
+  function startAutoOcr() {
     ocrSection.hidden = false;
     ocrTableWrap.hidden = true;
     ocrRawWrap.hidden = true;
     ocrStatus.hidden = true;
 
+    // PDF 报告不支持 OCR
+    if (img.type && img.type.indexOf("image/") !== 0) {
+      showOcrStatus("PDF 报告暂不支持自动识别，可直接查看或下载。", true);
+      return;
+    }
+
     if (isFileProtocol()) {
       showOcrStatus(
-        "当前是直接双击打开（file://），浏览器禁止 OCR 引擎加载。\n请在项目目录运行本地服务器后访问，例如：\ncd 项目目录\npython -m http.server -d app 8080\n然后打开 http://localhost:8080/report-detail.html",
+        "当前是直接双击打开（file://），浏览器禁止加载识别引擎。\n请通过 start.bat 或本地服务器打开 http://localhost:8080/",
         true
       );
       return;
     }
-    if (typeof Tesseract === "undefined") {
-      showOcrStatus("OCR 引擎未加载，请确认 app/assets/ocr/ 目录文件完整。", true);
-      return;
+
+    // 引擎可能仍在后台加载（首次需从网络下载模型），自动等待后识别
+    var waited = 0;
+    function tryRun() {
+      if (typeof window.runPaddleOCR === "function") {
+        runOcr();
+        return;
+      }
+      if (window.paddleOcrStatus) {
+        var st = String(window.paddleOcrStatus());
+        if (st.indexOf("error") === 0) {
+          showOcrStatus("识别引擎加载失败：" + st.slice(6) + "（请检查网络后刷新页面重试）", true);
+          return;
+        }
+      }
+      waited += 2000;
+      if (waited > 120000) {
+        showOcrStatus("识别引擎加载超时，请检查网络后刷新页面重试。", true);
+        return;
+      }
+      showOcrStatus("识别引擎加载中（首次需从网络下载模型，约 10-60 秒），请稍候…");
+      setTimeout(tryRun, 2000);
     }
-    runOcr();
-  });
+    tryRun();
+  }
 
   var ocrBusy = false;
 
   function runOcr() {
     if (ocrBusy) return;
     ocrBusy = true;
-    showOcrStatus("正在识别，首次使用需加载语言包（约 10-30 秒），请稍候…");
+    showOcrStatus("正在识别，首次使用需加载识别模型（约 10-30 秒），请稍候…");
 
-    Tesseract.createWorker("chi_sim+eng", 1, {
-      workerPath: "assets/ocr/worker.min.js",
-      corePath: "assets/ocr/tesseract-core.wasm.js",
-      langPath: "assets/ocr/"
-    })
-      .then(function (worker) {
-        return worker.recognize(img.dataUrl).then(function (result) {
-          return worker.terminate().then(function () {
-            return result;
-          });
-        });
-      })
-      .then(function (result) {
+    window
+      .runPaddleOCR(img.dataUrl)
+      .then(function (text) {
         ocrBusy = false;
-        var text = result && result.data && result.data.text ? result.data.text : "";
-        if (!text.trim()) {
+        text = String(text || "").trim();
+        if (!text) {
           showOcrStatus("未能识别出文字，请确认报告图片清晰、未倾斜。", true);
           return;
         }
@@ -186,26 +196,26 @@
   /* ---------- 血常规标准项目清单（固定显示，含默认单位、标准参考范围与别名） ---------- */
 
   var CBC_ITEMS = [
-    { name: "白细胞计数", unit: "×10⁹/L", range: "3.5-9.5", aliases: ["白细胞计数", "白细胞", "WBC"] },
-    { name: "淋巴细胞百分数", unit: "%", range: "20-50", aliases: ["淋巴细胞百分数", "淋巴细胞百分比", "淋巴细胞", "淋巴", "LYMPH%", "LYMPH"] },
-    { name: "单核细胞百分数", unit: "%", range: "3-10", aliases: ["单核细胞百分数", "单核细胞百分比", "单核细胞", "MONO%", "MONO"] },
-    { name: "嗜中性粒细胞百分数", unit: "%", range: "40-75", aliases: ["嗜中性粒细胞百分数", "嗜中性粒细胞百分比", "嗜中性粒细胞", "中性粒细胞百分数", "中性粒细胞百分比", "中性粒细胞", "NEUT%", "NEUT"] },
-    { name: "嗜酸性粒细胞百分数", unit: "%", range: "0.4-8", aliases: ["嗜酸性粒细胞百分数", "嗜酸性粒细胞百分比", "嗜酸性粒细胞", "EO%", "EOS"] },
-    { name: "嗜碱性粒细胞百分数", unit: "%", range: "0-1", aliases: ["嗜碱性粒细胞百分数", "嗜碱性粒细胞百分比", "嗜碱性粒细胞", "BASO%", "BASO"] },
-    { name: "淋巴细胞绝对值", unit: "×10⁹/L", range: "1.1-3.2", aliases: ["淋巴细胞绝对值", "LYMPH#"] },
+    { name: "白细胞计数", unit: "×10⁹/L", range: "3.5-9.5", aliases: ["白细胞计数", "白细胞数目", "白细胞计", "白细胞", "WBC"] },
+    { name: "淋巴细胞百分数", unit: "%", range: "20-50", aliases: ["淋巴细胞百分数", "淋巴细胞百分比", "淋巴细胞比率", "淋巴细胞", "淋巴百分数", "LYMPH%", "LYMPH"] },
+    { name: "单核细胞百分数", unit: "%", range: "3-10", aliases: ["单核细胞百分数", "单核细胞百分比", "单核细胞比率", "单核细胞", "MONO%", "MONO"] },
+    { name: "嗜中性粒细胞百分数", unit: "%", range: "40-75", aliases: ["嗜中性粒细胞百分数", "嗜中性粒细胞百分比", "嗜中性粒细胞比率", "嗜中性粒细胞", "中性粒细胞百分数", "中性粒细胞百分比", "中性粒细胞", "NEUT%", "NEUT"] },
+    { name: "嗜酸性粒细胞百分数", unit: "%", range: "0.4-8", aliases: ["嗜酸性粒细胞百分数", "嗜酸性粒细胞百分比", "嗜酸性粒细胞比率", "嗜酸性粒细胞", "EO%", "EOS"] },
+    { name: "嗜碱性粒细胞百分数", unit: "%", range: "0-1", aliases: ["嗜碱性粒细胞百分数", "嗜碱性粒细胞百分比", "嗜碱性粒细胞比率", "嗜碱性粒细胞", "BASO%", "BASO"] },
+    { name: "淋巴细胞绝对值", unit: "×10⁹/L", range: "1.1-3.2", aliases: ["淋巴细胞绝对值", "淋巴绝对值", "LYMPH#"] },
     { name: "单核细胞绝对值", unit: "×10⁹/L", range: "0.1-0.6", aliases: ["单核细胞绝对值", "MONO#"] },
     { name: "嗜中性粒细胞绝对值", unit: "×10⁹/L", range: "1.8-6.3", aliases: ["嗜中性粒细胞绝对值", "中性粒细胞绝对值", "NEUT#"] },
     { name: "嗜酸性粒细胞绝对值", unit: "×10⁹/L", range: "0.02-0.52", aliases: ["嗜酸性粒细胞绝对值", "EO#"] },
-    { name: "红细胞计数", unit: "×10¹²/L", range: { male: "4.3-5.8", female: "3.8-5.1" }, aliases: ["红细胞计数", "红细胞", "RBC"] },
+    { name: "红细胞计数", unit: "×10¹²/L", range: { male: "4.3-5.8", female: "3.8-5.1" }, aliases: ["红细胞计数", "红细胞数目", "红细胞计", "RBC"] },
     { name: "血红蛋白浓度", unit: "g/L", range: { male: "130-175", female: "115-150" }, aliases: ["血红蛋白浓度", "血红蛋白", "HGB", "Hb"] },
     { name: "红细胞比积", unit: "%", range: { male: "40-50", female: "35-45" }, aliases: ["红细胞比积", "红细胞压积", "红细胞比容", "HCT"] },
-    { name: "平均红细胞体积", unit: "fL", range: "82-100", aliases: ["平均红细胞体积", "平均红细胞体", "MCV"] },
-    { name: "平均红细胞血红蛋白含量", unit: "pg", range: "27-34", aliases: ["平均红细胞血红蛋白含量", "平均红细胞血红白含量", "MCH"] },
-    { name: "平均红细胞血红蛋白浓度", unit: "g/L", range: "316-354", aliases: ["平均红细胞血红蛋白浓度", "MCHC"] },
-    { name: "红细胞分布宽度", unit: "%", range: "11-16", aliases: ["红细胞分布宽度", "RDW"] },
-    { name: "血小板计数", unit: "×10⁹/L", range: "125-350", aliases: ["血小板计数", "血小板", "PLT"] },
+    { name: "平均红细胞体积", unit: "fL", range: "82-100", aliases: ["平均红细胞体积", "平均红细胞体", "红细胞平均体积", "MCV"] },
+    { name: "平均红细胞血红蛋白含量", unit: "pg", range: "27-34", aliases: ["平均红细胞血红蛋白含量", "平均红细胞血红白含量", "平均红细胞血红蛋白量", "MCH"] },
+    { name: "平均红细胞血红蛋白浓度", unit: "g/L", range: "316-354", aliases: ["平均红细胞血红蛋白浓度", "平均红细胞血红白浓度", "MCHC"] },
+    { name: "红细胞分布宽度", unit: "%", range: "11-16", aliases: ["红细胞分布宽度", "红细胞分布宽度变异系数", "RDW"] },
+    { name: "血小板计数", unit: "×10⁹/L", range: "125-350", aliases: ["血小板计数", "血小板数目", "血小板计", "血小板", "PLT"] },
     { name: "血小板比积", unit: "%", range: "0.11-0.28", aliases: ["血小板比积", "PCT"] },
-    { name: "血小板平均体积", unit: "fL", range: "7-11", aliases: ["血小板平均体积", "MPV"] },
+    { name: "血小板平均体积", unit: "fL", range: "7-11", aliases: ["血小板平均体积", "血小板平均体", "MPV"] },
     { name: "血小板分布宽度", unit: "%", range: "9-17", aliases: ["血小板分布宽度", "PDW"] },
     { name: "嗜碱性粒细胞绝对值", unit: "×10⁹/L", range: "0-0.1", aliases: ["嗜碱性粒细胞绝对值", "BASO#"] }
   ];
@@ -231,21 +241,58 @@
     return "男" + r.male + " / 女" + r.female;
   }
 
+  function normalize(s) {
+    // 去空格、标点、全半角差异、统一小写，便于模糊比对
+    return String(s)
+      .toLowerCase()
+      .replace(/[\s\-－_（）()·、，,.:：/\\|｜%#^*^×μµ]/g, "");
+  }
+
+  function subsequenceScore(name, line) {
+    // 名字字符按顺序出现在行中的比例（容忍 OCR 漏字/错位）
+    var n = normalize(name);
+    var l = normalize(line);
+    if (!n || !l) return 0;
+    var i = 0;
+    var hit = 0;
+    for (var j = 0; j < n.length; j++) {
+      var idx = l.indexOf(n[j], i);
+      if (idx !== -1) {
+        hit++;
+        i = idx + 1;
+      }
+    }
+    return hit / n.length;
+  }
+
   function matchCbcItem(line) {
-    // 最长别名优先，避免“淋巴细胞”误匹配“淋巴细胞绝对值”
+    // 精确子串命中：最长别名优先，避免“淋巴细胞”误匹配“淋巴细胞绝对值”
+    // 无精确命中时：用子序列相似度模糊匹配，相近即可（阈值 0.55）
     var best = null;
+    var bestScore = 0;
     var bestLen = 0;
     for (var i = 0; i < CBC_ITEMS.length; i++) {
       var item = CBC_ITEMS[i];
-      for (var j = 0; j < item.aliases.length; j++) {
-        var alias = item.aliases[j];
-        if (alias && line.indexOf(alias) > -1 && alias.length > bestLen) {
-          best = item;
-          bestLen = alias.length;
+      var cands = [item.name].concat(item.aliases);
+      for (var j = 0; j < cands.length; j++) {
+        var alias = cands[j];
+        if (!alias) continue;
+        if (line.indexOf(alias) > -1) {
+          if (alias.length > bestLen) {
+            bestLen = alias.length;
+            bestScore = 1;
+            best = item;
+          }
+        } else {
+          var s = subsequenceScore(alias, line);
+          if (s > bestScore) {
+            bestScore = s;
+            best = item;
+          }
         }
       }
     }
-    return best;
+    return bestScore >= 0.4 ? best : null;
   }
 
   /* ---------- 检验报告解析：只匹配血常规清单，返回 name -> 数据 映射 ---------- */
@@ -329,4 +376,7 @@
     ocrTbody.innerHTML = html;
     ocrTableWrap.hidden = false;
   }
+
+  // 打开页面后自动开始识别
+  startAutoOcr();
 })();

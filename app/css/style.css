@@ -1003,6 +1003,16 @@ a.btn-add {
   padding: 1.6rem 2rem 2rem;
 }
 
+.ocr-warning {
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: rgba(185, 28, 28, 0.06);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
 .ocr-note {
   display: inline-block;
   font-size: 0.8rem;
