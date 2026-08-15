@@ -314,14 +314,143 @@ fieldset + fieldset {
   gap: 0.6rem;
 }
 
-.birth-selects select {
+.birth-selects .cselect {
   flex: 1;
   min-width: 0;
-  text-align-last: center;
 }
 
-.birth-selects select option {
-  text-align: center;
+.birth-selects .cselect-trigger {
+  justify-content: center;
+}
+
+.birth-selects .cselect-caret {
+  margin-left: 0.45rem;
+}
+
+/* ---------- 自定义下拉组件 ---------- */
+.cselect {
+  position: relative;
+  width: 100%;
+}
+
+.cselect-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfcfa;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.cselect-trigger:hover {
+  border-color: #d6d3d1;
+}
+
+.cselect.open .cselect-trigger,
+.cselect-trigger:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
+.cselect-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cselect-value.placeholder {
+  color: var(--ink-3);
+}
+
+.cselect-caret {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--ink-3);
+  transition: transform 0.2s ease;
+}
+
+.cselect.open .cselect-caret {
+  transform: rotate(180deg);
+}
+
+.cselect-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 34px rgba(28, 25, 23, 0.14);
+  z-index: 40;
+  animation: menu-in 0.14s ease both;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cselect-menu li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 7px;
+  font-size: 0.92rem;
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.cselect-menu li:hover,
+.cselect-menu li.active {
+  background: var(--accent-soft);
+}
+
+.cselect-menu li.selected {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.cselect-check {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.cselect.error .cselect-trigger {
+  border-color: var(--danger) !important;
+}
+
+.cselect.error .cselect-trigger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12);
 }
 
 /* ---------- 性别分段选择 ---------- */

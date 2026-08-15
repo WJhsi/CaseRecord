@@ -10,14 +10,173 @@
 
   var form = document.getElementById("profile-form");
   var toast = document.getElementById("toast");
-  var birthYear = document.getElementById("birth-year");
-  var birthMonth = document.getElementById("birth-month");
-  var birthDay = document.getElementById("birth-day");
   var ageHint = document.getElementById("age-hint");
   var summary = document.getElementById("saved-summary");
   var summaryMeta = document.getElementById("summary-meta");
   var clearBtn = document.getElementById("btn-clear");
   var submitBtn = document.getElementById("btn-submit");
+
+  /* ==========================================================
+     自定义下拉组件
+     与全局样式风格统一，替换原生 <select>
+     ========================================================== */
+
+  function createSelect(config) {
+    var placeholder = config.placeholder || "";
+    var options = config.options || [];
+    var value = config.value || "";
+    var onChange = config.onChange || function () {};
+    var open = false;
+    var activeIndex = -1;
+
+    var root = document.createElement("div");
+    root.className = "cselect";
+    root.innerHTML =
+      '<button type="button" class="cselect-trigger" aria-haspopup="listbox" aria-expanded="false">' +
+      '<span class="cselect-value"></span>' +
+      '<span class="cselect-caret"></span>' +
+      "</button>" +
+      '<ul class="cselect-menu" role="listbox" hidden></ul>';
+
+    var trigger = root.querySelector(".cselect-trigger");
+    var valueEl = root.querySelector(".cselect-value");
+    var menu = root.querySelector(".cselect-menu");
+
+    function getLabel(v) {
+      for (var i = 0; i < options.length; i++) {
+        if (String(options[i].value) === String(v)) return options[i].label;
+      }
+      return v || placeholder;
+    }
+
+    function renderMenu() {
+      var html = "";
+      for (var i = 0; i < options.length; i++) {
+        var o = options[i];
+        var selected = String(o.value) === String(value);
+        html +=
+          '<li role="option" data-index="' + i + '"' + (selected ? ' class="selected"' : "") + ">" +
+          "<span>" + o.label + "</span>" +
+          (selected ? '<span class="cselect-check">✓</span>' : "") +
+          "</li>";
+      }
+      menu.innerHTML = html;
+      valueEl.textContent = value ? getLabel(value) : placeholder;
+      valueEl.classList.toggle("placeholder", !value);
+    }
+
+    function updateActive() {
+      var items = menu.querySelectorAll("li");
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.toggle("active", i === activeIndex);
+        if (i === activeIndex) items[i].scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function moveActive(delta) {
+      var n = options.length;
+      if (!n) return;
+      activeIndex = (activeIndex + delta + n) % n;
+      updateActive();
+    }
+
+    function selectIndex(idx) {
+      if (!options[idx]) return;
+      value = String(options[idx].value);
+      onChange(value, options[idx].label);
+      renderMenu();
+    }
+
+    function setOpen(v) {
+      open = v;
+      root.classList.toggle("open", v);
+      trigger.setAttribute("aria-expanded", String(v));
+      if (v) {
+        menu.hidden = false;
+        activeIndex = -1;
+        updateActive();
+      } else {
+        menu.hidden = true;
+      }
+    }
+
+    trigger.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(!open);
+    });
+
+    menu.addEventListener("click", function (e) {
+      var li = e.target.closest("li");
+      if (!li) return;
+      selectIndex(parseInt(li.getAttribute("data-index"), 10));
+      setOpen(false);
+      trigger.focus();
+    });
+
+    trigger.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          return;
+        }
+        moveActive(1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          return;
+        }
+        moveActive(-1);
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        if (open) {
+          if (activeIndex >= 0) selectIndex(activeIndex);
+          setOpen(false);
+        } else {
+          setOpen(true);
+        }
+      } else if (e.key === "Escape") {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (open && !root.contains(e.target)) setOpen(false);
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && open) setOpen(false);
+    });
+
+    renderMenu();
+
+    return {
+      root: root,
+      getValue: function () {
+        return value;
+      },
+      setValue: function (v) {
+        value = v ? String(v) : "";
+        renderMenu();
+      },
+      setOptions: function (arr) {
+        options = arr || [];
+        var found = false;
+        for (var i = 0; i < options.length; i++) {
+          if (String(options[i].value) === String(value)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) value = "";
+        renderMenu();
+      },
+      setError: function (bad) {
+        root.classList.toggle("error", !!bad);
+      }
+    };
+  }
 
   /* ---------- 工具函数 ---------- */
 
@@ -66,44 +225,87 @@
     }
   }
 
-  /* ---------- 出生日期三下拉 ---------- */
+  /* ---------- 下拉实例 ---------- */
 
-  function initBirthSelects() {
-    // 年：今年往前 YEAR_BACK 年
+  var birthYear = createSelect({
+    placeholder: "年",
+    onChange: function () {
+      birthYear.setError(false);
+      renderDays();
+      updateAgeHint();
+    }
+  });
+  var birthMonth = createSelect({
+    placeholder: "月",
+    onChange: function () {
+      birthMonth.setError(false);
+      renderDays();
+      updateAgeHint();
+    }
+  });
+  var birthDay = createSelect({
+    placeholder: "日",
+    onChange: function () {
+      birthDay.setError(false);
+      updateAgeHint();
+    }
+  });
+  var blood = createSelect({
+    placeholder: "血型",
+    value: "未知",
+    options: [
+      { value: "未知", label: "未知" },
+      { value: "A", label: "A 型" },
+      { value: "B", label: "B 型" },
+      { value: "AB", label: "AB 型" },
+      { value: "O", label: "O 型" }
+    ],
+    onChange: function () {
+      blood.setError(false);
+    }
+  });
+
+  document.getElementById("birth-year-slot").appendChild(birthYear.root);
+  document.getElementById("birth-month-slot").appendChild(birthMonth.root);
+  document.getElementById("birth-day-slot").appendChild(birthDay.root);
+  document.getElementById("blood-slot").appendChild(blood.root);
+
+  /* ---------- 出生日期选项 ---------- */
+
+  function yearOptions() {
     var nowY = new Date().getFullYear();
-    var yOpts = '<option value="">年</option>';
+    var arr = [];
     for (var y = nowY; y >= nowY - YEAR_BACK; y--) {
-      yOpts += '<option value="' + y + '">' + y + ' 年</option>';
+      arr.push({ value: y, label: y + " 年" });
     }
-    birthYear.innerHTML = yOpts;
+    return arr;
+  }
 
-    // 月：1-12
-    var mOpts = '<option value="">月</option>';
+  function monthOptions() {
+    var arr = [];
     for (var m = 1; m <= 12; m++) {
-      mOpts += '<option value="' + m + '">' + m + ' 月</option>';
+      arr.push({ value: m, label: m + " 月" });
     }
-    birthMonth.innerHTML = mOpts;
-
-    renderDays();
+    return arr;
   }
 
   function renderDays() {
-    var y = birthYear.value ? parseInt(birthYear.value, 10) : 2000;
-    var m = birthMonth.value ? parseInt(birthMonth.value, 10) : 1;
+    var y = birthYear.getValue() ? parseInt(birthYear.getValue(), 10) : 2000;
+    var m = birthMonth.getValue() ? parseInt(birthMonth.getValue(), 10) : 1;
     var dim = daysInMonth(y, m);
-    var cur = birthDay.value ? parseInt(birthDay.value, 10) : null;
-
-    var dOpts = '<option value="">日</option>';
+    var arr = [];
     for (var d = 1; d <= dim; d++) {
-      var sel = cur === d ? " selected" : "";
-      dOpts += '<option value="' + d + '"' + sel + ">" + d + " 日</option>";
+      arr.push({ value: d, label: d + " 日" });
     }
-    birthDay.innerHTML = dOpts;
+    birthDay.setOptions(arr);
   }
 
   function getBirthValue() {
-    if (!birthYear.value || !birthMonth.value || !birthDay.value) return "";
-    return birthYear.value + "-" + pad(birthMonth.value) + "-" + pad(birthDay.value);
+    var y = birthYear.getValue();
+    var m = birthMonth.getValue();
+    var d = birthDay.getValue();
+    if (!y || !m || !d) return "";
+    return y + "-" + pad(m) + "-" + pad(d);
   }
 
   function updateAgeHint() {
@@ -123,22 +325,21 @@
     var g = document.querySelector('input[name="gender"][value="' + p.gender + '"]');
     if (g) g.checked = true;
 
-    // 出生日期：拆分为 年 / 月 / 日
     if (p.birth) {
       var parts = p.birth.split("-");
-      birthYear.value = parts[0] || "";
-      birthMonth.value = parseInt(parts[1], 10) || "";
+      birthYear.setValue(parts[0]);
+      birthMonth.setValue(parseInt(parts[1], 10));
       renderDays();
-      birthDay.value = parseInt(parts[2], 10) || "";
+      birthDay.setValue(parseInt(parts[2], 10));
     } else {
-      birthYear.value = "";
-      birthMonth.value = "";
+      birthYear.setValue("");
+      birthMonth.setValue("");
       renderDays();
     }
 
     form.height.value = p.height || "";
     form.weight.value = p.weight || "";
-    form.blood.value = p.blood || "未知";
+    blood.setValue(p.blood || "未知");
     form.history.value = p.history || "";
     form.allergy.value = p.allergy || "";
     form.notes.value = p.notes || "";
@@ -175,7 +376,7 @@
       birth: getBirthValue(),
       height: form.height.value.trim(),
       weight: form.weight.value.trim(),
-      blood: form.blood.value || "未知",
+      blood: blood.getValue() || "未知",
       history: form.history.value.trim(),
       allergy: form.allergy.value.trim(),
       notes: form.notes.value.trim(),
@@ -196,9 +397,9 @@
 
     // 必填：出生日期（年 / 月 / 日 三项齐全）
     var birthBad = !p.birth || isNaN(new Date(p.birth).getTime());
-    markError(birthYear, birthBad);
-    markError(birthMonth, birthBad);
-    markError(birthDay, birthBad);
+    birthYear.setError(birthBad);
+    birthMonth.setError(birthBad);
+    birthDay.setError(birthBad);
     if (birthBad) ok = false;
 
     // 选填但需校验格式：身高、体重
@@ -221,16 +422,6 @@
 
   /* ---------- 事件 ---------- */
 
-  birthYear.addEventListener("change", function () {
-    renderDays();
-    updateAgeHint();
-  });
-  birthMonth.addEventListener("change", function () {
-    renderDays();
-    updateAgeHint();
-  });
-  birthDay.addEventListener("change", updateAgeHint);
-
   // 输入时清除错误状态
   form.addEventListener("input", function (e) {
     if (e.target.classList) e.target.classList.remove("error");
@@ -251,10 +442,10 @@
   clearBtn.addEventListener("click", function () {
     localStorage.removeItem(STORAGE_KEY);
     form.reset();
-    form.blood.value = "未知";
-    birthYear.value = "";
-    birthMonth.value = "";
+    birthYear.setValue("");
+    birthMonth.setValue("");
     renderDays();
+    blood.setValue("未知");
     updateAgeHint();
     updateSummary(null);
     showToast("本地档案已清除");
@@ -262,7 +453,9 @@
 
   /* ---------- 初始化 ---------- */
 
-  initBirthSelects();
+  birthYear.setOptions(yearOptions());
+  birthMonth.setOptions(monthOptions());
+  renderDays();
 
   var saved = readSaved();
   fillForm(saved);

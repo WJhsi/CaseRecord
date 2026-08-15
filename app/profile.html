@@ -36,9 +36,9 @@
           <div class="field span-2">
             <label class="required">出生日期</label>
             <div class="birth-selects">
-              <select id="birth-year" name="birth-year" aria-label="出生年"></select>
-              <select id="birth-month" name="birth-month" aria-label="出生月"></select>
-              <select id="birth-day" name="birth-day" aria-label="出生日"></select>
+              <div id="birth-year-slot" aria-label="出生年"></div>
+              <div id="birth-month-slot" aria-label="出生月"></div>
+              <div id="birth-day-slot" aria-label="出生日"></div>
             </div>
             <small class="hint" id="age-hint"></small>
           </div>
@@ -50,14 +50,8 @@
         <div class="group-title">体征信息</div>
         <div class="grid grid-3">
           <div class="field">
-            <label for="blood">血型</label>
-            <select id="blood" name="blood">
-              <option value="未知">未知</option>
-              <option value="A">A 型</option>
-              <option value="B">B 型</option>
-              <option value="AB">AB 型</option>
-              <option value="O">O 型</option>
-            </select>
+            <label>血型</label>
+            <div id="blood-slot"></div>
           </div>
           <div class="field">
             <label for="height">身高（cm）</label>
