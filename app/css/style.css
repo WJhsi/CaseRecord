@@ -144,6 +144,199 @@ header {
   color: var(--accent);
 }
 
+/* ---------- 个人界面：宽幅容器 ---------- */
+.dash {
+  max-width: min(1320px, 94vw); /* 比全屏略窄，两侧留空隙 */
+  padding-top: 5rem;
+}
+
+/* 返回按钮固定在左上角 */
+.dash .back {
+  position: fixed;
+  top: 1.4rem;
+  left: 1.5rem;
+  z-index: 30;
+}
+
+/* 顶部超长信息条 */
+.profile-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 1.6rem 2rem;
+}
+
+.bar-top {
+  display: flex;
+  align-items: center;
+  gap: 2.2rem;
+}
+
+.bar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-shrink: 0;
+}
+
+.bar-title h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.bar-saved {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  margin-top: 0.35rem;
+}
+
+.bar-info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.bar-actions {
+  flex-shrink: 0;
+}
+
+.btn-edit {
+  display: inline-block;
+  min-width: 200px;
+  padding: 0.9rem 2rem;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.btn-edit:hover {
+  background: var(--accent-deep);
+}
+
+.btn-edit:active {
+  transform: scale(0.99);
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: Georgia, "Times New Roman", "Songti SC", SimSun, serif;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+.chip {
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+}
+
+.info-value {
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 0.9rem;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.history-label {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+}
+
+.history-text {
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+/* 病史信息（并入档案条内） */
+.bar-history {
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem 2rem;
+}
+
+/* 窄屏响应式 */
+@media (max-width: 1024px) {
+  .bar-top {
+    flex-wrap: wrap;
+  }
+
+  .bar-info {
+    flex-basis: 100%;
+  }
+
+  .bar-actions {
+    width: 100%;
+  }
+
+  .btn-edit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .dash {
+    padding-top: 4.5rem;
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 表单页返回链接 */
 .back {
   display: inline-block;

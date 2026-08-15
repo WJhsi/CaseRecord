@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CaseRecord · 我的档案</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page dash">
+    <a class="back" href="index.html">← 返回首页</a>
+
+    <div class="brand">CaseRecord · 病例档案</div>
+
+    <!-- 顶部超长信息条：档案 + 病史信息 -->
+    <section class="card profile-bar">
+      <div class="bar-top">
+        <div class="bar-left">
+          <div class="avatar" id="avatar"></div>
+          <div class="bar-title">
+            <h2 id="p-name"></h2>
+            <div class="chips" id="p-chips"></div>
+            <div class="bar-saved" id="saved-at"></div>
+          </div>
+        </div>
+
+        <div class="bar-info">
+          <div class="info-item">
+            <span class="info-label">性别</span>
+            <span class="info-value" id="p-gender">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">出生日期</span>
+            <span class="info-value" id="p-birth">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">血型</span>
+            <span class="info-value" id="p-blood">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">身高</span>
+            <span class="info-value" id="p-height">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">体重</span>
+            <span class="info-value" id="p-weight">—</span>
+          </div>
+        </div>
+
+        <div class="bar-actions">
+          <a class="btn-edit" href="profile.html">编辑档案</a>
+        </div>
+      </div>
+
+      <div class="bar-history">
+        <div class="section-title">病史信息</div>
+        <div class="history-grid">
+          <div class="history-item">
+            <span class="history-label">既往病史</span>
+            <span class="history-text" id="p-history">—</span>
+          </div>
+          <div class="history-item">
+            <span class="history-label">过敏史</span>
+            <span class="history-text" id="p-allergy">—</span>
+          </div>
+          <div class="history-item">
+            <span class="history-label">备注</span>
+            <span class="history-text" id="p-notes">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

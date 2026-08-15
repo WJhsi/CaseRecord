@@ -437,6 +437,10 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
     updateSummary(p);
     showToast("档案已保存 ✓");
+    // 短暂展示成功提示后，直接进入个人界面
+    setTimeout(function () {
+      window.location.href = "dashboard.html";
+    }, 700);
   });
 
   clearBtn.addEventListener("click", function () {
