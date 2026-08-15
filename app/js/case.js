@@ -86,6 +86,231 @@
     return ALLOWED_EXT.indexOf(ext) > -1;
   }
 
+  /* ==========================================================
+     自定义下拉组件（与全局样式统一）
+     ========================================================== */
+
+  function createSelect(config) {
+    var placeholder = config.placeholder || "";
+    var options = config.options || [];
+    var value = config.value || "";
+    var onChange = config.onChange || function () {};
+    var open = false;
+    var activeIndex = -1;
+
+    var root = document.createElement("div");
+    root.className = "cselect";
+    root.innerHTML =
+      '<button type="button" class="cselect-trigger" aria-haspopup="listbox" aria-expanded="false">' +
+      '<span class="cselect-value"></span>' +
+      '<span class="cselect-caret"></span>' +
+      "</button>" +
+      '<ul class="cselect-menu" role="listbox" hidden></ul>';
+
+    var trigger = root.querySelector(".cselect-trigger");
+    var valueEl = root.querySelector(".cselect-value");
+    var menu = root.querySelector(".cselect-menu");
+
+    function getLabel(v) {
+      for (var i = 0; i < options.length; i++) {
+        if (String(options[i].value) === String(v)) return options[i].label;
+      }
+      return v || placeholder;
+    }
+
+    function renderMenu() {
+      var html = "";
+      for (var i = 0; i < options.length; i++) {
+        var o = options[i];
+        var selected = String(o.value) === String(value);
+        html +=
+          '<li role="option" data-index="' + i + '"' + (selected ? ' class="selected"' : "") + ">" +
+          "<span>" + o.label + "</span>" +
+          (selected ? '<span class="cselect-check">✓</span>' : "") +
+          "</li>";
+      }
+      menu.innerHTML = html;
+      valueEl.textContent = value ? getLabel(value) : placeholder;
+      valueEl.classList.toggle("placeholder", !value);
+    }
+
+    function updateActive() {
+      var items = menu.querySelectorAll("li");
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.toggle("active", i === activeIndex);
+        if (i === activeIndex) items[i].scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function moveActive(delta) {
+      var n = options.length;
+      if (!n) return;
+      activeIndex = (activeIndex + delta + n) % n;
+      updateActive();
+    }
+
+    function selectIndex(idx) {
+      if (!options[idx]) return;
+      value = String(options[idx].value);
+      onChange(value, options[idx].label);
+      renderMenu();
+    }
+
+    function setOpen(v) {
+      open = v;
+      root.classList.toggle("open", v);
+      trigger.setAttribute("aria-expanded", String(v));
+      if (v) {
+        menu.hidden = false;
+        activeIndex = -1;
+        updateActive();
+      } else {
+        menu.hidden = true;
+      }
+    }
+
+    trigger.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(!open);
+    });
+
+    menu.addEventListener("click", function (e) {
+      var li = e.target.closest("li");
+      if (!li) return;
+      selectIndex(parseInt(li.getAttribute("data-index"), 10));
+      setOpen(false);
+      trigger.focus();
+    });
+
+    trigger.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          return;
+        }
+        moveActive(1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          return;
+        }
+        moveActive(-1);
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        if (open) {
+          if (activeIndex >= 0) selectIndex(activeIndex);
+          setOpen(false);
+        } else {
+          setOpen(true);
+        }
+      } else if (e.key === "Escape") {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (open && !root.contains(e.target)) setOpen(false);
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && open) setOpen(false);
+    });
+
+    renderMenu();
+
+    return {
+      root: root,
+      getValue: function () {
+        return value;
+      },
+      setValue: function (v) {
+        value = v ? String(v) : "";
+        renderMenu();
+      },
+      setOptions: function (arr) {
+        options = arr || [];
+        var found = false;
+        for (var i = 0; i < options.length; i++) {
+          if (String(options[i].value) === String(value)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) value = "";
+        renderMenu();
+      },
+      setError: function (bad) {
+        root.classList.toggle("error", !!bad);
+      }
+    };
+  }
+
+  /* ---------- 下拉病情 ---------- */
+
+  var illness = createSelect({
+    placeholder: "选择病情",
+    value: "未分类",
+    options: [
+      { value: "未分类", label: "未分类" },
+      // 呼吸系统
+      { value: "急性上呼吸道感染", label: "急性上呼吸道感染" },
+      { value: "流行性感冒", label: "流行性感冒" },
+      { value: "急性支气管炎", label: "急性支气管炎" },
+      { value: "肺炎", label: "肺炎" },
+      { value: "支气管哮喘", label: "支气管哮喘" },
+      { value: "变应性鼻炎", label: "变应性鼻炎" },
+      { value: "慢性阻塞性肺疾病", label: "慢性阻塞性肺疾病" },
+      // 心血管系统
+      { value: "原发性高血压", label: "原发性高血压" },
+      { value: "冠状动脉粥样硬化性心脏病", label: "冠状动脉粥样硬化性心脏病" },
+      { value: "心律失常", label: "心律失常" },
+      { value: "高脂血症", label: "高脂血症" },
+      { value: "心力衰竭", label: "心力衰竭" },
+      // 消化系统
+      { value: "慢性胃炎", label: "慢性胃炎" },
+      { value: "消化性溃疡", label: "消化性溃疡" },
+      { value: "急性胃肠炎", label: "急性胃肠炎" },
+      { value: "功能性消化不良", label: "功能性消化不良" },
+      { value: "便秘", label: "便秘" },
+      { value: "病毒性肝炎", label: "病毒性肝炎" },
+      // 内分泌与代谢
+      { value: "2型糖尿病", label: "2型糖尿病" },
+      { value: "甲状腺功能亢进症", label: "甲状腺功能亢进症" },
+      { value: "甲状腺功能减退症", label: "甲状腺功能减退症" },
+      { value: "痛风", label: "痛风" },
+      // 神经系统
+      { value: "偏头痛", label: "偏头痛" },
+      { value: "紧张性头痛", label: "紧张性头痛" },
+      { value: "失眠症", label: "失眠症" },
+      { value: "眩晕", label: "眩晕" },
+      // 泌尿系统
+      { value: "泌尿道感染", label: "泌尿道感染" },
+      { value: "泌尿系结石", label: "泌尿系结石" },
+      // 骨骼肌肉
+      { value: "颈椎病", label: "颈椎病" },
+      { value: "腰椎间盘突出症", label: "腰椎间盘突出症" },
+      { value: "骨关节炎", label: "骨关节炎" },
+      { value: "软组织损伤", label: "软组织损伤" },
+      { value: "骨折", label: "骨折" },
+      // 皮肤
+      { value: "湿疹", label: "湿疹" },
+      { value: "荨麻疹", label: "荨麻疹" },
+      { value: "痤疮", label: "痤疮" },
+      { value: "接触性皮炎", label: "接触性皮炎" },
+      // 其他
+      { value: "创伤", label: "创伤" },
+      { value: "复诊", label: "复诊" },
+      { value: "健康体检", label: "健康体检" },
+      { value: "其他", label: "其他" }
+    ],
+    onChange: function () {
+      illness.setError(false);
+    }
+  });
+  document.getElementById("illness-slot").appendChild(illness.root);
+
   /* ---------- 影像上传 ---------- */
 
   uploadTrigger.addEventListener("click", function () {
@@ -200,6 +425,7 @@
 
     var cases = readCases();
     var savedId;
+    var illnessVal = illness.getValue() || "未分类";
     var imageData = files.map(function (f) {
       return { name: f.name, type: f.type, dataUrl: f.dataUrl };
     });
@@ -216,6 +442,7 @@
         showToast("病例不存在，请返回重试", "err");
         return;
       }
+      cases[idx].illness = illnessVal;
       cases[idx].condition = condition;
       cases[idx].images = imageData;
       cases[idx].meds = meds;
@@ -224,6 +451,7 @@
     } else {
       var newCase = {
         id: Date.now(),
+        illness: illnessVal,
         condition: condition,
         images: imageData,
         meds: meds,
@@ -256,6 +484,7 @@
 
   if (editing) {
     form.condition.value = editing.condition || "";
+    illness.setValue(editing.illness || "未分类");
     renderPreview();
     if (editing.meds && editing.meds.length) {
       editing.meds.forEach(function (m) {

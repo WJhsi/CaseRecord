@@ -60,6 +60,13 @@
   var editBtn = $("btn-edit-case");
   if (editBtn) editBtn.href = "case.html?id=" + c.id;
 
+  // 下拉病情类型
+  var illnessEl = $("detail-illness");
+  if (c.illness && c.illness !== "未分类") {
+    illnessEl.textContent = "病情类型：" + c.illness;
+    illnessEl.hidden = false;
+  }
+
   $("detail-cond").textContent = c.condition || "—";
 
   // 影像报告

@@ -22,13 +22,18 @@
     </header>
 
     <form id="case-form" class="card" novalidate>
-      <!-- 病情描述 -->
+      <!-- 病情描述：下拉病情 + 填写问诊病例 -->
       <fieldset>
         <div class="group-title">病情描述</div>
         <div class="grid">
-          <div class="field span-2">
-            <label for="condition" class="required">病情</label>
-            <textarea id="condition" name="condition" rows="5" placeholder="请描述本次就诊的病情，如症状、诊断、医嘱等…"></textarea>
+          <div class="field">
+            <label class="required">下拉病情</label>
+            <div id="illness-slot"></div>
+            <small class="hint">病情类型，选项后续补充完善</small>
+          </div>
+          <div class="field">
+            <label for="condition" class="required">填写问诊病例</label>
+            <textarea id="condition" name="condition" rows="6" placeholder="详细描述症状、诊断、就诊过程等…"></textarea>
           </div>
         </div>
       </fieldset>
