@@ -999,8 +999,7 @@ a.btn-add {
 
 /* ---------- OCR 识别区 ---------- */
 .ocr-section {
-  margin-top: 1.4rem;
-  padding: 1.6rem 2rem 2rem;
+  min-width: 0;
 }
 
 .ocr-warning {
@@ -1073,11 +1072,39 @@ a.btn-add {
   color: #b45309;
 }
 
-.ocr-raw-title {
+/* 识别原文：默认折叠，点击展开 */
+.ocr-raw-details {
   margin-top: 1.4rem;
+}
+
+.ocr-raw-details summary {
+  cursor: pointer;
   font-size: 0.8rem;
   color: var(--ink-3);
   letter-spacing: 0.08em;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  transition: color 0.15s ease;
+}
+
+.ocr-raw-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ocr-raw-details summary:hover {
+  color: var(--accent);
+}
+
+.ocr-raw-details summary::before {
+  content: "▸";
+  transition: transform 0.15s ease;
+}
+
+.ocr-raw-details[open] summary::before {
+  transform: rotate(90deg);
 }
 
 .ocr-raw {
@@ -1104,14 +1131,30 @@ a.btn-add {
 }
 
 /* ---------- 报告详情页 ---------- */
-.report-view {
+/* 两栏：左原始报告 / 右 OCR 结果 */
+.report-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
   padding: 1.6rem 2rem 2rem;
+}
+
+.report-left {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  padding-right: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-right {
+  min-width: 0;
 }
 
 .report-img {
   display: block;
   max-width: 100%;
-  max-height: 78vh;
+  max-height: 70vh;
   margin: 0 auto;
   object-fit: contain;
   border-radius: 10px;
@@ -1121,7 +1164,7 @@ a.btn-add {
 
 .report-pdf-frame {
   width: 100%;
-  height: 76vh;
+  height: 70vh;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #fff;
@@ -1138,6 +1181,20 @@ a.btn-add {
 
 .report-open:hover {
   color: var(--accent-deep);
+}
+
+@media (max-width: 900px) {
+  .report-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .report-left {
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.5rem;
+  }
 }
 
 @media (max-width: 640px) {

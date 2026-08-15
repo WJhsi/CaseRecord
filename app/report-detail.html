@@ -22,36 +22,43 @@
       <p class="sub" id="report-meta"></p>
     </header>
 
-    <!-- 报告查看区 -->
-    <section class="card report-view">
-      <div id="report-content"></div>
-    </section>
-
-    <!-- OCR 识别区（打开页面自动识别） -->
-    <section class="card ocr-section" id="ocr-section" hidden>
-      <div class="section-title">检验报告识别</div>
-      <div class="ocr-warning">⚠ OCR 可能无法完全或错误识别，可能会影响 AI 判断，请注意辨别。</div>
-      <div class="ocr-note">目前仅支持血常规识别，其他报告可查看下方识别原文。</div>
-      <div id="ocr-status" class="ocr-status" hidden></div>
-
-      <div id="ocr-table-wrap" hidden>
-        <table class="ocr-table">
-          <thead>
-            <tr>
-              <th>项目</th>
-              <th>结果</th>
-              <th>单位</th>
-              <th>参考范围</th>
-              <th>状态</th>
-            </tr>
-          </thead>
-          <tbody id="ocr-tbody"></tbody>
-        </table>
+    <!-- 报告 + OCR 识别结果：两栏布局 -->
+    <section class="card report-layout">
+      <!-- 左栏：原始报告 -->
+      <div class="report-left">
+        <div class="section-title">原始报告</div>
+        <div id="report-content"></div>
       </div>
 
-      <div id="ocr-raw-wrap" hidden>
-        <div class="ocr-raw-title">识别原文</div>
-        <pre class="ocr-raw" id="ocr-raw"></pre>
+      <!-- 右栏：OCR 识别结果 -->
+      <div class="report-right">
+        <div class="section-title">OCR 识别结果</div>
+        <div id="ocr-section">
+          <div class="ocr-warning">⚠ OCR 可能无法完全或错误识别，可能会影响 AI 判断，请注意辨别。</div>
+          <div class="ocr-note">目前仅支持血常规识别。</div>
+          <div id="ocr-status" class="ocr-status" hidden></div>
+
+          <div id="ocr-table-wrap" hidden>
+            <table class="ocr-table">
+              <thead>
+                <tr>
+                  <th>项目</th>
+                  <th>结果</th>
+                  <th>单位</th>
+                  <th>参考范围</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="ocr-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- 识别原文：默认折叠，点击展开 -->
+          <details class="ocr-raw-details" id="ocr-raw-wrap">
+            <summary>识别原文（点击展开）</summary>
+            <pre class="ocr-raw" id="ocr-raw"></pre>
+          </details>
+        </div>
       </div>
     </section>
   </main>

@@ -115,7 +115,6 @@
   function startAutoOcr() {
     ocrSection.hidden = false;
     ocrTableWrap.hidden = true;
-    ocrRawWrap.hidden = true;
     ocrStatus.hidden = true;
 
     // PDF 报告不支持 OCR
@@ -174,7 +173,6 @@
           return;
         }
         ocrRaw.textContent = text;
-        ocrRawWrap.hidden = false;
         var parsed = parseLabReport(text);
         renderLabTable(parsed);
         var count = 0;
