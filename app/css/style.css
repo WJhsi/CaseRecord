@@ -296,6 +296,435 @@ header {
   line-height: 1.7;
 }
 
+/* 添加病例（档案外右下侧） */
+.add-case-row {
+  margin-top: 1.4rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-add {
+  padding: 0.75rem 1.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-family: inherit;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+a.btn-add {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-add:hover {
+  background: var(--accent-soft);
+}
+
+.btn-add:active {
+  transform: scale(0.98);
+}
+
+/* ---------- 影像上传 ---------- */
+.upload-btn {
+  width: 100%;
+  padding: 1.2rem;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  background: #fcfcfa;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.upload-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.upload-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+
+.thumb {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fcfcfa;
+}
+
+.thumb img {
+  width: 100%;
+  height: 84px;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-pdf {
+  height: 84px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+}
+
+.thumb-name {
+  font-size: 0.72rem;
+  color: var(--ink-2);
+  padding: 0.35rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(28, 25, 23, 0.65);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.thumb-remove:hover {
+  background: var(--danger);
+}
+
+/* ---------- 药物行 ---------- */
+.med-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.med-remove {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.med-remove:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.add-med {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.add-med:hover {
+  background: var(--accent-soft);
+}
+
+@media (max-width: 640px) {
+  .med-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 病例列表 ---------- */
+.cases-section {
+  margin-top: 2.4rem;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-title-row .section-title {
+  margin-bottom: 0;
+}
+
+.cases-count {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+.cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.case-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.3rem;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.case-item:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 4px rgba(28, 25, 23, 0.05), 0 12px 32px rgba(47, 111, 79, 0.1);
+}
+
+.case-item:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.15);
+}
+
+.case-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.case-date {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+}
+
+.case-cond {
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.case-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .case-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------- 顶部导航栏 ---------- */
+.topnav {
+  display: flex;
+  gap: 0.3rem;
+  width: fit-content;
+  padding: 0.25rem;
+  margin-bottom: 1.8rem;
+  background: #f1f0ed;
+  border-radius: 12px;
+}
+
+.topnav-link {
+  padding: 0.5rem 1.1rem;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.topnav-link:hover {
+  color: var(--ink);
+}
+
+.topnav-link.active {
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.1);
+}
+
+@media (max-width: 640px) {
+  .topnav {
+    width: 100%;
+  }
+
+  .topnav-link {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* ---------- 病例详情页（整屏） ---------- */
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-edit-detail {
+  padding: 0.7rem 1.5rem;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-family: inherit;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.btn-edit-detail:hover {
+  background: var(--accent-soft);
+}
+
+.detail-card {
+  padding: 1.6rem 2rem 1.8rem;
+}
+
+.detail-block {
+  padding-top: 1.4rem;
+}
+
+.detail-block:first-child {
+  padding-top: 0.6rem;
+}
+
+.detail-block + .detail-block {
+  border-top: 1px solid var(--line);
+}
+
+.detail-cond {
+  font-size: 1rem;
+  line-height: 1.9;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.detail-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.9rem;
+}
+
+.detail-images img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  display: block;
+  cursor: zoom-in;
+  transition: border-color 0.15s ease;
+}
+
+.detail-images img:hover {
+  border-color: var(--accent);
+}
+
+.detail-pdf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.detail-pdf:hover {
+  background: var(--accent-soft);
+}
+
+.detail-meds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.detail-med {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.95rem;
+}
+
+.detail-med-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.detail-med-usage {
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.detail-empty {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+
+@media (max-width: 640px) {
+  .detail-med {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .detail-med-usage {
+    text-align: left;
+  }
+}
+
 /* 病史信息（并入档案条内） */
 .bar-history {
   padding-top: 1.4rem;

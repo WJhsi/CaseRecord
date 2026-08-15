@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CaseRecord · 病例详情</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page dash">
+    <a class="back" href="dashboard.html">← 返回个人主页</a>
+
+    <div class="brand">CaseRecord · 病例档案</div>
+
+    <nav class="topnav">
+      <a class="topnav-link" href="dashboard.html">我的档案</a>
+      <a class="topnav-link" href="case.html">添加病例</a>
+    </nav>
+
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>病例详情</h1>
+          <p class="sub" id="detail-date"></p>
+        </div>
+        <a class="btn-edit-detail" id="btn-edit-case" href="#">编辑病例</a>
+      </div>
+    </header>
+
+    <!-- 病例详情：病情 / 影像 / 药物 合并为一个大块 -->
+    <section class="card detail-card">
+      <div class="detail-block">
+        <div class="section-title">病情描述</div>
+        <p class="detail-cond" id="detail-cond"></p>
+      </div>
+
+      <div class="detail-block">
+        <div class="section-title">影像报告</div>
+        <div class="detail-images" id="detail-images"></div>
+      </div>
+
+      <div class="detail-block">
+        <div class="section-title">药物</div>
+        <div class="detail-meds" id="detail-meds"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/case-detail.js"></script>
+</body>
+</html>

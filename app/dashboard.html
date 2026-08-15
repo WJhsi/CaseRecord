@@ -12,6 +12,11 @@
 
     <div class="brand">CaseRecord · 病例档案</div>
 
+    <nav class="topnav">
+      <a class="topnav-link active" href="dashboard.html">我的档案</a>
+      <a class="topnav-link" href="case.html">添加病例</a>
+    </nav>
+
     <!-- 顶部超长信息条：档案 + 病史信息 -->
     <section class="card profile-bar">
       <div class="bar-top">
@@ -70,7 +75,23 @@
         </div>
       </div>
     </section>
+
+    <!-- 添加病例 -->
+    <div class="add-case-row">
+      <a class="btn-add" href="case.html">＋ 添加病例</a>
+    </div>
+
+    <!-- 病例记录列表 -->
+    <section class="cases-section" id="cases-section" hidden>
+      <div class="section-title-row">
+        <span class="section-title">病例记录</span>
+        <span class="cases-count" id="cases-count"></span>
+      </div>
+      <div class="cases-list" id="cases-list"></div>
+    </section>
   </main>
+
+  <div class="toast" id="toast" role="status"></div>
 
   <script src="js/dashboard.js"></script>
 </body>

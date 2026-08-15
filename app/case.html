@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CaseRecord · 添加病例</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page dash">
+    <a class="back" href="dashboard.html" id="back-link">← 返回个人主页</a>
+    <div class="brand">CaseRecord · 病例档案</div>
+
+    <nav class="topnav">
+      <a class="topnav-link" href="dashboard.html">我的档案</a>
+      <a class="topnav-link active" href="case.html">添加病例</a>
+    </nav>
+
+    <header>
+      <h1 id="page-title">添加病例</h1>
+      <p class="sub" id="page-sub">记录病情、上传影像报告、录入用药。</p>
+    </header>
+
+    <form id="case-form" class="card" novalidate>
+      <!-- 病情描述 -->
+      <fieldset>
+        <div class="group-title">病情描述</div>
+        <div class="grid">
+          <div class="field span-2">
+            <label for="condition" class="required">病情</label>
+            <textarea id="condition" name="condition" rows="5" placeholder="请描述本次就诊的病情，如症状、诊断、医嘱等…"></textarea>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 影像报告 -->
+      <fieldset>
+        <div class="group-title">影像报告</div>
+        <div class="grid">
+          <div class="field span-2">
+            <input type="file" id="report-files" name="report-files" accept="image/*,.pdf" multiple hidden>
+            <button type="button" class="upload-btn" id="upload-trigger">＋ 选择影像文件（图片 / PDF）</button>
+            <small class="hint" id="upload-hint">支持 jpg / png / webp / gif / pdf，单个文件不超过 2MB</small>
+            <div class="upload-preview" id="upload-preview"></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 药物 -->
+      <fieldset>
+        <div class="group-title">药物</div>
+        <div class="grid" id="med-list">
+          <!-- 药物行由 JS 生成 -->
+        </div>
+        <button type="button" class="add-med" id="add-med">＋ 添加药物</button>
+      </fieldset>
+
+      <div class="submit-row">
+        <button type="submit" class="btn-submit" id="btn-submit">保存病例</button>
+      </div>
+    </form>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/case.js"></script>
+</body>
+</html>

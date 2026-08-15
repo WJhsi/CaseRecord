@@ -19,6 +19,19 @@
     return document.getElementById(id);
   }
 
+  // 病例保存成功提示
+  var toast = document.getElementById("toast");
+
+  function showToast(msg, type) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.className = "toast " + (type || "ok") + " show";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () {
+      toast.classList.remove("show");
+    }, 2800);
+  }
+
   var p = readSaved();
   if (!p || !p.name) {
     window.location.replace("index.html");
@@ -57,4 +70,76 @@
     var d = new Date(p.savedAt);
     $("saved-at").textContent = "档案保存于 " + d.toLocaleString("zh-CN");
   }
+
+  var STORAGE_KEY = "caseRecord.profile";
+  var CASES_KEY = "caseRecord.cases";
+
+  function readCases() {
+    try {
+      var arr = JSON.parse(localStorage.getItem(CASES_KEY));
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /* ---------- 病例列表 ---------- */
+
+  function renderCases() {
+    var list = readCases();
+    var section = $("cases-section");
+    if (!section) return;
+    if (!list.length) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+    $("cases-count").textContent = "共 " + list.length + " 条";
+
+    var html = list
+      .slice()
+      .reverse()
+      .map(function (c) {
+        var d = new Date(c.createdAt);
+        var dateStr =
+          d.toLocaleDateString("zh-CN") +
+          " " +
+          d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+        var tags = [];
+        if (c.images && c.images.length) tags.push(c.images.length + " 张影像");
+        if (c.meds && c.meds.length) tags.push(c.meds.length + " 种药物");
+        var tagsHtml = tags
+          .map(function (t) {
+            return '<span class="chip">' + t + "</span>";
+          })
+          .join("");
+        return (
+          '<a class="case-item" href="case-detail.html?id=' + c.id + '">' +
+          '<div class="case-left">' +
+          '<div class="case-date">' + dateStr + "</div>" +
+          '<div class="case-cond">' + escapeHtml(c.condition) + "</div>" +
+          "</div>" +
+          '<div class="case-tags">' + tagsHtml + "</div>" +
+          "</a>"
+        );
+      })
+      .join("");
+    $("cases-list").innerHTML = html;
+  }
+
+  // 从添加病例页保存后跳转回来时提示
+  if (/[?&]saved=1/.test(window.location.search)) {
+    showToast("病例已保存 ✓");
+  }
+
+  renderCases();
 })();
