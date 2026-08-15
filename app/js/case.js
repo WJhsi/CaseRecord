@@ -148,9 +148,10 @@
       for (var i = 0; i < filtered.length; i++) {
         var o = filtered[i];
         var selected = String(o.value) === String(value);
+        var aliasHtml = o.alias ? '<span class="cselect-alias">/' + esc(o.alias) + "</span>" : "";
         html +=
           '<li role="option" data-value="' + esc(o.value) + '"' + (selected ? ' class="selected"' : "") + ">" +
-          "<span>" + esc(o.label) + "</span>" +
+          '<span class="cselect-label"><span>' + esc(o.label) + "</span>" + aliasHtml + "</span>" +
           (selected ? '<span class="cselect-check">✓</span>' : "") +
           "</li>";
       }
@@ -167,7 +168,8 @@
         filtered = options.filter(function (o) {
           return (
             o.label.toLowerCase().indexOf(q) > -1 ||
-            String(o.value).toLowerCase().indexOf(q) > -1
+            String(o.value).toLowerCase().indexOf(q) > -1 ||
+            (o.alias && o.alias.toLowerCase().indexOf(q) > -1)
           );
         });
       }
@@ -352,54 +354,54 @@
     searchable: true,
     options: [
       // 呼吸系统
-      { value: "急性上呼吸道感染", label: "急性上呼吸道感染" },
-      { value: "流行性感冒", label: "流行性感冒" },
-      { value: "急性支气管炎", label: "急性支气管炎" },
-      { value: "肺炎", label: "肺炎" },
-      { value: "支气管哮喘", label: "支气管哮喘" },
-      { value: "变应性鼻炎", label: "变应性鼻炎" },
-      { value: "慢性阻塞性肺疾病", label: "慢性阻塞性肺疾病" },
+      { value: "急性上呼吸道感染", label: "急性上呼吸道感染", alias: "感冒" },
+      { value: "流行性感冒", label: "流行性感冒", alias: "流感" },
+      { value: "急性支气管炎", label: "急性支气管炎", alias: "气管炎" },
+      { value: "肺炎", label: "肺炎", alias: "肺部感染" },
+      { value: "支气管哮喘", label: "支气管哮喘", alias: "哮喘" },
+      { value: "变应性鼻炎", label: "变应性鼻炎", alias: "过敏性鼻炎" },
+      { value: "慢性阻塞性肺疾病", label: "慢性阻塞性肺疾病", alias: "慢阻肺" },
       // 心血管系统
-      { value: "原发性高血压", label: "原发性高血压" },
-      { value: "冠状动脉粥样硬化性心脏病", label: "冠状动脉粥样硬化性心脏病" },
-      { value: "心律失常", label: "心律失常" },
-      { value: "高脂血症", label: "高脂血症" },
-      { value: "心力衰竭", label: "心力衰竭" },
+      { value: "原发性高血压", label: "原发性高血压", alias: "高血压" },
+      { value: "冠状动脉粥样硬化性心脏病", label: "冠状动脉粥样硬化性心脏病", alias: "冠心病" },
+      { value: "心律失常", label: "心律失常", alias: "心律不齐" },
+      { value: "高脂血症", label: "高脂血症", alias: "高血脂" },
+      { value: "心力衰竭", label: "心力衰竭", alias: "心衰" },
       // 消化系统
-      { value: "慢性胃炎", label: "慢性胃炎" },
-      { value: "消化性溃疡", label: "消化性溃疡" },
-      { value: "急性胃肠炎", label: "急性胃肠炎" },
-      { value: "功能性消化不良", label: "功能性消化不良" },
-      { value: "便秘", label: "便秘" },
-      { value: "病毒性肝炎", label: "病毒性肝炎" },
+      { value: "慢性胃炎", label: "慢性胃炎", alias: "胃炎" },
+      { value: "消化性溃疡", label: "消化性溃疡", alias: "胃溃疡" },
+      { value: "急性胃肠炎", label: "急性胃肠炎", alias: "肠胃炎" },
+      { value: "功能性消化不良", label: "功能性消化不良", alias: "消化不良" },
+      { value: "便秘", label: "便秘", alias: "排便困难" },
+      { value: "病毒性肝炎", label: "病毒性肝炎", alias: "肝炎" },
       // 内分泌与代谢
-      { value: "2型糖尿病", label: "2型糖尿病" },
-      { value: "甲状腺功能亢进症", label: "甲状腺功能亢进症" },
-      { value: "甲状腺功能减退症", label: "甲状腺功能减退症" },
-      { value: "痛风", label: "痛风" },
+      { value: "2型糖尿病", label: "2型糖尿病", alias: "糖尿病" },
+      { value: "甲状腺功能亢进症", label: "甲状腺功能亢进症", alias: "甲亢" },
+      { value: "甲状腺功能减退症", label: "甲状腺功能减退症", alias: "甲减" },
+      { value: "痛风", label: "痛风", alias: "痛风" },
       // 神经系统
-      { value: "偏头痛", label: "偏头痛" },
-      { value: "紧张性头痛", label: "紧张性头痛" },
-      { value: "失眠症", label: "失眠症" },
-      { value: "眩晕", label: "眩晕" },
+      { value: "偏头痛", label: "偏头痛", alias: "偏头痛" },
+      { value: "紧张性头痛", label: "紧张性头痛", alias: "紧张性头痛" },
+      { value: "失眠症", label: "失眠症", alias: "失眠" },
+      { value: "眩晕", label: "眩晕", alias: "头晕" },
       // 泌尿系统
-      { value: "泌尿道感染", label: "泌尿道感染" },
-      { value: "泌尿系结石", label: "泌尿系结石" },
+      { value: "泌尿道感染", label: "泌尿道感染", alias: "尿路感染" },
+      { value: "泌尿系结石", label: "泌尿系结石", alias: "尿路结石" },
       // 骨骼肌肉
-      { value: "颈椎病", label: "颈椎病" },
-      { value: "腰椎间盘突出症", label: "腰椎间盘突出症" },
-      { value: "骨关节炎", label: "骨关节炎" },
-      { value: "软组织损伤", label: "软组织损伤" },
-      { value: "骨折", label: "骨折" },
+      { value: "颈椎病", label: "颈椎病", alias: "颈椎病" },
+      { value: "腰椎间盘突出症", label: "腰椎间盘突出症", alias: "腰椎间盘突出" },
+      { value: "骨关节炎", label: "骨关节炎", alias: "关节炎" },
+      { value: "软组织损伤", label: "软组织损伤", alias: "扭伤" },
+      { value: "骨折", label: "骨折", alias: "骨折" },
       // 皮肤
-      { value: "湿疹", label: "湿疹" },
-      { value: "荨麻疹", label: "荨麻疹" },
-      { value: "痤疮", label: "痤疮" },
-      { value: "接触性皮炎", label: "接触性皮炎" },
+      { value: "湿疹", label: "湿疹", alias: "湿疹" },
+      { value: "荨麻疹", label: "荨麻疹", alias: "风疹块" },
+      { value: "痤疮", label: "痤疮", alias: "青春痘" },
+      { value: "接触性皮炎", label: "接触性皮炎", alias: "皮炎" },
       // 其他
-      { value: "创伤", label: "创伤" },
-      { value: "复诊", label: "复诊" },
-      { value: "健康体检", label: "健康体检" }
+      { value: "创伤", label: "创伤", alias: "外伤" },
+      { value: "复诊", label: "复诊", alias: "复查" },
+      { value: "健康体检", label: "健康体检", alias: "体检" }
     ],
     onChange: function () {
       illness.setError(false);
@@ -443,19 +445,38 @@
   function renderPreview() {
     uploadPreview.innerHTML = "";
     files.forEach(function (f, i) {
-      var box = document.createElement("div");
-      box.className = "thumb";
+      var row = document.createElement("div");
+      row.className = "report-row";
 
+      // 缩略图
+      var thumb = document.createElement("div");
+      thumb.className = "report-thumb";
       if (f.type && f.type.indexOf("image/") === 0) {
-        box.innerHTML = '<img src="' + f.dataUrl + '" alt="' + f.name + '">';
+        var im = document.createElement("img");
+        im.src = f.dataUrl;
+        im.alt = f.name;
+        thumb.appendChild(im);
       } else {
-        box.innerHTML = '<div class="thumb-pdf">PDF</div>';
+        thumb.innerHTML = '<span class="report-thumb-pdf">PDF</span>';
       }
 
-      box.innerHTML +=
-        '<div class="thumb-name">' + f.name + "</div>" +
-        '<button type="button" class="thumb-remove" data-i="' + i + '" title="移除">×</button>';
-      uploadPreview.appendChild(box);
+      // 文件名
+      var name = document.createElement("div");
+      name.className = "report-name";
+      name.textContent = f.name;
+
+      // 移除按钮
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "report-remove";
+      del.setAttribute("data-i", i);
+      del.title = "移除";
+      del.textContent = "×";
+
+      row.appendChild(thumb);
+      row.appendChild(name);
+      row.appendChild(del);
+      uploadPreview.appendChild(row);
     });
   }
 

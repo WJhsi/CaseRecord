@@ -69,29 +69,47 @@
 
   $("detail-cond").textContent = c.condition || "—";
 
-  // 影像报告
+  // 检验报告 / 检查报告：横向块列表，点击进入报告详情页
   var imagesEl = $("detail-images");
   imagesEl.innerHTML = "";
   if (c.images && c.images.length) {
-    c.images.forEach(function (img) {
+    var listEl = document.createElement("div");
+    listEl.className = "report-list";
+
+    c.images.forEach(function (img, idx) {
       var a = document.createElement("a");
-      a.href = img.dataUrl;
-      a.target = "_blank";
-      a.rel = "noopener";
+      a.className = "report-row";
+      a.href = "report-detail.html?caseId=" + c.id + "&idx=" + idx;
+      a.title = "查看报告";
+
+      var thumb = document.createElement("div");
+      thumb.className = "report-thumb";
       if (img.type && img.type.indexOf("image/") === 0) {
         var im = document.createElement("img");
         im.src = img.dataUrl;
-        im.alt = img.name || "影像";
-        im.title = img.name;
-        a.appendChild(im);
+        im.alt = img.name || "报告";
+        thumb.appendChild(im);
       } else {
-        a.className = "detail-pdf";
-        a.textContent = "📄 " + (img.name || "PDF 报告");
+        thumb.innerHTML = '<span class="report-thumb-pdf">PDF</span>';
       }
-      imagesEl.appendChild(a);
+
+      var name = document.createElement("div");
+      name.className = "report-name";
+      name.textContent = img.name || "报告 " + (idx + 1);
+
+      var arrow = document.createElement("span");
+      arrow.className = "report-arrow";
+      arrow.textContent = "›";
+
+      a.appendChild(thumb);
+      a.appendChild(name);
+      a.appendChild(arrow);
+      listEl.appendChild(a);
     });
+
+    imagesEl.appendChild(listEl);
   } else {
-    imagesEl.innerHTML = '<span class="detail-empty">无影像报告</span>';
+    imagesEl.innerHTML = '<span class="detail-empty">无检验 / 检查报告</span>';
   }
 
   // 药物

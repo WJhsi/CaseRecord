@@ -350,63 +350,29 @@ a.btn-add {
 }
 
 .upload-preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 0.8rem;
   margin-top: 0.9rem;
 }
 
-.thumb {
-  position: relative;
+.report-remove {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: hidden;
-  background: #fcfcfa;
-}
-
-.thumb img {
-  width: 100%;
-  height: 84px;
-  object-fit: cover;
-  display: block;
-}
-
-.thumb-pdf {
-  height: 84px;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
-}
-
-.thumb-name {
-  font-size: 0.72rem;
-  color: var(--ink-2);
-  padding: 0.35rem 0.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.thumb-remove {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(28, 25, 23, 0.65);
-  color: #fff;
-  font-size: 0.85rem;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease;
+  flex-shrink: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.thumb-remove:hover {
-  background: var(--danger);
+.report-remove:hover {
+  color: var(--danger);
+  border-color: var(--danger);
 }
 
 /* ---------- 药物行 ---------- */
@@ -726,6 +692,116 @@ a.btn-add {
 .detail-empty {
   font-size: 0.9rem;
   color: var(--ink-3);
+}
+
+/* ---------- 报告横向块列表 ---------- */
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.report-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fcfcfa;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-row:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 4px rgba(28, 25, 23, 0.05), 0 10px 28px rgba(47, 111, 79, 0.1);
+}
+
+.report-row:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.15);
+}
+
+.report-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+}
+
+.report-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.report-thumb-pdf {
+  color: var(--accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.report-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-arrow {
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  color: var(--ink-3);
+  line-height: 1;
+}
+
+/* ---------- 报告详情页 ---------- */
+.report-view {
+  padding: 1.6rem 2rem 2rem;
+}
+
+.report-img {
+  display: block;
+  max-width: 100%;
+  max-height: 78vh;
+  margin: 0 auto;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.report-pdf-frame {
+  width: 100%;
+  height: 76vh;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.report-open {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--accent);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.report-open:hover {
+  color: var(--accent-deep);
 }
 
 @media (max-width: 640px) {
@@ -1135,6 +1211,19 @@ fieldset + fieldset {
 .cselect-custom b {
   color: var(--ink);
   font-weight: 600;
+}
+
+/* 选项：医学名词 + 淡灰俗称 */
+.cselect-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.cselect-alias {
+  color: var(--ink-3);
+  font-size: 0.82em;
 }
 
 /* 未输入时隐藏自定义项（防止 flex 覆盖 hidden） */

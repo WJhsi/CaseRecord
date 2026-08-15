@@ -115,7 +115,7 @@
           " " +
           d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
         var tags = [];
-        if (c.images && c.images.length) tags.push(c.images.length + " 张影像");
+        if (c.images && c.images.length) tags.push(c.images.length + " 份报告");
         if (c.meds && c.meds.length) tags.push(c.meds.length + " 种药物");
         var tagsHtml = tags
           .map(function (t) {

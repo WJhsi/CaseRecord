@@ -29,7 +29,7 @@
           <div class="field">
             <label class="required">下拉病情</label>
             <div id="illness-slot"></div>
-            <small class="hint">病情类型，选项后续补充完善</small>
+            <small class="hint">选择病情类型，也可搜索或自定义输入</small>
           </div>
           <div class="field">
             <label for="condition" class="required">填写问诊病例</label>
@@ -38,13 +38,13 @@
         </div>
       </fieldset>
 
-      <!-- 影像报告 -->
+      <!-- 检验报告 / 检查报告 -->
       <fieldset>
-        <div class="group-title">影像报告</div>
+        <div class="group-title">检验报告 / 检查报告</div>
         <div class="grid">
           <div class="field span-2">
             <input type="file" id="report-files" name="report-files" accept="image/*,.pdf" multiple hidden>
-            <button type="button" class="upload-btn" id="upload-trigger">＋ 选择影像文件（图片 / PDF）</button>
+            <button type="button" class="upload-btn" id="upload-trigger">＋ 选择报告文件（图片 / PDF）</button>
             <small class="hint" id="upload-hint">支持 jpg / png / webp / gif / pdf，单个文件不超过 2MB</small>
             <div class="upload-preview" id="upload-preview"></div>
           </div>
