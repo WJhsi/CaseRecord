@@ -18,9 +18,9 @@
 | --- | --- |
 | ![个人主页](docs/screenshots/03-dashboard.png) | ![添加病例](docs/screenshots/04-case-edit.png) |
 
-| 病例详情 |
-| --- |
-| ![病例详情](docs/screenshots/05-case-detail.png) |
+| 病例详情 | 报告详情 |
+| --- | --- |
+| ![病例详情](docs/screenshots/05-case-detail.png) | ![报告详情](docs/screenshots/06-report-detail.png) |
 
 ---
 
