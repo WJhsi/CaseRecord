@@ -95,8 +95,20 @@
     var options = config.options || [];
     var value = config.value || "";
     var onChange = config.onChange || function () {};
+    var searchable = !!config.searchable;
     var open = false;
     var activeIndex = -1;
+    var query = "";
+    var filtered = options.slice();
+
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
     var root = document.createElement("div");
     root.className = "cselect";
@@ -105,11 +117,19 @@
       '<span class="cselect-value"></span>' +
       '<span class="cselect-caret"></span>' +
       "</button>" +
-      '<ul class="cselect-menu" role="listbox" hidden></ul>';
+      '<div class="cselect-menu has-options" role="listbox" hidden>' +
+      (searchable
+        ? '<li class="cselect-search-li" role="none"><input type="text" class="cselect-search" placeholder="搜索病情，或直接输入自定义…"></li>' +
+          '<li class="cselect-custom" role="option" hidden><span>使用“<b></b>”</span></li>'
+        : "") +
+      '<div class="cselect-options"></div>' +
+      "</div>";
 
     var trigger = root.querySelector(".cselect-trigger");
     var valueEl = root.querySelector(".cselect-value");
     var menu = root.querySelector(".cselect-menu");
+    var searchInput = searchable ? menu.querySelector(".cselect-search") : null;
+    var customEl = searchable ? menu.querySelector(".cselect-custom") : null;
 
     function getLabel(v) {
       for (var i = 0; i < options.length; i++) {
@@ -118,24 +138,73 @@
       return v || placeholder;
     }
 
-    function renderMenu() {
+    function renderOptions() {
+      // 移除旧选项，保留搜索/自定义行
+      var box = menu.querySelector(".cselect-options");
+      var olds = box.querySelectorAll("li[data-value]");
+      for (var k = 0; k < olds.length; k++) olds[k].remove();
+
       var html = "";
-      for (var i = 0; i < options.length; i++) {
-        var o = options[i];
+      for (var i = 0; i < filtered.length; i++) {
+        var o = filtered[i];
         var selected = String(o.value) === String(value);
         html +=
-          '<li role="option" data-index="' + i + '"' + (selected ? ' class="selected"' : "") + ">" +
-          "<span>" + o.label + "</span>" +
+          '<li role="option" data-value="' + esc(o.value) + '"' + (selected ? ' class="selected"' : "") + ">" +
+          "<span>" + esc(o.label) + "</span>" +
           (selected ? '<span class="cselect-check">✓</span>' : "") +
           "</li>";
       }
-      menu.innerHTML = html;
+      box.insertAdjacentHTML("beforeend", html);
+      updateCustom();
+    }
+
+    function applyFilter() {
+      query = searchInput ? searchInput.value.trim() : "";
+      var q = query.toLowerCase();
+      if (!q) {
+        filtered = options.slice();
+      } else {
+        filtered = options.filter(function (o) {
+          return (
+            o.label.toLowerCase().indexOf(q) > -1 ||
+            String(o.value).toLowerCase().indexOf(q) > -1
+          );
+        });
+      }
+      renderOptions();
+    }
+
+    function updateCustom() {
+      if (!customEl) return;
+      var exact = filtered.some(function (o) {
+        return String(o.value) === query || o.label === query;
+      });
+      var show = query !== "" && !exact;
+      customEl.hidden = !show;
+      if (show) customEl.querySelector("b").textContent = query;
+    }
+
+    function selectValue(v, label) {
+      value = String(v);
+      onChange(value, label || v);
+      renderMenu();
+      setOpen(false);
+      trigger.focus();
+    }
+
+    function renderMenu() {
+      if (searchInput && !open) {
+        searchInput.value = "";
+        applyFilter();
+      } else {
+        renderOptions();
+      }
       valueEl.textContent = value ? getLabel(value) : placeholder;
       valueEl.classList.toggle("placeholder", !value);
     }
 
     function updateActive() {
-      var items = menu.querySelectorAll("li");
+      var items = menu.querySelectorAll("li[data-value]");
       for (var i = 0; i < items.length; i++) {
         items[i].classList.toggle("active", i === activeIndex);
         if (i === activeIndex) items[i].scrollIntoView({ block: "nearest" });
@@ -143,17 +212,15 @@
     }
 
     function moveActive(delta) {
-      var n = options.length;
+      var n = filtered.length;
       if (!n) return;
       activeIndex = (activeIndex + delta + n) % n;
       updateActive();
     }
 
     function selectIndex(idx) {
-      if (!options[idx]) return;
-      value = String(options[idx].value);
-      onChange(value, options[idx].label);
-      renderMenu();
+      if (!filtered[idx]) return;
+      selectValue(filtered[idx].value, filtered[idx].label);
     }
 
     function setOpen(v) {
@@ -161,9 +228,16 @@
       root.classList.toggle("open", v);
       trigger.setAttribute("aria-expanded", String(v));
       if (v) {
+        if (searchInput) {
+          searchInput.value = "";
+          applyFilter();
+        } else {
+          renderOptions();
+        }
         menu.hidden = false;
         activeIndex = -1;
         updateActive();
+        if (searchInput) searchInput.focus();
       } else {
         menu.hidden = true;
       }
@@ -175,12 +249,36 @@
     });
 
     menu.addEventListener("click", function (e) {
-      var li = e.target.closest("li");
+      if (e.target.closest(".cselect-search")) return;
+      var custom = e.target.closest(".cselect-custom");
+      if (custom && !custom.hidden) {
+        selectValue(query, query);
+        return;
+      }
+      var li = e.target.closest("li[data-value]");
       if (!li) return;
-      selectIndex(parseInt(li.getAttribute("data-index"), 10));
-      setOpen(false);
-      trigger.focus();
+      selectValue(li.getAttribute("data-value"), li.querySelector("span").textContent);
     });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applyFilter);
+      searchInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (customEl && !customEl.hidden) {
+            selectValue(query, query);
+            return;
+          }
+          var first = menu.querySelector(".cselect-options li[data-value]");
+          if (first) {
+            selectValue(first.getAttribute("data-value"), first.querySelector("span").textContent);
+          }
+        } else if (e.key === "Escape") {
+          setOpen(false);
+          trigger.focus();
+        }
+      });
+    }
 
     trigger.addEventListener("keydown", function (e) {
       if (e.key === "ArrowDown") {
@@ -251,9 +349,8 @@
 
   var illness = createSelect({
     placeholder: "选择病情",
-    value: "未分类",
+    searchable: true,
     options: [
-      { value: "未分类", label: "未分类" },
       // 呼吸系统
       { value: "急性上呼吸道感染", label: "急性上呼吸道感染" },
       { value: "流行性感冒", label: "流行性感冒" },
@@ -302,8 +399,7 @@
       // 其他
       { value: "创伤", label: "创伤" },
       { value: "复诊", label: "复诊" },
-      { value: "健康体检", label: "健康体检" },
-      { value: "其他", label: "其他" }
+      { value: "健康体检", label: "健康体检" }
     ],
     onChange: function () {
       illness.setError(false);
@@ -425,7 +521,7 @@
 
     var cases = readCases();
     var savedId;
-    var illnessVal = illness.getValue() || "未分类";
+    var illnessVal = illness.getValue() || "";
     var imageData = files.map(function (f) {
       return { name: f.name, type: f.type, dataUrl: f.dataUrl };
     });
@@ -484,7 +580,7 @@
 
   if (editing) {
     form.condition.value = editing.condition || "";
-    illness.setValue(editing.illness || "未分类");
+    illness.setValue(editing.illness || "");
     renderPreview();
     if (editing.meds && editing.meds.length) {
       editing.meds.forEach(function (m) {

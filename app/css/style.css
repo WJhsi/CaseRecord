@@ -1087,6 +1087,61 @@ fieldset + fieldset {
   transition: background 0.12s ease, color 0.12s ease;
 }
 
+/* 可搜索下拉：搜索框相对页面视口固定（页面滚动时保持原位，滚过即消失） */
+.cselect-search-li {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+  padding: 4px 4px 6px;
+}
+
+/* 有滚动选项容器时：菜单自身不限制高度、不滚动，选项区独立滚动 */
+.cselect-menu.has-options {
+  max-height: none;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.cselect-options {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-bottom: 5px;
+}
+
+.cselect-search {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fcfcfa;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cselect-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.1);
+}
+
+/* 自定义输入项 */
+.cselect-custom {
+  color: var(--accent) !important;
+}
+
+.cselect-custom b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* 未输入时隐藏自定义项（防止 flex 覆盖 hidden） */
+.cselect-custom[hidden] {
+  display: none;
+}
+
 .cselect-menu li:hover,
 .cselect-menu li.active {
   background: var(--accent-soft);
