@@ -310,21 +310,41 @@ fieldset + fieldset {
 
 /* ---------- 出生日期三下拉 ---------- */
 .birth-selects {
-  display: flex;
-  gap: 0.6rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr; /* 年占一半，月/日各四分之一 */
+  gap: 0.5rem;
 }
 
 .birth-selects .cselect {
-  flex: 1;
   min-width: 0;
 }
 
 .birth-selects .cselect-trigger {
   justify-content: center;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+}
+
+.birth-selects .cselect-value {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .birth-selects .cselect-caret {
-  margin-left: 0.45rem;
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+}
+
+/* 极窄屏幕：年独占一行，月/日各半行 */
+@media (max-width: 480px) {
+  .birth-selects {
+    grid-template-columns: 1fr 1fr;
+  }
+  .birth-selects .cselect:first-child {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ---------- 自定义下拉组件 ---------- */
