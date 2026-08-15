@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CaseRecord · 病例档案</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page">
+    <a class="back" href="index.html">← 返回首页</a>
+    <header>
+      <div class="brand">CaseRecord · 病例档案</div>
+      <h1>建立患者档案</h1>
+      <p class="sub">填写患者基本信息，档案将保存在本机浏览器中。</p>
+    </header>
+
+    <form id="profile-form" class="card" novalidate>
+      <!-- 基本信息 -->
+      <fieldset>
+        <div class="group-title">基本信息</div>
+        <div class="grid">
+          <div class="field">
+            <label for="name" class="required">姓名</label>
+            <input type="text" id="name" name="name" placeholder="患者姓名" autocomplete="name">
+          </div>
+          <div class="field">
+            <label class="required">性别</label>
+            <div class="segmented">
+              <input type="radio" name="gender" id="gender-male" value="男" hidden>
+              <label for="gender-male">男</label>
+              <input type="radio" name="gender" id="gender-female" value="女" hidden>
+              <label for="gender-female">女</label>
+            </div>
+          </div>
+          <div class="field span-2">
+            <label class="required">出生日期</label>
+            <div class="birth-selects">
+              <select id="birth-year" name="birth-year" aria-label="出生年"></select>
+              <select id="birth-month" name="birth-month" aria-label="出生月"></select>
+              <select id="birth-day" name="birth-day" aria-label="出生日"></select>
+            </div>
+            <small class="hint" id="age-hint"></small>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 体征信息 -->
+      <fieldset>
+        <div class="group-title">体征信息</div>
+        <div class="grid grid-3">
+          <div class="field">
+            <label for="blood">血型</label>
+            <select id="blood" name="blood">
+              <option value="未知">未知</option>
+              <option value="A">A 型</option>
+              <option value="B">B 型</option>
+              <option value="AB">AB 型</option>
+              <option value="O">O 型</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="height">身高（cm）</label>
+            <input type="number" id="height" name="height" min="40" max="250" placeholder="选填">
+          </div>
+          <div class="field">
+            <label for="weight">体重（kg）</label>
+            <input type="number" id="weight" name="weight" min="1" max="300" placeholder="选填">
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 病史信息 -->
+      <fieldset>
+        <div class="group-title">病史信息</div>
+        <div class="grid">
+          <div class="field span-2">
+            <label for="history">既往病史</label>
+            <textarea id="history" name="history" rows="3" placeholder="选填，如：高血压、糖尿病等"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="allergy">过敏史</label>
+            <textarea id="allergy" name="allergy" rows="2" placeholder="选填，如：青霉素过敏"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="notes">备注</label>
+            <textarea id="notes" name="notes" rows="2" placeholder="选填，其他需要说明的信息"></textarea>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="submit-row">
+        <button type="submit" class="btn-submit" id="btn-submit">保存档案</button>
+      </div>
+    </form>
+
+    <!-- 已保存档案摘要 -->
+    <section class="summary" id="saved-summary" hidden>
+      <div>
+        <div class="summary-label">当前本地档案</div>
+        <div class="summary-meta" id="summary-meta"></div>
+      </div>
+      <button type="button" class="clear" id="btn-clear">清除本地档案</button>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
