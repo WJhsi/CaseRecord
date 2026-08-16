@@ -356,6 +356,10 @@
         showRecogStatus(parts.join("，"));
         parseResult.placeholder = "识别完成，点击「AI 解析」生成解析…";
         aiHint.textContent = "识别完成，未保存";
+        // 检验报告：识别完成后自动提取检验项目表格
+        if (!isCheckReport) {
+          extractLabTable();
+        }
       })
       .catch(function (err) {
         recognitionBusy = false;
@@ -365,14 +369,128 @@
       });
   }
 
-  /* ---------- AI 解析（文本模型基于识别文字） ---------- */
+  /* ---------- 检验报告：从识别文字提取检验项目表格 ---------- */
+
+  var labBlock = document.getElementById("lab-table-block");
+  var labTbody = document.getElementById("lab-tbody");
+  var addRowBtn = document.getElementById("btn-add-row");
+  var labRows = []; // [{name, value, unit, range}]
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderLabTable(rows) {
+    labRows = rows;
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i] || {};
+      html +=
+        "<tr>" +
+        '<td><input type="text" class="lab-input lab-name" data-i="' + i + '" value="' + esc(r.name || "") + '" placeholder="项目"></td>' +
+        '<td><input type="text" class="lab-input lab-value" data-i="' + i + '" value="' + esc(r.value || "") + '" placeholder="结果"></td>' +
+        '<td><input type="text" class="lab-input lab-unit" data-i="' + i + '" value="' + esc(r.unit || "") + '" placeholder="单位"></td>' +
+        '<td><input type="text" class="lab-input lab-range" data-i="' + i + '" value="' + esc(r.range || "") + '" placeholder="参考范围"></td>' +
+        "</tr>";
+    }
+    labTbody.innerHTML = html;
+    labBlock.hidden = rows.length === 0;
+  }
+
+  // 读取表格当前值
+  function collectLabRows() {
+    var rows = [];
+    var inputs = labTbody.querySelectorAll("tr");
+    for (var i = 0; i < inputs.length; i++) {
+      var tr = inputs[i];
+      var name = (tr.querySelector(".lab-name") || {}).value || "";
+      var value = (tr.querySelector(".lab-value") || {}).value || "";
+      var unit = (tr.querySelector(".lab-unit") || {}).value || "";
+      var range = (tr.querySelector(".lab-range") || {}).value || "";
+      if (name || value || range) rows.push({ name: name.trim(), value: value.trim(), unit: unit.trim(), range: range.trim() });
+    }
+    return rows;
+  }
+
+  // 用文本模型把识别文字提取为检验项目 JSON
+  function extractLabTable() {
+    if (aiBusy || !recognizedText.trim()) return;
+    lockButton(btnParse, "提取检验项目中…");
+
+    readAiConfig()
+      .then(function (cfg) {
+        var parse = cfg.parse;
+        if (!parse || !parse.base || !parse.key || !parse.model) {
+          throw new Error("尚未配置「解析模型（文本）」，请先到「编辑档案」页填写文本模型的 API 地址、Key 和模型。");
+        }
+        var prompt =
+          "以下是检验报告的识别文字（可能不准确，仅供参考）：\n" +
+          recognizedText +
+          "\n\n请从中提取所有检验项目，输出 JSON 数组，每个元素包含：name（项目名称）、value（结果数值）、unit（单位，没有则为空）、range（参考范围，没有则为空）。\n" +
+          "要求：\n" +
+          "1. 只输出 JSON 数组，不要任何解释、不要 Markdown 代码块标记；\n" +
+          "2. 只提取明确的检验项目，不要把标题、日期等无关内容当作项目；\n" +
+          "3. 看不清楚或缺失的字段用空字符串。";
+        return callAiText(parse, prompt);
+      })
+      .then(function (result) {
+        stopAiTimer();
+        var rows = [];
+        try {
+          var t = result.text.replace(/```json|```/g, "").trim();
+          var arr = JSON.parse(t);
+          if (Array.isArray(arr)) {
+            rows = arr
+              .filter(function (it) {
+                return it && (it.name || it.value);
+              })
+              .map(function (it) {
+                return {
+                  name: String(it.name || "").trim(),
+                  value: String(it.value || "").trim(),
+                  unit: String(it.unit || "").trim(),
+                  range: String(it.range || "").trim()
+                };
+              });
+          }
+        } catch (e) {
+          /* JSON 解析失败则保留空表 */
+        }
+        renderLabTable(rows);
+        showRecogStatus(rows.length ? "检验项目已提取：共 " + rows.length + " 项，可修改后点击「AI 解析」。" : "识别完成，但未能提取出检验项目，可手动添加后解析。");
+        aiHint.textContent = "识别完成，未保存";
+      })
+      .catch(function (err) {
+        stopAiTimer();
+        showRecogStatus("检验项目提取失败：" + String(err && err.message ? err.message : err), true);
+      })
+      .finally(function () {
+        finishButton(btnParse);
+      });
+  }
+
+  // 添加一行空项目
+  if (addRowBtn) {
+    addRowBtn.addEventListener("click", function () {
+      var rows = collectLabRows();
+      rows.push({ name: "", value: "", unit: "", range: "" });
+      renderLabTable(rows);
+      labBlock.hidden = false;
+    });
+  }
+
+  /* ---------- AI 解析（文本模型） ---------- */
 
   function buildParsePrompt() {
-    var text = recognizedText.trim();
     if (isCheckReport) {
       return (
         "你是一位专业的医学影像科医生。以下是检查报告的识别文字（可能不准确，仅供参考）：\n" +
-        text +
+        recognizedText.trim() +
         "\n\n请解析，要求：\n" +
         "1. 先分「影像表现」和「影像判断」两段，照实转写报告中的描述与结论；\n" +
         "2. 再简要解读：指出异常或需要关注的地方，给出就医或复查建议；\n" +
@@ -381,14 +499,20 @@
         "5. 控制在 300～500 字。"
       );
     }
+    // 检验报告：用表格（含用户修改）作为解析依据
+    var tableText = collectLabRows()
+      .map(function (r) {
+        return (r.name || "?") + "：" + (r.value || "?") + (r.unit ? " " + r.unit : "") + (r.range ? "（参考 " + r.range + "）" : "");
+      })
+      .join("\n");
     return (
-      "你是一位专业的检验科医生。以下是检验报告的识别文字（可能不准确，仅供参考）：\n" +
-      text +
+      "你是一位专业的检验科医生。以下是检验报告的项目（识别提取，可能不准确，仅供参考）：\n" +
+      tableText +
       "\n\n请解析，要求：\n" +
-      "1. 照实转写各项检验项目、结果、单位、参考范围，并判断每项是否正常（偏高/偏低/正常）；\n" +
+      "1. 逐项判断是否正常（偏高/偏低/正常），结合参考范围；\n" +
       "2. 简要解读异常项目可能提示的情况，给出就医或复查建议；\n" +
       "3. 不要使用 Markdown 符号（不要用 # * - 等）；\n" +
-      "4. 只依据识别文字内容，不要虚构；\n" +
+      "4. 只依据上面给出的信息，不要虚构；\n" +
       "5. 控制在 300～500 字。"
     );
   }

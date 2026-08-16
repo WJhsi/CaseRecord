@@ -31,7 +31,7 @@
         <div id="report-content"></div>
       </div>
 
-      <!-- 右栏：进入即自动识别（视觉模型看原图）+ AI 解析（文本模型） -->
+      <!-- 右栏：进入即自动识别（视觉模型看原图）+ 检验项目表格 + AI 解析 -->
       <div class="report-right">
         <div class="ai-parse">
           <div class="section-title-row">
@@ -41,9 +41,30 @@
               <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
             </div>
           </div>
-          <p class="case-note-tip">进入页面后自动调用视觉模型识别报告原图文字；再点「AI 解析」由文本模型基于识别文字解析。结果仅本次展示、不保存。</p>
+          <p class="case-note-tip" id="ai-tip">进入页面后自动调用视觉模型识别报告原图文字；再点「AI 解析」由文本模型基于识别文字解析。结果仅本次展示、不保存。</p>
 
           <div class="ai-recog-status" id="ai-recog-status" hidden></div>
+
+          <!-- 检验报告：识别文字 → 提取检验项目表格 -->
+          <div id="lab-table-block" hidden>
+            <div class="ocr-text-title">检验项目 <span class="ocr-check-tag">由识别文字自动提取，可修改</span></div>
+            <div class="lab-table-scroll">
+              <table class="lab-table">
+                <thead>
+                  <tr>
+                    <th style="width:34%">项目</th>
+                    <th style="width:22%">结果</th>
+                    <th style="width:16%">单位</th>
+                    <th style="width:28%">参考范围</th>
+                  </tr>
+                </thead>
+                <tbody id="lab-tbody"></tbody>
+              </table>
+            </div>
+            <div class="lab-table-actions">
+              <button type="button" class="btn-rerun" id="btn-add-row">＋ 添加项目</button>
+            </div>
+          </div>
 
           <div class="ocr-text-title">AI 解析 <span class="ocr-check-tag">文本模型基于识别文字</span></div>
           <textarea id="ai-parse-result" rows="12" readonly placeholder="正在自动识别报告文字…识别完成后点击「AI 解析」"></textarea>

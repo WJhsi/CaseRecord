@@ -1515,6 +1515,71 @@ a.btn-add {
   border: 1px solid rgba(185, 28, 28, 0.3);
 }
 
+/* 检验项目表格 */
+#lab-table-block {
+  margin-bottom: 1.2rem;
+}
+
+.lab-table-scroll {
+  max-height: 45vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.lab-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.lab-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--accent-soft);
+  color: var(--ink);
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--line);
+  z-index: 1;
+}
+
+.lab-table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.lab-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 30px;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--ink);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.lab-input:hover {
+  background: #f5f4f1;
+}
+
+.lab-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.lab-table-actions {
+  margin-top: 0.6rem;
+}
+
 .ocr-check-col textarea {
   width: 100%;
   box-sizing: border-box;
