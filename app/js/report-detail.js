@@ -93,6 +93,7 @@
   var ocrTbody = document.getElementById("ocr-tbody");
   var ocrTextWrap = document.getElementById("ocr-text-wrap");
   var ocrTextarea = document.getElementById("ocr-textarea");
+  var ocrImpression = document.getElementById("ocr-impression");
   var ocrRawWrap = document.getElementById("ocr-raw-wrap");
   var ocrRaw = document.getElementById("ocr-raw");
 
@@ -177,11 +178,11 @@
         }
         ocrRaw.textContent = text;
         if (isCheckReport) {
-          // 检查报告：识别整段文字，填入文本框（自动模式只读）
+          // 检查报告：识别整段文字，填入「影像表现」（自动模式只读）；影像判断手动填写、不识别
           ocrTextarea.value = text;
           ocrTextarea.readOnly = currentMode === "auto";
-          autoSaveOcrText(text);
-          showOcrStatus("识别完成，报告文字已填入并自动保存到本地（下次打开直接显示），可切换手动输入修改后再次保存。");
+          autoSaveOcrText(text, ocrImpression.value);
+          showOcrStatus("识别完成，影像表现已填入并自动保存到本地，可切换手动输入修改；影像判断请手动填写后保存。");
         } else {
           var parsed = parseLabReport(text);
           rowsData = rowsFromMap(parsed);
@@ -452,10 +453,14 @@
     }
   }
 
-  // 检查报告：自动保存整段文字
-  function autoSaveOcrText(text) {
-    if (!text || !String(text).trim()) return;
-    img.ocr = { text: String(text).trim(), savedAt: new Date().toISOString() };
+  // 检查报告：自动保存影像表现 + 影像判断
+  function autoSaveOcrText(text, impression) {
+    if (!text && !impression) return;
+    img.ocr = {
+      text: text ? String(text).trim() : "",
+      impression: impression ? String(impression).trim() : "",
+      savedAt: new Date().toISOString()
+    };
     var list = readCases();
     for (var j = 0; j < list.length; j++) {
       if (String(list[j].id) === String(c.id) && list[j].images && list[j].images[idx]) {
@@ -509,16 +514,16 @@
   function switchMode(mode) {
     if (mode === currentMode) return;
     if (isCheckReport) {
-      // 检查报告：仅切换文本框只读状态
+      // 检查报告：仅切换「影像表现」只读状态；「影像判断」始终可手动编辑
       currentMode = mode;
       document.getElementById("mode-auto").classList.toggle("active", mode === "auto");
       document.getElementById("mode-manual").classList.toggle("active", mode === "manual");
       document.getElementById("ocr-mode").classList.toggle("manual", mode === "manual"); // 滑块滑动
       ocrTextarea.readOnly = mode === "auto";
       if (mode === "manual") {
-        showOcrStatus("手动输入模式：可直接编辑报告文字，修改后点击保存。");
+        showOcrStatus("手动输入模式：可编辑影像表现与影像判断，修改后点击保存。");
       } else {
-        showOcrStatus("自动输入模式：显示识别结果，可切换手动输入修改。");
+        showOcrStatus("自动输入模式：影像表现显示识别结果，影像判断可随时手动填写。");
       }
       return;
     }
@@ -583,15 +588,16 @@
     }
   });
 
-  // 检查报告：保存 / 重新识别整段文字
+  // 检查报告：保存 / 重新识别影像表现（影像判断手动填写，一并保存）
   saveTextBtn.addEventListener("click", function () {
     var text = ocrTextarea.value.trim();
-    if (!text) {
-      showOcrStatus("请先填写或识别出报告文字后再保存。", true);
+    var impression = ocrImpression.value.trim();
+    if (!text && !impression) {
+      showOcrStatus("请先填写或识别出影像表现后再保存。", true);
       return;
     }
-    autoSaveOcrText(text);
-    showOcrStatus("报告文字已保存 ✓ 刷新后仍保留，可继续修改。");
+    autoSaveOcrText(text, impression);
+    showOcrStatus("影像表现与影像判断已保存 ✓ 刷新后仍保留，可继续修改。");
   });
 
   rerunTextBtn.addEventListener("click", function () {
@@ -607,13 +613,16 @@
   if (isCheckReport) {
     ocrTableWrap.hidden = true;
     ocrTextWrap.hidden = false;
-    var savedText = img.ocr && img.ocr.text;
-    if (savedText) {
-      ocrTextarea.value = savedText;
+    var savedOcrText = img.ocr && img.ocr.text;
+    if (savedOcrText) {
+      ocrTextarea.value = savedOcrText;
+      ocrTextarea.readOnly = currentMode === "auto";
+      ocrImpression.value = (img.ocr && img.ocr.impression) || "";
       var savedAt = img.ocr.savedAt ? "（" + new Date(img.ocr.savedAt).toLocaleString("zh-CN") + "）" : "";
-      showOcrStatus("已载入上次保存的报告文字" + savedAt + "，可切换手动输入修改。");
+      showOcrStatus("已载入上次保存的影像表现与影像判断" + savedAt + "，可切换手动输入修改。");
     } else {
       ocrTextarea.value = "";
+      ocrImpression.value = "";
       startAutoOcr();
     }
   } else {

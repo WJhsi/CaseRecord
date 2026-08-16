@@ -64,9 +64,18 @@
             </div>
           </div>
 
-          <!-- 检查报告：整段文字（自动模式只读 / 手动模式可编辑） -->
+          <!-- 检查报告：影像表现（OCR）+ 影像判断（手动填写，不识别） -->
           <div id="ocr-text-wrap" hidden>
-            <textarea id="ocr-textarea" rows="12" placeholder="识别出的报告文字将显示在这里，可切换「手动输入」修改…"></textarea>
+            <div class="ocr-check-cols">
+              <div class="ocr-check-col">
+                <div class="ocr-check-title">影像表现 <span class="ocr-check-tag">OCR 识别</span></div>
+                <textarea id="ocr-textarea" rows="12" placeholder="由 OCR 自动识别的影像表现文字，可切换「手动输入」修改…"></textarea>
+              </div>
+              <div class="ocr-check-col">
+                <div class="ocr-check-title">影像判断 <span class="ocr-check-tag">手动填写</span></div>
+                <textarea id="ocr-impression" rows="12" placeholder="影像判断/结论，手动填写，不做 OCR 识别…"></textarea>
+              </div>
+            </div>
             <div class="ocr-actions">
               <button type="button" class="btn-save-ocr" id="ocr-save-text">保存识别结果</button>
               <button type="button" class="btn-rerun" id="ocr-rerun-text">重新识别</button>

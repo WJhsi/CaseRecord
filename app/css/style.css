@@ -1395,14 +1395,46 @@ a.btn-add {
   overflow-y: auto;
 }
 
-/* 检查报告：整段文字识别框 */
+/* 检查报告：影像表现（OCR）+ 影像判断（手动）两栏 */
 #ocr-text-wrap {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
 }
 
-#ocr-text-wrap textarea {
+.ocr-check-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ocr-check-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ocr-check-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ocr-check-tag {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+}
+
+.ocr-check-col textarea {
   width: 100%;
   box-sizing: border-box;
   min-height: 260px;
@@ -1418,16 +1450,22 @@ a.btn-add {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-#ocr-text-wrap textarea:focus {
+.ocr-check-col textarea:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
 }
 
-#ocr-text-wrap textarea[readonly] {
+.ocr-check-col textarea[readonly] {
   background: #faf9f7;
   color: var(--ink-2, #555);
   cursor: default;
+}
+
+@media (max-width: 900px) {
+  .ocr-check-cols {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ocr-table thead th {
