@@ -139,10 +139,18 @@ python server.py
   <img src="docs/screenshots/06-report-detail.png" width="640" alt="报告详情">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/07-report-parse.png" width="640" alt="检查报告 AI 解析">
+</p>
+
 #### 7. 浅色 / 深色主题
 
 - 各页面右上角太阳 / 月亮按钮一键切换浅色 / 深色，600ms 颜色渐变过渡；
 - 选择自动记忆，下次打开保持；页面渲染前应用主题，避免闪白。
+
+<p align="center">
+  <img src="docs/screenshots/08-theme-dark.png" width="640" alt="深色主题">
+</p>
 
 ### 注意事项
 
@@ -290,10 +298,18 @@ Two-column layout: title and entry buttons on the left, a landscape photo on the
   <img src="docs/screenshots/06-report-detail.png" width="640" alt="Report Detail">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/07-report-parse.png" width="640" alt="Examination Report AI Parsing">
+</p>
+
 #### 7. Light / Dark Theme
 
 - Sun / moon buttons on the top-right of every page switch between light and dark with a 600ms color transition;
 - The choice is remembered and applied before rendering to avoid white flashes.
+
+<p align="center">
+  <img src="docs/screenshots/08-theme-dark.png" width="640" alt="Dark Theme">
+</p>
 
 ### Notes
 
