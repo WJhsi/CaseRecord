@@ -53,6 +53,43 @@ html.dark .ocr-raw-details[open] .ocr-raw {
   background: var(--field-bg);
 }
 
+/* 深色模式：按钮 / 切换控件 hover 高亮适配 */
+html.dark .btn-add:hover,
+html.dark .add-med:hover,
+html.dark .btn-edit-detail:hover,
+html.dark .btn-rerun:hover {
+  background: var(--well);
+}
+
+html.dark .btn-danger:hover {
+  background: rgba(224, 106, 92, 0.14);
+}
+
+html.dark .modal-btn-cancel:hover {
+  background: var(--well);
+}
+
+html.dark .cselect-trigger:hover {
+  border-color: var(--line);
+  background: var(--field-bg);
+}
+
+html.dark .segmented label:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .mode-btn:hover {
+  color: #fff;
+}
+
+html.dark .lab-input:hover {
+  background: var(--well);
+}
+
+html.dark .topnav-link:hover {
+  color: #fff;
+}
+
 
 * {
   margin: 0;
@@ -1801,7 +1838,7 @@ a.btn-add {
 }
 
 .lab-input:hover {
-  background: #f5f4f1;
+  background: var(--well, #f5f4f1);
 }
 
 .lab-input:focus {
@@ -2374,7 +2411,7 @@ fieldset + fieldset {
 }
 
 .cselect-trigger:hover {
-  border-color: #d6d3d1;
+  border-color: var(--line-strong, #d6d3d1);
 }
 
 .cselect.open .cselect-trigger,
@@ -2749,15 +2786,19 @@ textarea {
 
 .theme-btn.active {
   color: var(--accent);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.18);
 }
 
-/* 深色模式下：非激活图标淡灰，激活图标亮色更明显 */
+/* 深色模式下：非激活图标淡灰，激活图标白底高亮 */
 .theme-toggle.dark .theme-btn {
   color: rgba(255, 255, 255, 0.45);
 }
 
 .theme-toggle.dark .theme-btn.active {
-  color: #8ad2ab;
+  color: #2f6f4f;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .theme-btn:hover:not(:disabled) {
