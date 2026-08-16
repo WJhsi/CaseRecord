@@ -105,12 +105,13 @@ html.dark .topnav-link:hover {
 html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  background: var(--bg);
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
+  background: transparent; /* 背景由 html 承载，避免遮挡负层辐射圆 */
   color: var(--ink);
   line-height: 1.6;
   min-height: 100vh;

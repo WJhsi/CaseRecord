@@ -19,9 +19,9 @@
     dark: "#151517"
   };
 
-  var REVEAL_MS = 520;
+  var REVEAL_MS = 650;
 
-  // 以药丸中心为圆心，背景层辐射扩散圆（z-index:-1，盖住背景但不盖卡片）
+  // 以药丸中心为圆心，背景层辐射扩散圆（z-index:0，在内容下、html 背景上）
   function revealAndSwitch(theme) {
     var rect = toggle.getBoundingClientRect();
     var cx = rect.left + rect.width / 2;
@@ -34,7 +34,7 @@
     circle.className = "theme-reveal";
     circle.style.cssText =
       "position:fixed;left:0;top:0;width:100vw;height:100vh;" +
-      "z-index:-1;pointer-events:none;" +
+      "z-index:0;pointer-events:none;" +
       "background:" + BG[theme] + ";" +
       "clip-path:circle(0px at " + cx + "px " + cy + "px);" +
       "transition:clip-path " + REVEAL_MS + "ms cubic-bezier(0.4,0,0.2,1);";
