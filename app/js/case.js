@@ -539,34 +539,90 @@
     fileInput.value = ""; // 允许重复选择同一文件
   });
 
-  // 拖拽上传：拖入上传区域高亮，松开后处理文件
+  // 拖拽上传：文件拖入网页 → 全屏深色遮罩提示；拖到上传区域 → 提示可放置；松开 → 处理文件
   var dragDepth = 0;
+  var dragOverUpload = false;
 
   function preventDefaults(e) {
     e.preventDefault();
     e.stopPropagation();
   }
 
+  // 判断拖拽内容是否包含文件
+  function hasFiles(e) {
+    var dt = e.dataTransfer;
+    return !!dt && Array.prototype.indexOf.call(dt.types || [], "Files") !== -1;
+  }
+
+  // 全屏拖拽遮罩（深色 + 提示）
+  var dropOverlay = document.createElement("div");
+  dropOverlay.className = "drop-overlay";
+  dropOverlay.innerHTML =
+    '<div class="drop-overlay-box">' +
+    '<div class="drop-overlay-icon">📄</div>' +
+    '<div class="drop-overlay-title">松开即可上传报告文件</div>' +
+    '<div class="drop-overlay-sub">支持 jpg / png / webp / gif / pdf，单个不超过 2MB</div>' +
+    "</div>";
+  document.body.appendChild(dropOverlay);
+
+  // 文件拖入页面：显示遮罩（dragover 冒泡无法可靠计数，用 depth 计数 dragenter/dragleave）
+  document.addEventListener("dragenter", function (e) {
+    preventDefaults(e);
+    if (!hasFiles(e)) return;
+    dragDepth++;
+    dropOverlay.classList.add("show");
+  });
+
+  document.addEventListener("dragover", function (e) {
+    preventDefaults(e);
+  });
+
+  document.addEventListener("dragleave", function (e) {
+    preventDefaults(e);
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0 && !dragOverUpload) {
+      dropOverlay.classList.remove("show");
+    }
+  });
+
+  // 拖到上传区域：遮罩提示"可放置"，高亮按钮
   ["dragenter", "dragover"].forEach(function (evt) {
     uploadTrigger.addEventListener(evt, function (e) {
       preventDefaults(e);
+      dragOverUpload = true;
       uploadTrigger.classList.add("drag-over");
+      dropOverlay.classList.add("over-upload");
     });
   });
 
   ["dragleave", "dragend"].forEach(function (evt) {
     uploadTrigger.addEventListener(evt, function (e) {
       preventDefaults(e);
+      dragOverUpload = false;
       uploadTrigger.classList.remove("drag-over");
+      dropOverlay.classList.remove("over-upload");
     });
   });
 
   uploadTrigger.addEventListener("drop", function (e) {
     preventDefaults(e);
+    dragOverUpload = false;
     uploadTrigger.classList.remove("drag-over");
+    dropOverlay.classList.remove("over-upload");
+    dropOverlay.classList.remove("show");
+    dragDepth = 0;
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
       handleFiles(e.dataTransfer.files);
     }
+  });
+
+  // 松在页面其他位置：移除遮罩
+  document.addEventListener("drop", function (e) {
+    preventDefaults(e);
+    dragDepth = 0;
+    dragOverUpload = false;
+    dropOverlay.classList.remove("over-upload");
+    dropOverlay.classList.remove("show");
   });
 
   function renderPreview() {

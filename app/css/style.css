@@ -591,6 +591,63 @@ a.btn-add {
   box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
 }
 
+/* ---------- 全屏拖拽遮罩（文件拖入页面时） ---------- */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(21, 21, 23, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: none; /* 不拦截拖拽事件本身 */
+}
+
+.drop-overlay.show {
+  display: flex;
+}
+
+.drop-overlay-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.2rem 3rem;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: center;
+}
+
+.drop-overlay-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.drop-overlay-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.drop-overlay-sub {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* 拖到上传区域：提示变绿高亮 */
+.drop-overlay.over-upload .drop-overlay-box {
+  border-color: var(--accent);
+  background: rgba(47, 111, 79, 0.28);
+}
+
+.drop-overlay.over-upload .drop-overlay-title {
+  color: #8ad2ab;
+}
+
 .upload-preview {
   display: flex;
   flex-direction: column;
