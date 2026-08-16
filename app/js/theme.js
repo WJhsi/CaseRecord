@@ -1,6 +1,6 @@
 /* ==========================================================
    CaseRecord · 主题切换（浅色 / 深色）
-   切换效果：以药丸为中心，圆圈只在背景层辐射扩散（不盖住卡片）
+   切换效果：背景与全页面颜色平滑渐变过渡
    滑块滑动、按钮高亮、选择记忆、防闪白
    ========================================================== */
 (function () {
@@ -13,62 +13,112 @@
   var buttons = toggle.querySelectorAll(".theme-btn");
   var slider = toggle.querySelector(".theme-slider");
 
-  // 两套主题的背景色（辐射圆的颜色，与 CSS 定义一致）
-  var BG = {
-    light: "#f6f5f2",
-    dark: "#151517"
+  // 两套主题的颜色变量（与 CSS 中定义一致）
+  var THEMES = {
+    light: {
+      "--bg": "#f6f5f2",
+      "--card": "#ffffff",
+      "--ink": "#1c1917",
+      "--ink-2": "#79716b",
+      "--ink-3": "#a8a29e",
+      "--line": "#e7e5e4",
+      "--accent": "#2f6f4f",
+      "--accent-deep": "#20533a",
+      "--accent-soft": "#e9f2ec",
+      "--danger": "#b91c1c",
+      "--field-bg": "#fcfcfa",
+      "--well": "#f1f0ed",
+      "--field-focus": "#ffffff",
+      "--scroll-thumb": "#d4d2ce",
+      "--scroll-thumb-hover": "#b8b5b0"
+    },
+    dark: {
+      "--bg": "#151517",
+      "--card": "#1b1b1c",
+      "--ink": "#e8e8ea",
+      "--ink-2": "#9a9a9f",
+      "--ink-3": "#6b6b70",
+      "--line": "#333336",
+      "--accent": "#6fbf96",
+      "--accent-deep": "#8ad2ab",
+      "--accent-soft": "#223a2d",
+      "--danger": "#e06a5c",
+      "--field-bg": "#1f1f21",
+      "--well": "#242426",
+      "--field-focus": "#262629",
+      "--scroll-thumb": "#3a3a3d",
+      "--scroll-thumb-hover": "#4a4a4e"
+    }
   };
 
-  var REVEAL_MS = 650;
+  var COLOR_KEYS = Object.keys(THEMES.light);
+  var DURATION = 600;
 
-  // 以药丸中心为圆心，圆辐射扩散（盖住内容，扩散明显）
-  // 扩散接近覆盖屏幕时圆半透明淡出，卡片在圆下渐变，避免"满屏纯色"突兀
-  function revealAndSwitch(theme) {
-    var rect = toggle.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    var w = Math.max(cx, window.innerWidth - cx);
-    var h = Math.max(cy, window.innerHeight - cy);
-    var r = Math.sqrt(w * w + h * h) + 20;
+  // hex → [r,g,b]
+  function hexToRgb(hex) {
+    var h = hex.replace("#", "");
+    if (h.length === 3) {
+      h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    }
+    return [
+      parseInt(h.slice(0, 2), 16),
+      parseInt(h.slice(2, 4), 16),
+      parseInt(h.slice(4, 6), 16)
+    ];
+  }
 
+  function rgbStr(rgb) {
+    return "rgb(" + Math.round(rgb[0]) + ", " + Math.round(rgb[1]) + ", " + Math.round(rgb[2]) + ")";
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  // 主题颜色渐变动画
+  function animateTheme(from, to) {
+    var start = null;
+    var fromColors = THEMES[from];
+    var toColors = THEMES[to];
     var root = document.documentElement;
-    // 记录并锁定当前背景色（避免 html.dark 切换导致背景整体渐变）
-    var oldBg = getComputedStyle(root).backgroundColor;
-    root.style.backgroundColor = oldBg;
 
-    var circle = document.createElement("div");
-    circle.className = "theme-reveal";
-    circle.style.cssText =
-      "position:fixed;left:0;top:0;width:100vw;height:100vh;" +
-      "z-index:9998;pointer-events:none;" +
-      "background:" + BG[theme] + ";" +
-      "clip-path:circle(0px at " + cx + "px " + cy + "px);" +
-      "transition:clip-path " + REVEAL_MS + "ms cubic-bezier(0.4,0,0.2,1), opacity 300ms ease;";
-    document.body.appendChild(circle);
+    // 立即用起始色覆盖（防止先闪到目标色）
+    COLOR_KEYS.forEach(function (key) {
+      var rgb = hexToRgb(fromColors[key]);
+      root.style.setProperty(key, rgbStr(rgb));
+    });
 
-    // 启用全局颜色过渡（卡片/文字/边框在圆下同步渐变）
-    root.classList.add("theme-transitioning");
+    function frame(ts) {
+      if (start === null) start = ts;
+      var t = Math.min(1, (ts - start) / DURATION);
+      // ease-in-out
+      var e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-    // 强制回流后触发扩散，同时切换主题类（卡片渐变与圆扩散同步）
-    void circle.offsetWidth;
-    circle.style.clipPath = "circle(" + r + "px at " + cx + "px " + cy + "px)";
-    root.classList.toggle("dark", theme === "dark");
+      COLOR_KEYS.forEach(function (key) {
+        var fromRgb = hexToRgb(fromColors[key]);
+        var toRgb = hexToRgb(toColors[key]);
+        root.style.setProperty(
+          key,
+          rgbStr([lerp(fromRgb[0], toRgb[0], e), lerp(fromRgb[1], toRgb[1], e), lerp(fromRgb[2], toRgb[2], e)])
+        );
+      });
 
-    // 圆接近覆盖屏幕时淡出（避免满屏纯色突兀）
-    setTimeout(function () {
-      circle.style.opacity = "0";
-    }, REVEAL_MS - 260);
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        // 动画结束：移除内联变量，让 CSS 规则（html.dark）接管最终值
+        COLOR_KEYS.forEach(function (key) {
+          root.style.removeProperty(key);
+        });
+      }
+    }
 
-    // 动画结束：解锁背景、移除圆（露出已渐变的新主题）、关闭全局过渡
-    setTimeout(function () {
-      root.style.backgroundColor = "";
-      circle.remove();
-      root.classList.remove("theme-transitioning");
-    }, REVEAL_MS + 120);
+    requestAnimationFrame(frame);
   }
 
   function apply(theme, animate) {
     var dark = theme === "dark";
+    var prevTheme = toggle.classList.contains("dark") ? "dark" : "light";
 
     // 滑块 + 按钮高亮（立即）
     toggle.classList.toggle("dark", dark);
@@ -76,6 +126,7 @@
       var active = btn.getAttribute("data-theme") === theme;
       btn.classList.toggle("active", active);
     });
+    document.documentElement.classList.toggle("dark", dark);
 
     // 滑块位置（JS 像素控制）
     if (slider) {
@@ -89,12 +140,9 @@
       slider.style.transform = "translateX(" + target + "px)";
     }
 
-    // 用户点击切换：背景层辐射扩散，扩散完成后再切换 html.dark
-    if (animate) {
-      revealAndSwitch(theme);
-    } else {
-      // 首屏按记忆加载：无动画，直接应用（head 脚本已设 html.dark 防闪白）
-      document.documentElement.classList.toggle("dark", dark);
+    // 颜色渐变：从旧主题过渡到新主题（用户点击时；首屏加载不动画）
+    if (animate && prevTheme !== theme) {
+      animateTheme(prevTheme, theme);
     }
   }
 

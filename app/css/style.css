@@ -2895,28 +2895,6 @@ html.dark {
   --scroll-track: transparent;
 }
 
-/* 主题切换期间：全局颜色过渡（卡片/文字/边框随圆扩散同步变色，背景由圆控制不渐变） */
-html.theme-transitioning *,
-html.theme-transitioning *::before,
-html.theme-transitioning *::after {
-  transition: background-color 0.6s ease, color 0.6s ease,
-    border-color 0.6s ease, box-shadow 0.6s ease !important;
-}
-
-/* 排除 html 自身背景（背景由圆扩散控制，不做渐变）与主题切换按钮/滑块 */
-html.theme-transitioning,
-html.theme-transitioning .theme-toggle,
-html.theme-transitioning .theme-toggle * {
-  transition: none !important;
-}
-
-/* 滚动条不参与主题过渡：原生组件即时变色，避免滞后 */
-html.theme-transitioning ::-webkit-scrollbar,
-html.theme-transitioning ::-webkit-scrollbar-thumb,
-html.theme-transitioning ::-webkit-scrollbar-track {
-  transition: none !important;
-}
-
 
 
 
