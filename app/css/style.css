@@ -2855,7 +2855,7 @@ textarea {
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #9e9c98 transparent;
+  scrollbar-color: #b5b3b0 transparent;
 }
 
 /* WebKit / Chromium / Edge */
@@ -2869,14 +2869,14 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #9e9c98;
+  background: #b5b3b0;
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b5b3b0;
+  background: #9e9c98;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
