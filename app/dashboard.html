@@ -83,11 +83,10 @@
         <span class="section-title">病例说明</span>
         <button type="button" class="btn-ai-note" id="btn-ai-note">✦ AI 生成说明</button>
       </div>
-      <p class="case-note-tip">针对已有病例的整体说明，可手动编写，也可让 AI 根据全部病例自动生成。</p>
-      <textarea id="case-note-input" rows="6" placeholder="在此填写对已有病例的说明…"></textarea>
+      <p class="case-note-tip">由 AI 根据全部病例自动生成的整体说明，生成后自动保存，不可手动修改。</p>
+      <textarea id="case-note-input" rows="6" readonly placeholder="点击「AI 生成说明」，AI 将根据全部病例自动生成说明…"></textarea>
       <div class="case-note-foot">
         <span class="case-note-hint" id="case-note-hint"></span>
-        <button type="button" class="btn-save-note" id="btn-save-note">保存说明</button>
       </div>
     </section>
 

@@ -156,29 +156,19 @@
 
   var noteInput = document.getElementById("case-note-input");
   var noteHint = document.getElementById("case-note-hint");
-  var noteSaveBtn = document.getElementById("btn-save-note");
   var noteAiBtn = document.getElementById("btn-ai-note");
 
-  // 回填已保存的说明
+  // 回填已保存的说明（只读展示，不可手动修改）
   try {
     var savedNote = localStorage.getItem(NOTE_KEY);
     if (savedNote) {
       noteInput.value = savedNote;
-      noteHint.textContent = "已保存";
+      var savedTime = localStorage.getItem(NOTE_KEY + ".time");
+      noteHint.textContent = savedTime ? "上次生成 " + savedTime : "已生成";
     }
   } catch (e) {
     /* ignore */
   }
-
-  noteSaveBtn.addEventListener("click", function () {
-    try {
-      localStorage.setItem(NOTE_KEY, noteInput.value);
-      noteHint.textContent = "已保存 " + new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
-      showToast("病例说明已保存 ✓");
-    } catch (e) {
-      showToast("保存失败", "err");
-    }
-  });
 
   /* ---------- AI 生成说明 ---------- */
 
@@ -288,8 +278,15 @@
       })
       .then(function (text) {
         noteInput.value = text;
-        noteHint.textContent = "AI 已生成，可修改后保存";
-        showToast("AI 说明已生成 ✓");
+        var now = new Date().toLocaleString("zh-CN");
+        try {
+          localStorage.setItem(NOTE_KEY, text);
+          localStorage.setItem(NOTE_KEY + ".time", now);
+        } catch (e) {
+          /* ignore */
+        }
+        noteHint.textContent = "已自动保存 " + now;
+        showToast("AI 说明已生成并自动保存 ✓");
       })
       .catch(function (err) {
         showAiModal("AI 生成说明失败", String(err && err.message ? err.message : err), true);
