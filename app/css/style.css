@@ -2894,6 +2894,21 @@ html.dark {
   --scroll-track: transparent;
 }
 
+/* 主题切换期间：全局颜色过渡（卡片/背景/文字/边框同步变色，避免割裂） */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.6s ease, color 0.6s ease,
+    border-color 0.6s ease, box-shadow 0.6s ease !important;
+}
+
+/* 排除主题切换按钮与滑块自身（保留其独立动画） */
+html.theme-transitioning .theme-toggle,
+html.theme-transitioning .theme-toggle * {
+  transition: none !important;
+}
+
 
 
 
