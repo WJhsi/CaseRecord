@@ -35,15 +35,15 @@
     var editBtn = $("btn-edit-case");
     if (editBtn) editBtn.href = "case.html?id=" + c.id;
 
-    // 下拉病情类型（可点击跳转丁香园疾病搜索）
+    // 下拉病情类型（可点击跳转百度百科）
     var illnessEl = $("detail-illness");
     if (c.illness && c.illness !== "未分类") {
       var illnessName = escapeHtml(c.illness);
-      var illnessUrl = "https://dxy.com/search?keyword=" + encodeURIComponent(c.illness);
+      var illnessUrl = "https://baike.baidu.com/item/" + encodeURIComponent(c.illness);
       illnessEl.innerHTML =
         '<span class="illness-label">病情类型：</span>' +
         '<a class="illness-link" href="' + illnessUrl +
-        '" target="_blank" rel="noopener" title="在「丁香园」中查询「' + illnessName + '」的疾病信息">' + illnessName + "</a>";
+        '" target="_blank" rel="noopener" title="在「百度百科」中查询「' + illnessName + '」的疾病信息">' + illnessName + "</a>";
       illnessEl.hidden = false;
     }
 
