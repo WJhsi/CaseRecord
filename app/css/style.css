@@ -582,6 +582,15 @@ a.btn-add {
   background: var(--accent-soft);
 }
 
+/* 拖拽文件到上传区域时高亮 */
+.upload-btn.drag-over {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
 .upload-preview {
   display: flex;
   flex-direction: column;

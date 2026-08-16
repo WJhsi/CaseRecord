@@ -496,14 +496,10 @@
   });
   document.getElementById("treatment-slot").appendChild(treatment.root);
 
-  /* ---------- 影像上传 ---------- */
+  /* ---------- 影像上传（点击选择 + 拖拽） ---------- */
 
-  uploadTrigger.addEventListener("click", function () {
-    fileInput.click();
-  });
-
-  fileInput.addEventListener("change", function () {
-    var list = Array.prototype.slice.call(fileInput.files);
+  function handleFiles(fileList) {
+    var list = Array.prototype.slice.call(fileList);
     var added = 0;
     list.forEach(function (f) {
       if (!isAllowed(f)) {
@@ -532,7 +528,45 @@
       added++;
     });
     if (added) showToast("已选择 " + added + " 个文件");
+  }
+
+  uploadTrigger.addEventListener("click", function () {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", function () {
+    handleFiles(fileInput.files);
     fileInput.value = ""; // 允许重复选择同一文件
+  });
+
+  // 拖拽上传：拖入上传区域高亮，松开后处理文件
+  var dragDepth = 0;
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ["dragenter", "dragover"].forEach(function (evt) {
+    uploadTrigger.addEventListener(evt, function (e) {
+      preventDefaults(e);
+      uploadTrigger.classList.add("drag-over");
+    });
+  });
+
+  ["dragleave", "dragend"].forEach(function (evt) {
+    uploadTrigger.addEventListener(evt, function (e) {
+      preventDefaults(e);
+      uploadTrigger.classList.remove("drag-over");
+    });
+  });
+
+  uploadTrigger.addEventListener("drop", function (e) {
+    preventDefaults(e);
+    uploadTrigger.classList.remove("drag-over");
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      handleFiles(e.dataTransfer.files);
+    }
   });
 
   function renderPreview() {
