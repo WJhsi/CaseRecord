@@ -3,9 +3,9 @@ chcp 65001 >nul
 cd /d "%~dp0"
 echo ============================================
 echo  CaseRecord - Local Server
-echo  URL: http://localhost:8080/
+echo  URL: http://localhost:8081/
 echo  Close this window to stop the server.
 echo ============================================
-start "" "http://localhost:8080/"
-python -m http.server -d app 8080
+start "" "http://localhost:8081/"
+python -m http.server -d app 8081
 pause

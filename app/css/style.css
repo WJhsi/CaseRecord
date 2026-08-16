@@ -407,22 +407,75 @@ a.btn-add {
   border-color: var(--danger);
 }
 
-/* ---------- 药物行 ---------- */
-.med-row {
+/* ---------- 药物行（一药一卡，两列并排小方块） ---------- */
+#med-list {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.8rem;
-  align-items: end;
+}
+
+/* 窗口较窄时改为单列，保证用法用量一行放得下 */
+@media (max-width: 1200px) {
+  #med-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.med-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fcfcfa;
+}
+
+.med-row .field:first-child {
+  margin-right: 3rem; /* 给右上角删除按钮留位 */
+}
+
+/* 用法用量四段下拉 */
+.med-usage-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap; /* 强制一行，不换行 */
+}
+
+.med-usage-row .cselect {
+  width: auto;
+}
+
+.med-usage-row .usage-freq {
+  width: 78px;
+}
+
+.med-usage-row .usage-amount {
+  width: 82px;
+}
+
+.med-usage-row .usage-unit {
+  width: 82px;
+}
+
+.med-usage-row .usage-method {
+  width: 122px;
 }
 
 .med-remove {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink-3);
   font-size: 1.1rem;
+  line-height: 1;
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
@@ -447,12 +500,6 @@ a.btn-add {
 
 .add-med:hover {
   background: var(--accent-soft);
-}
-
-@media (max-width: 640px) {
-  .med-row {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ---------- 病例列表 ---------- */

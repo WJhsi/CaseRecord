@@ -513,24 +513,148 @@
 
   /* ---------- 药物行 ---------- */
 
+  // 用法用量四段下拉：一日 X 次 / 每次 X / 单位 / 用法
+  var FREQ_OPTIONS = [
+    { value: "1", label: "1次" },
+    { value: "2", label: "2次" },
+    { value: "3", label: "3次" },
+    { value: "4", label: "4次" }
+  ];
+  var AMOUNT_OPTIONS = [
+    { value: "0.5", label: "0.5" },
+    { value: "1", label: "1" },
+    { value: "1.5", label: "1.5" },
+    { value: "2", label: "2" },
+    { value: "3", label: "3" }
+  ];
+  var UNIT_OPTIONS = [
+    { value: "粒", label: "粒" },
+    { value: "片", label: "片" },
+    { value: "袋", label: "袋" },
+    { value: "支", label: "支" },
+    { value: "ml", label: "ml" },
+    { value: "丸", label: "丸" },
+    { value: "滴", label: "滴" },
+    { value: "包", label: "包" }
+  ];
+  var METHOD_OPTIONS = [
+    { value: "饭后服用", label: "饭后服用" },
+    { value: "饭前服用", label: "饭前服用" },
+    { value: "睡前服用", label: "睡前服用" },
+    { value: "空腹服用", label: "空腹服用" },
+    { value: "随餐服用", label: "随餐服用" },
+    { value: "外用", label: "外用" }
+  ];
+
+  // 解析已保存的用法用量字符串回填到四段
+  function parseUsage(str) {
+    var u = { freq: "", amount: "", unit: "", method: "" };
+    if (!str) return u;
+    var m1 = str.match(/一日(\d+(?:\.\d+)?)次/);
+    if (m1) u.freq = m1[1];
+    var m2 = str.match(/每次(\d+(?:\.\d+)?)/);
+    if (m2) u.amount = m2[1];
+    var m3 = str.match(/每次\d+(?:\.\d+)?(ml|[粒片袋支丸滴包])/);
+    if (m3) u.unit = m3[1];
+    var m4 = str.match(/，([^，]+)$/);
+    if (m4) u.method = m4[1];
+    return u;
+  }
+
+  // 四段组合成用法用量文本
+  function composeUsage(u) {
+    var parts = [];
+    if (u.freq && u.amount && u.unit) {
+      parts.push("一日" + u.freq + "次，每次" + u.amount + u.unit);
+    } else if (u.amount && u.unit) {
+      parts.push("每次" + u.amount + u.unit);
+    } else if (u.freq) {
+      parts.push("一日" + u.freq + "次");
+    }
+    if (u.method) parts.push(u.method);
+    return parts.join("，");
+  }
+
+  function makeUsageSelect(options, cls, value) {
+    var sel = createSelect({
+      placeholder: "选择",
+      options: options,
+      value: value || "",
+      onChange: function () {}
+    });
+    sel.root.classList.add(cls);
+    return sel;
+  }
+
   function addMedRow(name, usage) {
     var row = document.createElement("div");
     row.className = "med-row";
-    row.innerHTML =
-      '<div class="field">' +
+
+    // 药物名称
+    var nameField = document.createElement("div");
+    nameField.className = "field";
+    nameField.innerHTML =
       '<label>药物名称</label>' +
-      '<input type="text" class="med-name" placeholder="如：阿莫西林胶囊" value="' + (name || "") + '">' +
-      "</div>" +
-      '<div class="field">' +
-      "<label>用法用量</label>" +
-      '<input type="text" class="med-usage" placeholder="如：每次1粒，每日3次，饭后" value="' + (usage || "") + '">' +
-      "</div>" +
-      '<button type="button" class="med-remove" title="删除此药物">×</button>';
+      '<input type="text" class="med-name" placeholder="如：阿莫西林胶囊" value="' + (name || "") + '">';
+
+    // 用法用量：一日X次，每次X单位，用法
+    var parsed = parseUsage(usage || "");
+    var freqSel = makeUsageSelect(FREQ_OPTIONS, "usage-freq", parsed.freq);
+    var amountSel = makeUsageSelect(AMOUNT_OPTIONS, "usage-amount", parsed.amount);
+    var unitSel = makeUsageSelect(UNIT_OPTIONS, "usage-unit", parsed.unit);
+    var methodSel = makeUsageSelect(METHOD_OPTIONS, "usage-method", parsed.method);
+
+    var usageField = document.createElement("div");
+    usageField.className = "field";
+    usageField.innerHTML = "<label>用法用量</label>";
+    var usageRow = document.createElement("div");
+    usageRow.className = "med-usage-row";
+    usageRow.appendChild(document.createTextNode("一日"));
+    usageRow.appendChild(freqSel.root);
+    usageRow.appendChild(document.createTextNode("次，每次"));
+    usageRow.appendChild(amountSel.root);
+    usageRow.appendChild(unitSel.root);
+    usageRow.appendChild(document.createTextNode("，"));
+    usageRow.appendChild(methodSel.root);
+    usageField.appendChild(usageRow);
+
+    row._usage = { freq: freqSel, amount: amountSel, unit: unitSel, method: methodSel };
+
+    var removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "med-remove";
+    removeBtn.title = "删除此药物";
+    removeBtn.textContent = "×";
+
+    row.appendChild(nameField);
+    row.appendChild(usageField);
+    row.appendChild(removeBtn);
     medList.appendChild(row);
+  }
+
+  function collectUsage(row) {
+    var u = row._usage;
+    if (!u) return "";
+    return composeUsage({
+      freq: u.freq.getValue(),
+      amount: u.amount.getValue(),
+      unit: u.unit.getValue(),
+      method: u.method.getValue()
+    });
   }
 
   addMedBtn.addEventListener("click", function () {
     addMedRow();
+    // 自动滚动：新行底部超出视口时向下滑动，保证新行可见
+    var rows = medList.querySelectorAll(".med-row");
+    var lastRow = rows[rows.length - 1];
+    if (lastRow) {
+      var rect = lastRow.getBoundingClientRect();
+      var overflow = rect.bottom - (window.innerHeight - 80);
+      if (overflow > 0) {
+        window.scrollBy({ top: overflow + 40, behavior: "smooth" });
+      }
+    }
   });
 
   medList.addEventListener("click", function (e) {
@@ -541,7 +665,12 @@
     } else {
       // 至少保留一行，仅清空内容
       row.querySelector(".med-name").value = "";
-      row.querySelector(".med-usage").value = "";
+      if (row._usage) {
+        row._usage.freq.setValue("");
+        row._usage.amount.setValue("");
+        row._usage.unit.setValue("");
+        row._usage.method.setValue("");
+      }
     }
   });
 
@@ -560,7 +689,7 @@
     var meds = [];
     Array.prototype.forEach.call(medList.querySelectorAll(".med-row"), function (row) {
       var name = row.querySelector(".med-name").value.trim();
-      var usage = row.querySelector(".med-usage").value.trim();
+      var usage = collectUsage(row);
       if (name || usage) meds.push({ name: name, usage: usage });
     });
 
