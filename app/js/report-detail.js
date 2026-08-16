@@ -330,6 +330,27 @@
 
   var recognitionBusy = false;
 
+  // 保存识别文字 + 检验表格到本地（AI 解析结果不保存）
+  function saveOcrData() {
+    img.ocr = {
+      text: recognizedText || "",
+      rows: labRows.length ? labRows : undefined,
+      savedAt: new Date().toISOString()
+    };
+    var list = readCases();
+    for (var j = 0; j < list.length; j++) {
+      if (String(list[j].id) === String(c.id) && list[j].images && list[j].images[idx]) {
+        list[j].images[idx] = img;
+        break;
+      }
+    }
+    try {
+      localStorage.setItem(CASES_KEY, JSON.stringify(list));
+    } catch (e) {
+      /* 存储空间不足时静默失败 */
+    }
+  }
+
   function autoRecognize() {
     if (recognitionBusy) return;
     // PDF 无法作为图片发送
@@ -361,7 +382,8 @@
         }
         showRecogStatus(parts.join("，"));
         parseResult.placeholder = "识别完成，点击「AI 解析」生成解析…";
-        aiHint.textContent = "识别完成，未保存";
+        aiHint.textContent = "识别完成，已保存";
+        saveOcrData();
         // 检验报告：识别完成后自动提取检验项目表格
         if (!isCheckReport) {
           extractLabTable();
@@ -452,7 +474,7 @@
     }
   }
 
-  // 表格输入时实时更新该行状态
+  // 表格输入时实时更新该行状态，并保存到本地
   if (labTbody) {
     labTbody.addEventListener("input", function (e) {
       var tr = e.target.closest("tr");
@@ -471,6 +493,8 @@
         cell.className = "lab-status " + cls;
         cell.textContent = arrow + " " + s;
       }
+      labRows = collectLabRows();
+      saveOcrData();
     });
   }
 
@@ -556,7 +580,9 @@
           if (rows[fi] && (rows[fi].name || rows[fi].value)) filledCount++;
         }
         showRecogStatus(filledCount ? "检验项目已提取：共 " + filledCount + " 项，可修改后点击「AI 解析」。" : "识别完成，但未能提取出检验项目，可手动添加后解析。");
-        aiHint.textContent = "识别完成，未保存";
+        aiHint.textContent = "识别完成，已保存";
+        labRows = collectLabRows();
+        saveOcrData();
       })
       .catch(function (err) {
         stopAiTimer();
@@ -574,6 +600,8 @@
       rows.push({ name: "", value: "", unit: "", range: "" });
       renderLabTable(rows);
       labBlock.hidden = false;
+      labRows = collectLabRows();
+      saveOcrData();
     });
   }
 
@@ -643,9 +671,26 @@
   });
 
   /* ---------- 初始化 ---------- */
-  // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
-  if (!isCheckReport) {
-    showLabTablePlaceholder();
+  // 已有本地保存的识别数据：直接载入，不再识别；否则自动识别
+  var savedOcr = img.ocr || null;
+  if (savedOcr && (savedOcr.text || (savedOcr.rows && savedOcr.rows.length))) {
+    recognizedText = savedOcr.text || "";
+    recognitionDone = !!recognizedText;
+    if (!isCheckReport) {
+      var savedRows = (savedOcr.rows && savedOcr.rows.slice()) || [];
+      while (savedRows.length < 6) savedRows.push({ name: "", value: "", unit: "", range: "" });
+      renderLabTable(savedRows);
+      labBlock.hidden = false;
+    }
+    var savedAtStr = savedOcr.savedAt ? "（" + new Date(savedOcr.savedAt).toLocaleString("zh-CN") + "）" : "";
+    showRecogStatus("已载入上次识别结果" + savedAtStr + "，无需重新识别；可修改表格后点击「AI 解析」。");
+    parseResult.placeholder = "已载入识别结果，点击「AI 解析」生成解析…";
+    aiHint.textContent = "已载入本地识别结果";
+  } else {
+    // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
+    if (!isCheckReport) {
+      showLabTablePlaceholder();
+    }
+    autoRecognize();
   }
-  autoRecognize();
 })();
