@@ -77,6 +77,20 @@
       </div>
     </section>
 
+    <!-- 病例说明 -->
+    <section class="card case-note" id="case-note-section">
+      <div class="section-title-row">
+        <span class="section-title">病例说明</span>
+        <button type="button" class="btn-ai-note" id="btn-ai-note">✦ AI 生成说明</button>
+      </div>
+      <p class="case-note-tip">针对已有病例的整体说明，可手动编写，也可让 AI 根据全部病例自动生成。</p>
+      <textarea id="case-note-input" rows="6" placeholder="在此填写对已有病例的说明…"></textarea>
+      <div class="case-note-foot">
+        <span class="case-note-hint" id="case-note-hint"></span>
+        <button type="button" class="btn-save-note" id="btn-save-note">保存说明</button>
+      </div>
+    </section>
+
     <!-- 添加病例 -->
     <div class="add-case-row">
       <a class="btn-add" href="case.html">＋ 添加病例</a>
@@ -93,6 +107,23 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
+
+  <!-- AI 生成说明结果弹窗（灰色遮罩 + 屏幕上方） -->
+  <div class="modal-mask" id="ai-test-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="AI 生成说明">
+      <div class="modal-head">
+        <div class="modal-title" id="ai-test-title">AI 生成说明</div>
+        <button type="button" class="modal-close" id="ai-test-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-test-box" id="ai-test-box"></div>
+        <div class="ai-test-interpret" id="ai-test-interpret" hidden></div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn-cancel ai-test-ok" id="ai-test-ok">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="js/dashboard.js"></script>
   <script>

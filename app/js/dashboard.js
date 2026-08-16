@@ -147,4 +147,206 @@
   }
 
   renderCases();
+
+  /* ==========================================================
+     病例说明：手动编辑保存 + AI 自动生成
+     ========================================================== */
+
+  var NOTE_KEY = "caseRecord.caseNote";
+
+  var noteInput = document.getElementById("case-note-input");
+  var noteHint = document.getElementById("case-note-hint");
+  var noteSaveBtn = document.getElementById("btn-save-note");
+  var noteAiBtn = document.getElementById("btn-ai-note");
+
+  // 回填已保存的说明
+  try {
+    var savedNote = localStorage.getItem(NOTE_KEY);
+    if (savedNote) {
+      noteInput.value = savedNote;
+      noteHint.textContent = "已保存";
+    }
+  } catch (e) {
+    /* ignore */
+  }
+
+  noteSaveBtn.addEventListener("click", function () {
+    try {
+      localStorage.setItem(NOTE_KEY, noteInput.value);
+      noteHint.textContent = "已保存 " + new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+      showToast("病例说明已保存 ✓");
+    } catch (e) {
+      showToast("保存失败", "err");
+    }
+  });
+
+  /* ---------- AI 生成说明 ---------- */
+
+  // 弹窗（与档案页同款：灰遮罩 + 红框完整报错 + 橙框解读）
+  var aiMask = document.getElementById("ai-test-mask");
+  var aiTitle = document.getElementById("ai-test-title");
+  var aiBox = document.getElementById("ai-test-box");
+  var aiInterpret = document.getElementById("ai-test-interpret");
+
+  function interpretAiError(msg) {
+    msg = String(msg || "");
+    if (/authentication_error|invalid.*api\s*key/i.test(msg) || /401/.test(msg)) {
+      return "API Key 无效或已过期。请到「编辑档案」页检查 Key 是否正确（注意不要有多余空格）。";
+    }
+    if (/404|not found/i.test(msg)) {
+      return "接口地址不正确。请到「编辑档案」页检查 API 地址是否填对（如 https://api.deepseek.com/v1）。";
+    }
+    if (/invalid.*model|model.*not.*exist/i.test(msg)) {
+      return "模型名称不正确。请到「编辑档案」页在下拉中选择正确的模型。";
+    }
+    if (/429|rate\s*limit|too\s*many/i.test(msg)) {
+      return "请求过于频繁（触发限流）。请稍后重试。";
+    }
+    if (/failed\s*to\s*fetch|networkerror|network|ERR_NAME/i.test(msg)) {
+      return "无法连接到该地址。请检查：① 网络是否正常；② API 地址是否填写正确；③ 该平台是否允许浏览器直接调用。";
+    }
+    if (/cors|access-control/i.test(msg)) {
+      return "该平台不允许浏览器跨域调用（CORS）。可换用其他兼容 OpenAI 接口的平台。";
+    }
+    return "生成失败。请检查 API 地址、Key 和模型是否都填写正确。";
+  }
+
+  function showAiModal(title, text, isError) {
+    aiTitle.textContent = title;
+    aiBox.textContent = text;
+    aiBox.className = "ai-test-box" + (isError ? " error" : "");
+    if (isError) {
+      aiInterpret.textContent = interpretAiError(text);
+      aiInterpret.hidden = false;
+    } else {
+      aiInterpret.hidden = true;
+    }
+    aiMask.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeAiModal() {
+    aiMask.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("ai-test-ok").addEventListener("click", closeAiModal);
+  document.getElementById("ai-test-close").addEventListener("click", closeAiModal);
+  aiMask.addEventListener("click", function (e) {
+    if (e.target === aiMask) closeAiModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !aiMask.hidden) closeAiModal();
+  });
+
+  // 将病例整理成 AI 可读的摘要
+  function buildCaseSummary() {
+    var cases = readCases();
+    if (!cases.length) return null;
+    return cases.map(function (c, i) {
+      var d = new Date(c.createdAt);
+      var line = {
+        序号: i + 1,
+        时间: d.toLocaleString("zh-CN"),
+        病情: c.condition || "",
+        报告: (c.images || []).map(function (img) {
+          var ocr = (img.ocr && img.ocr.rows) || [];
+          var ocrText = ocr
+            .map(function (r) {
+              return r.name + " " + (r.value || "") + (r.status ? "（" + r.status + "）" : "");
+            })
+            .join("；");
+          return (img.kind || "报告") + (img.modality ? "（" + img.modality + "）" : "") + (ocrText ? "：" + ocrText : "");
+        }),
+        药物: (c.meds || []).map(function (m) {
+          return m.name + (m.usage ? "（" + m.usage + "）" : "");
+        }),
+        治疗方案: (c.treatment || "") + (c.treatmentNote ? "：" + c.treatmentNote : "")
+      };
+      return line;
+    });
+  }
+
+  noteAiBtn.addEventListener("click", function () {
+    var summary = buildCaseSummary();
+    if (!summary) {
+      showToast("暂无可说明的病例", "err");
+      return;
+    }
+
+    // 读取 AI 配置（本地 JSON）
+    fetch("/api/ai-config")
+      .then(function (res) {
+        if (!res.ok) throw new Error("无法读取 AI 配置（HTTP " + res.status + "）");
+        return res.json();
+      })
+      .then(function (cfg) {
+        if (!cfg || !cfg.base || !cfg.key || !cfg.model) {
+          throw new Error("尚未配置 AI 大模型，请先到「编辑档案」页填写 API 地址、Key 和模型。");
+        }
+        return callAi(cfg, summary);
+      })
+      .then(function (text) {
+        noteInput.value = text;
+        noteHint.textContent = "AI 已生成，可修改后保存";
+        showToast("AI 说明已生成 ✓");
+      })
+      .catch(function (err) {
+        showAiModal("AI 生成说明失败", String(err && err.message ? err.message : err), true);
+      })
+      .finally(function () {
+        noteAiBtn.disabled = false;
+        noteAiBtn.textContent = "✦ AI 生成说明";
+      });
+
+    noteAiBtn.disabled = true;
+    noteAiBtn.textContent = "AI 生成中…";
+  });
+
+  function callAi(cfg, summary) {
+    var url = cfg.base.replace(/\/+$/, "") + "/chat/completions";
+    var prompt =
+      "你是一位专业的医疗助理。以下是患者的病例记录（JSON）：\n" +
+      JSON.stringify(summary, null, 1) +
+      "\n\n请为患者写一段「病例说明」，作为个人健康档案的总览。要求：\n" +
+      "1. 用简洁、专业、通俗的中文概括整体病情、检查结果、用药和治疗情况；\n" +
+      "2. 分条列举更清晰，但不要使用 Markdown 符号（不要用 # * - 等）；\n" +
+      "3. 只依据上面给出的信息，不要虚构任何内容；\n" +
+      "4. 控制在 200～400 字。";
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + cfg.key
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        messages: [
+          { role: "system", content: "你是专业的医疗助理，输出中文。" },
+          { role: "user", content: prompt }
+        ]
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            var msg = t.slice(0, 300);
+            throw new Error("HTTP " + res.status + (msg ? "：" + msg : ""));
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (data && data.error) {
+          var em = data.error.message || JSON.stringify(data.error);
+          throw new Error(String(em).slice(0, 200));
+        }
+        if (!data || !data.choices || !data.choices.length) {
+          throw new Error("响应格式异常（未返回内容）");
+        }
+        var content = data.choices[0].message && data.choices[0].message.content;
+        if (!content) throw new Error("AI 未返回内容");
+        return String(content).trim();
+      });
+  }
 })();

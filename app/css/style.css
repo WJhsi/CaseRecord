@@ -608,6 +608,106 @@ a.btn-add {
   overflow: hidden;
 }
 
+/* ---------- 病例说明 ---------- */
+.case-note {
+  margin-top: 2.4rem;
+}
+
+.case-note .section-title-row {
+  margin-bottom: 0.4rem;
+}
+
+.case-note-tip {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  margin: 0 0 0.8rem;
+}
+
+.case-note textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.case-note textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
+.case-note-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.case-note-hint {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.btn-save-note {
+  flex-shrink: 0;
+  padding: 0.6rem 1.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-save-note:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-save-note:active {
+  transform: scale(0.99);
+}
+
+.btn-ai-note {
+  flex-shrink: 0;
+  padding: 0.55rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.05s ease;
+}
+
+.btn-ai-note:hover {
+  background: var(--accent-deep);
+}
+
+.btn-ai-note:active {
+  transform: scale(0.99);
+}
+
+.btn-ai-note:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .case-tags {
   display: flex;
   flex-wrap: wrap;

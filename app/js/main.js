@@ -645,16 +645,87 @@
       });
   }
 
-  clearBtn.addEventListener("click", function () {
+  /* ---------- 清除本地档案（确认弹窗：倒计时 + 输入验证） ---------- */
+
+  var clearBtn = document.getElementById("btn-clear");
+  var clearMask = document.getElementById("clear-mask");
+  var clearConfirm = document.getElementById("clear-confirm");
+  var clearCancel = document.getElementById("clear-cancel");
+  var clearCancelX = document.getElementById("clear-cancel-x");
+  var clearVerify = document.getElementById("clear-verify");
+  var CLEAR_COUNTDOWN = 15;
+  var clearTimer = null;
+  var clearDone = false;
+
+  function updateClearState() {
+    var typed = clearVerify && clearVerify.value.trim() === "我确认清除";
+    clearConfirm.disabled = !(clearDone && typed);
+  }
+
+  function openClearModal() {
+    clearMask.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    if (clearVerify) clearVerify.value = "";
+    clearDone = false;
+    updateClearState();
+
+    var left = CLEAR_COUNTDOWN;
+    clearConfirm.textContent = "确认清除（" + left + "s）";
+    clearInterval(clearTimer);
+    clearTimer = setInterval(function () {
+      left--;
+      if (left <= 0) {
+        clearInterval(clearTimer);
+        clearDone = true;
+        clearConfirm.textContent = "确认清除";
+        updateClearState();
+      } else {
+        clearConfirm.textContent = "确认清除（" + left + "s）";
+      }
+    }, 1000);
+  }
+
+  function closeClearModal() {
+    clearInterval(clearTimer);
+    clearMask.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function doClear() {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("caseRecord.caseNote"); // 同步清除病例说明
+    // 同时清除 AI 大模型配置（本地 JSON）
+    fetch("/api/ai-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}"
+    }).catch(function () {});
     form.reset();
     birthYear.setValue("");
     birthMonth.setValue("");
     renderDays();
     blood.setValue("未知");
+    aiModel.setValue("");
     updateAgeHint();
     updateSummary(null);
+    closeClearModal();
     showToast("本地档案已清除");
+  }
+
+  clearBtn.addEventListener("click", openClearModal);
+  clearCancel.addEventListener("click", closeClearModal);
+  clearCancelX.addEventListener("click", closeClearModal);
+  clearMask.addEventListener("click", function (e) {
+    if (e.target === clearMask) closeClearModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && clearMask && !clearMask.hidden) closeClearModal();
+  });
+  if (clearVerify) clearVerify.addEventListener("input", updateClearState);
+  clearConfirm.addEventListener("click", function () {
+    if (clearConfirm.disabled) return;
+    doClear();
   });
 
   /* ---------- 初始化 ---------- */

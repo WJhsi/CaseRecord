@@ -136,6 +136,30 @@
     </div>
   </div>
 
+  <!-- 清除本地档案确认弹窗 -->
+  <div class="modal-mask" id="clear-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="清除档案确认">
+      <div class="modal-head">
+        <div class="modal-title">清除本地档案</div>
+        <button type="button" class="modal-close" id="clear-cancel-x" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-warn">
+          清除后您的<strong>个人档案和 AI 大模型配置将被永久删除</strong>，且<strong>无法恢复</strong>。
+        </p>
+        <p class="modal-hint">请确认是否继续清除？</p>
+        <div class="modal-field">
+          <label for="clear-verify">请输入「我确认清除」以启用清除按钮</label>
+          <input type="text" id="clear-verify" placeholder="我确认清除" autocomplete="off">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn-cancel" id="clear-cancel">取消</button>
+          <button type="button" class="modal-btn-danger" id="clear-confirm" disabled>确认清除（5s）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/main.js"></script>
 </body>
 </html>
