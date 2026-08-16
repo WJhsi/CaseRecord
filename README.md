@@ -1,175 +1,305 @@
 # CaseRecord · 病例档案
 
-一个**纯前端、零后端、零依赖**的个人病例记录与管理工具。用于建立患者个人档案、记录每一次就诊的病情与问诊内容、上传检验 / 检查报告（图片或 PDF）、录入用药清单，并对报告图片进行 **OCR 识别**（自动解析血常规指标）。
-
-所有数据保存在**浏览器本地（localStorage）**，不经过任何服务器，保护隐私的同时也意味着数据不跨设备同步、清除浏览器数据即会丢失，请自行做好备份。
+**语言 / Language：** [中文](#中文) | [English](#english)
 
 ---
 
-## 界面截图
+## 中文
 
-> 以下为演示数据下的界面效果（真实使用时数据保存在浏览器本地，仅用于展示）。
+### 项目简介
 
-| 首页 | 患者档案 |
-| --- | --- |
-| ![首页](docs/screenshots/01-home.png) | ![患者档案](docs/screenshots/02-profile.png) |
+**CaseRecord** 是一个**本地部署的个人医疗档案管理工具**：纯前端页面 + 本地 Python 服务器，数据全部保存在**你自己电脑上的 JSON 文件**中，不上传任何云端。
 
-| 个人主页 | 添加 / 编辑病例 |
-| --- | --- |
-| ![个人主页](docs/screenshots/03-dashboard.png) | ![添加病例](docs/screenshots/04-case-edit.png) |
+它帮助你把零散的就诊信息整理成册：
 
-| 病例详情 | 报告详情 |
-| --- | --- |
-| ![病例详情](docs/screenshots/05-case-detail.png) | ![报告详情](docs/screenshots/06-report-detail.png) |
+- 建立**患者个人档案**（基本信息、体征、病史）；
+- 记录每一次就诊的**病情与问诊内容**；
+- 上传**检验 / 检查报告**（图片或 PDF，支持拖拽）；
+- 录入**用药清单**与**外科治疗方案**；
+- 借助**大模型 AI**：视觉模型识别报告图片文字、文本模型解析报告并生成病例说明；
+- 内置**浅色 / 深色主题**切换。
 
----
+**技术基础：**
 
-## 一、基于什么制作
+- 原生 HTML / CSS / JavaScript（无框架、无构建步骤）；
+- Python 本地服务器（`server.py`，端口 **8081**）：静态文件服务 + REST API（档案、病例、报告图片、识别结果均以 JSON / 文件存储于 `data/` 目录）；
+- 数据存储从旧版 localStorage 全面迁移为服务端 JSON 文件，**首次使用时自动迁移旧数据**；
+- 大模型 AI（需自备 API Key）：**识别模型（视觉）** 看图转文字 + **解析模型（文本）** 解析报告 / 生成说明，配置保存在 `data/ai-config.json`（已被 `.gitignore` 排除，密钥不会进入代码仓库）；
+- 无内置 OCR 引擎，识别完全依赖视觉大模型。
 
-- **原生 HTML / CSS / JavaScript（ES5 + 少量 ES2015+）**：无框架、无构建步骤，浏览器打开即用，代码开箱即读。
-- **localStorage**：患者档案（`caseRecord.profile`）与病例记录（`caseRecord.cases`）均以 JSON 形式持久化在本机浏览器中。
-- **OCR 识别引擎**：
-  - **PaddleOCR（PP-OCRv3 前端版）**：当前报告识别主力引擎，引擎代码已本地打包（`app/assets/ocr/paddle/ocr.bundle.mjs` 及其 Node 兼容模块），由页面动态加载，无需外部引入；首次识别时从百度公开 CDN 下载识别模型（约 10–60 秒），**无需 API Key**。
-- **启动脚本**：Windows 下 `start.bat` 一键启动本地静态服务器（依赖 Python）。
+### 快速开始
 
----
+#### 方式一：Windows 一键启动（推荐）
 
-## 二、功能特性
-
-### 1. 患者档案（`profile.html`）
-- 填写姓名、性别、出生日期（自定义年月日三级下拉，自动计算年龄）、血型、身高、体重。
-- 记录既往病史、过敏史、备注。
-- 必填项校验（姓名、性别、出生日期）与数值范围校验（身高 40–250cm、体重 1–300kg）。
-- 支持新建 / 编辑 / 清除本地档案。
-
-### 2. 个人主页（`dashboard.html`）
-- 顶部横条展示档案摘要：姓名首字头像、性别 / 年龄 / 血型标签、体征信息与病史信息。
-- 病例记录列表：按时间倒序展示，显示记录时间、病情摘要、报告份数与药物种数标签。
-
-### 3. 添加 / 编辑病例（`case.html`）
-- **下拉病情**：内置 40+ 个常见疾病术语（按呼吸、心血管、消化、内分泌、神经、泌尿、骨骼肌肉、皮肤等系统分类），支持**搜索过滤**（含俗称别名，如“感冒”“流感”）与**自定义输入**。
-- **填写问诊病例**：详细描述症状、诊断、就诊过程。
-- **检验 / 检查报告上传**：选择报告类型（检验报告 / 检查报告）后批量添加文件，支持 jpg / jpeg / png / webp / gif / pdf，单个文件不超过 **2MB**，以 DataURL 形式存入本地。
-- **药物清单**：动态添加多行药物（名称 + 用法用量），至少保留一行。
-- 支持通过 `case.html?id=xxx` 进入编辑模式，保存后直达病例详情页。
-
-### 4. 病例详情（`case-detail.html`）
-- 展示病情类型、问诊病例、报告缩略图列表、药物清单。
-- 一键进入**编辑**模式。
-- **删除病例**：带二次确认弹窗 —— 需等待 **5 秒倒计时** 并输入「我确认删除」才能点击删除，防止误操作（删除不可恢复）。
-
-### 5. 报告详情 + OCR 识别（`report-detail.html`）
-- **两栏布局**：左侧展示原始报告（图片全屏查看；PDF 内嵌预览，并支持“在新标签页打开 / 下载”），右侧展示 OCR 识别结果。
-- **自动识别**：打开图片报告页面即自动调用 PaddleOCR 识别，无需手动点击；并带有红字免责提示「OCR 可能无法完全或错误识别」。
-- 识别结果按**血常规 22 项标准清单**（白细胞、红细胞、血红蛋白、血小板等，含别名与模糊匹配，容错率较高）解析出数值，并按**标准参考范围**判断「偏高 / 偏低 / 正常」（部分指标按档案性别区分参考范围）。
-- **识别原文**默认折叠，点击「识别原文（点击展开）」可对照核对。
-
-### 6. 交互体验
-- 全站自定义下拉组件（替换原生 select），支持鼠标 / 键盘（方向键、Enter、Esc）操作与无障碍属性（ARIA）。
-- 页面跳转间的操作反馈（Toast 提示）、表单错误高亮、空状态展示。
-
----
-
-## 三、目录结构
-
-```
-CaseRecord/
-├── app/                          # 前端应用（纯静态）
-│   ├── index.html                # 首页入口
-│   ├── profile.html              # 患者档案（新建 / 编辑）
-│   ├── dashboard.html            # 个人主页（档案摘要 + 病例列表）
-│   ├── case.html                 # 添加 / 编辑病例
-│   ├── case-detail.html          # 病例详情
-│   ├── report-detail.html        # 报告详情 + OCR 识别
-│   ├── css/
-│   │   └── style.css             # 全站样式
-│   ├── js/
-│   │   ├── main.js               # 档案表单逻辑（含自定义下拉组件）
-│   │   ├── home.js               # 首页逻辑（按是否有档案切换入口）
-│   │   ├── dashboard.js          # 个人主页渲染
-│   │   ├── case.js               # 病例新增 / 编辑
-│   │   ├── case-detail.js        # 病例详情与删除确认
-│   │   ├── report-detail.js      # 报告展示 + 血常规解析
-│   │   └── report-ocr.js         # PaddleOCR 引擎封装（ES Module）
-│   └── assets/
-│       └── ocr/
-│           └── paddle/           # PaddleOCR（PP-OCRv3）本地打包引擎及 Node 兼容模块
-├── docs/
-│   └── screenshots/              # 界面截图（README 展示用）
-├── start.bat                     # Windows 一键启动脚本
-├── .gitignore
-└── README.md
-```
-
----
-
-## 四、使用说明
-
-### 方式一：Windows 一键启动（推荐）
-
-确保本机已安装 **Python 3**（用于 `python -m http.server`），双击项目根目录的 `start.bat`：
+确保本机已安装 **Python 3**，双击项目根目录的 `start.bat`：
 
 ```
 start.bat
 ```
 
-脚本会自动：
-1. 在 `app/` 目录启动本地静态服务器（端口 **8080**）；
-2. 用默认浏览器打开 `http://localhost:8080/`。
+脚本会在项目根目录运行 `python server.py`，自动打开 `http://localhost:8081/`；关闭命令行窗口即停止服务器。
 
-关闭命令行窗口即停止服务器。
+#### 方式二：手动启动
 
-### 方式二：手动启动静态服务器
-
-任选其一（在项目根目录执行）：
+在项目根目录执行：
 
 ```bash
-# Python
-python -m http.server -d app 8080
-
-# Node.js（如有）
-npx serve app -l 8080
+python server.py
 ```
 
-然后浏览器访问 `http://localhost:8080/`。
+然后浏览器访问 `http://localhost:8081/`。
 
-### 方式三：直接打开（功能受限）
+> ⚠️ **必须通过本地服务器访问**（`http://localhost:8081/`），直接双击打开 HTML 文件无法使用（页面依赖服务器 API 读写数据）。
 
-直接用浏览器双击打开 `app/index.html` 也可以浏览大部分功能，但**以下功能不可用**：
-- **OCR 识别**：`file://` 协议下浏览器禁止 OCR 引擎（Worker / WASM / 网络模型）加载，报告详情页会给出明确提示；
-- 其余档案、病例、报告查看等功能不受影响。
+#### 首次使用
 
-> 建议始终通过本地服务器访问，以获得完整功能。
+1. 打开首页 → 点击「创建个人档案」；
+2. 在档案页填写患者信息，并配置 **AI 大模型**（识别模型 + 解析模型的 API 地址 / Key / 模型名，保存前会自动做连接检测）；
+3. 之后即可正常添加病例、使用 AI 识别与解析功能。
+
+#### 使用流程
+
+```
+创建患者档案（含 AI 配置）→ 个人主页 → 添加病例（病情 + 报告 + 药物 + 治疗方案）
+→ 病例详情 → 报告详情（AI 自动识别 → AI 解析）
+```
+
+### 功能详解
+
+#### 1. 首页
+
+左右两栏布局：左侧标题与入口按钮，右侧风光照片。根据是否已有本地档案自动切换入口：没有档案时引导「创建个人档案」，已有档案时显示「进入个人主页」。
+
+<p align="center">
+  <img src="docs/screenshots/01-home.png" width="640" alt="首页">
+</p>
+
+#### 2. 患者档案 + AI 大模型配置
+
+- **基本信息**：姓名、性别、出生日期（年月日三级下拉，自动计算年龄）、血型、身高、体重；
+- **病史信息**：既往病史、过敏史、备注；
+- **AI 大模型配置**（两组）：
+  - **① 识别模型（视觉 · 看图转文字）**：API 地址 + 模型 + API Key（密码框），如通义千问 VL 系列；
+  - **② 解析模型（文本）**：API 地址 + 模型 + API Key，如 DeepSeek；
+  - 保存前自动进行**连接检测**，失败时弹窗解读错误原因；配置存本地 JSON，不进代码仓库；
+- 必填项校验与数值范围校验（身高 40–250cm、体重 1–300kg）；
+- 清除档案需 5 秒倒计时 + 输入「我确认清除」（同时删除 AI 配置）。
+
+<p align="center">
+  <img src="docs/screenshots/02-profile.png" width="640" alt="患者档案">
+</p>
+
+#### 3. 个人主页
+
+- 顶部横条展示档案摘要：姓名首字头像、性别 / 年龄 / 血型标签、体征信息与病史信息；
+- **病例说明**：一键「✦ AI 生成说明」，由解析模型读取全部病例自动生成整体说明，展示调用模型、Token 用量与生成耗时（仅本次展示，不保存）；
+- 病例记录列表：按时间倒序，每条显示记录时间、病情摘要，以及报告份数 / 药物种数标签。
+
+<p align="center">
+  <img src="docs/screenshots/03-dashboard.png" width="640" alt="个人主页">
+</p>
+
+#### 4. 添加 / 编辑病例
+
+- **下拉病情**：内置 40+ 个常见疾病术语（按系统分类），支持搜索过滤（含俗称别名）与自定义输入；
+- **填写问诊病例**：详细描述症状、诊断、就诊过程；
+- **报告上传**：
+  - 先选报告类型（**检验报告 / 检查报告**），检查报告还需选择**检查方式**（DR（X光）/ CT / MR（磁共振）/ 超声 / 心电图 / 内镜 / 病理）；
+  - 支持点击选择或**直接拖拽文件**到页面（出现全屏遮罩提示「松开即可上传」）；
+  - 支持 jpg / png / webp / gif / pdf，单个不超过 2MB；图片以独立文件存储，JSON 只保存引用；
+- **药物清单**：动态添加药物卡片（名称 + 用法用量，一日几次 / 每次剂量 / 单位 / 用法组合）；
+- **外科治疗方案**：方案下拉（无 / 手术 / 清创缝合 / 换药 / 引流 / 石膏固定 / 牵引 / 穿刺抽液 / 理疗 / 保守治疗）+ 方案说明；
+- 编辑模式：保存后直达病例详情页。
+
+<p align="center">
+  <img src="docs/screenshots/04-case-edit.png" width="640" alt="添加/编辑病例">
+</p>
+
+#### 5. 病例详情
+
+- 展示病情类型、问诊病例、报告缩略图列表、药物清单、外科治疗方案；
+- **病情类型可点击**，跳转**百度百科**查询疾病信息；**药物名称可点击**，跳转**丁香园用药助手**搜索药品；
+- 一键进入编辑模式；
+- **删除病例**带二次确认弹窗：5 秒倒计时 + 输入「我确认删除」（删除后病例文件夹一并移除，不可恢复）。
+
+<p align="center">
+  <img src="docs/screenshots/05-case-detail.png" width="640" alt="病例详情">
+</p>
+
+#### 6. 报告详情：AI 识别 + AI 解析
+
+- **两栏布局**：左侧原始报告（图片 / PDF 预览），右侧 AI 识别与解析结果；
+- **自动识别**：进入页面自动调用**视觉模型**识别报告原图文字，识别结果保存到本地（`ocr-<序号>.json`），刷新不重复识别；点击「↻ 重新识别」可重新识别并覆盖；
+- **检验报告**：识别文字自动提取为**检验项目表格**（项目 / 结果 / 单位 / 参考范围 / 状态），表格可编辑、可「＋ 添加项目」，**状态列**按参考范围自动判断（偏高 ↑ / 偏低 ↓，正常留空）；
+- **检查报告**（CT / MR / DR / 超声等）：整段识别 + 基于识别文字的 AI 解析（影像表现 / 影像判断 / 简要解读），解析结果可保存；
+- **AI 解析**：文本模型基于识别内容生成解析（检验报告基于表格内容）；
+- 未配置模型时给出明确提示，引导前往档案页配置。
+
+<p align="center">
+  <img src="docs/screenshots/06-report-detail.png" width="640" alt="报告详情">
+</p>
+
+#### 7. 浅色 / 深色主题
+
+- 各页面右上角太阳 / 月亮按钮一键切换浅色 / 深色，600ms 颜色渐变过渡；
+- 选择自动记忆，下次打开保持；页面渲染前应用主题，避免闪白。
+
+### 注意事项
+
+- **必须通过本地服务器访问**（`start.bat` 或 `python server.py`，端口 8081），直接打开 HTML 无法使用。
+- **数据存于本机 `data/` 目录**：档案 `profile.json`、病例 `data/cases/<id>/case.json`、报告图片 `images/`、识别结果 `ocr-<序号>.json`、AI 配置 `ai-config.json`。清除浏览器数据不影响数据，但**删除 / 移动 `data/` 目录会丢失全部数据**，请定期备份该目录。
+- **AI 功能需自备 API Key**：识别（视觉模型）与解析（文本模型）分别配置，密钥仅存本地 `data/ai-config.json`（已加入 `.gitignore`，不会提交到仓库）；AI 调用会产生第三方 API 费用，请留意用量。
+- **AI 结果仅供参考**：识别与解析可能出错，请务必对照报告原文核对；本项目不构成医疗建议。
+- **文件限制**：报告文件支持 jpg / png / webp / gif / pdf，单个不超过 2MB。
+- **浏览器兼容**：建议使用较新的 Chrome / Edge / Firefox。
 
 ---
 
-## 五、使用流程
+## English
 
-1. 打开首页 → 点击「创建个人档案」→ 填写并保存患者基本信息；
-2. 进入个人主页 → 点击「＋ 添加病例」；
-3. 选择病情类型（可搜索 / 自定义）、填写问诊病例；
-4. 选择报告类型并上传检验 / 检查报告（图片或 PDF）；
-5. 录入药物名称与用法用量 → 保存病例；
-6. 在病例详情页点击某份报告 → 报告详情页自动开始 OCR 识别，解析血常规指标；
-7. 需要修改时，在详情页点击「编辑病例」；确认删除时按弹窗提示完成双重验证。
+### Introduction
 
----
+**CaseRecord** is a **locally deployed personal medical record manager**: a pure front-end plus a local Python server, with all data stored as **JSON files on your own computer** — nothing is uploaded to any cloud.
 
-## 六、注意事项
+It helps you keep scattered medical records organized:
 
-- **数据仅存于本机浏览器**：档案与病例（含报告图片）都保存在当前浏览器的 localStorage 中，清除浏览器数据、更换设备或浏览器都会丢失；且图片以 DataURL 存储，请勿上传过多大文件，避免超出浏览器存储配额（超出时页面会提示）。
-- **OCR 需要网络**：识别引擎已本地打包、无需联网加载；但首次识别时需联网从 CDN 下载 PaddleOCR 模型（约 10–60 秒），且必须通过本地服务器访问（不能用 `file://` 直开）。
-- **OCR 识别范围**：目前仅针对**血常规（CBC）报告**做指标解析，其他类型的报告只会展示识别原文，不会自动填表；识别结果仅供参考，请务必对照报告原文核对。
-- **文件限制**：报告文件支持 jpg / jpeg / png / webp / gif / pdf，单个不超过 2MB。
-- **浏览器兼容**：建议使用较新的 Chrome / Edge / Firefox；OCR 部分依赖 ES Module 与 WebAssembly，老浏览器可能无法运行。
-- **隐私声明**：本项目不上传任何数据到服务器，OCR 仅将报告图片在本地进行识别；但 PaddleOCR 模型由第三方 CDN 提供，联网加载模型时会产生网络请求，请按需使用。
-- **本项目仅供个人记录与学习参考，不构成任何医疗建议**。
+- Create a **patient profile** (basic info, vitals, medical history);
+- Record **symptoms and consultation notes** for each visit;
+- Upload **lab / examination reports** (images or PDF, drag & drop supported);
+- Keep **medication lists** and **surgical treatment plans**;
+- Leverage **LLM AI**: a vision model transcribes report images into text, and a text model parses reports and generates case summaries;
+- Built-in **light / dark theme**.
 
----
+**Built with:**
 
-## 七、后续可能的扩展方向
+- Native HTML / CSS / JavaScript (no framework, no build step);
+- Python local server (`server.py`, port **8081**): static file serving + REST API; profile, cases, report images and recognition results are stored as JSON / files under the `data/` directory;
+- Data storage migrated from the old localStorage to server-side JSON files — **old data is auto-migrated on first run**;
+- LLM AI (bring your own API key): **vision model** (image → text) + **text model** (parse reports / generate summaries); config is saved to `data/ai-config.json` (excluded by `.gitignore`, so keys never enter the repo);
+- No built-in OCR engine — recognition relies entirely on the vision LLM.
 
-- 导出 / 导入档案数据（JSON 备份）与跨设备同步；
-- 增加更多检验报告类型的自动解析（生化、尿常规等）；
-- 实现完全离线识别（模型本地缓存 / 静态化）；
-- 增加图表化的指标趋势展示。
+### Getting Started
+
+#### Option 1: One-click on Windows (recommended)
+
+Make sure **Python 3** is installed, then double-click `start.bat` in the project root:
+
+```
+start.bat
+```
+
+It runs `python server.py` in the project root and opens `http://localhost:8081/` in your default browser. Close the console window to stop the server.
+
+#### Option 2: Start manually
+
+Run this in the project root:
+
+```bash
+python server.py
+```
+
+Then visit `http://localhost:8081/`.
+
+> ⚠️ **A local server is required** (`http://localhost:8081/`). Opening the HTML files directly will not work, because pages read/write data through the server API.
+
+#### First-time setup
+
+1. Open the home page → click "Create Profile";
+2. On the profile page, fill in patient info and configure the **AI models** (vision + text: API base URL / key / model; a connection test runs before saving);
+3. You can then add cases and use AI recognition / parsing.
+
+#### Workflow
+
+```
+Create patient profile (incl. AI config) → Dashboard → Add a case (illness + reports + meds + treatment)
+→ Case detail → Report detail (auto AI recognition → AI parsing)
+```
+
+### Features
+
+#### 1. Home Page
+
+Two-column layout: title and entry buttons on the left, a landscape photo on the right. It adapts to whether a profile exists: "Create Profile" when empty, or "Go to Dashboard" when one is saved.
+
+<p align="center">
+  <img src="docs/screenshots/01-home.png" width="640" alt="Home">
+</p>
+
+#### 2. Patient Profile + AI Model Config
+
+- **Basic info**: name, gender, date of birth (year/month/day dropdowns with auto age calculation), blood type, height, weight;
+- **Medical history**: past history, allergies, notes;
+- **AI model config** (two groups):
+  - **① Vision model (image → text)**: API base + model + key (password field), e.g. Qwen-VL series;
+  - **② Text model (parse / summarize)**: API base + model + key, e.g. DeepSeek;
+  - A **connection test** runs before saving, with readable error explanations; config is stored locally, never in the repo;
+- Required-field validation and value-range checks (height 40–250cm, weight 1–300kg);
+- Clearing the profile requires a 5-second countdown plus typing 「我确认清除」 (this also deletes the AI config).
+
+<p align="center">
+  <img src="docs/screenshots/02-profile.png" width="640" alt="Patient Profile">
+</p>
+
+#### 3. Dashboard
+
+- A top bar summarizing the profile: avatar with the name's first letter, gender / age / blood-type chips, vitals and medical history;
+- **Case summary**: one-click "✦ AI 生成说明" generates an overall summary from all cases via the text model, showing the model name, token usage and elapsed time (display-only, not saved);
+- A case list in reverse chronological order, each showing the record time, condition summary, and tags for report count / medication count.
+
+<p align="center">
+  <img src="docs/screenshots/03-dashboard.png" width="640" alt="Dashboard">
+</p>
+
+#### 4. Add / Edit Case
+
+- **Illness type dropdown**: 40+ common conditions grouped by body system, with search filtering (incl. common aliases) and custom input;
+- **Consultation notes**: describe symptoms, diagnosis and the visit in detail;
+- **Report upload**:
+  - Pick a report type first (**Lab Report / Examination Report**); examination reports also require a **modality** (DR (X-ray) / CT / MR (MRI) / Ultrasound / ECG / Endoscopy / Pathology);
+  - Upload by clicking or by **dragging & dropping files** anywhere on the page (a full-screen overlay prompts "release to upload");
+  - Supports jpg / png / webp / gif / pdf, up to 2MB each; images are stored as separate files, JSON keeps only references;
+- **Medication list**: dynamic medication cards (name + usage composed of frequency / dose / unit / route);
+- **Surgical treatment plan**: plan dropdown (None / Surgery / Debridement & suture / Dressing change / Drainage / Cast fixation / Traction / Puncture aspiration / Physiotherapy / Conservative) plus notes;
+- Edit mode: after saving it jumps straight to the case detail page.
+
+<p align="center">
+  <img src="docs/screenshots/04-case-edit.png" width="640" alt="Add / Edit Case">
+</p>
+
+#### 5. Case Detail
+
+- Shows illness type, consultation notes, report thumbnails, medication list and treatment plan;
+- **Illness type is clickable** → opens **Baidu Baike**; **medication names are clickable** → open **DXY drug assistant** (drugs.dxy.cn) search;
+- One-click edit;
+- **Deleting a case** requires a confirmation dialog: 5-second countdown + typing 「我确认删除」 (the case folder is removed; cannot be undone).
+
+<p align="center">
+  <img src="docs/screenshots/05-case-detail.png" width="640" alt="Case Detail">
+</p>
+
+#### 6. Report Detail: AI Recognition + AI Parsing
+
+- **Two-column layout**: original report on the left (image / PDF preview), AI recognition & parsing results on the right;
+- **Auto recognition**: opening the page automatically calls the **vision model** to transcribe the report image; the result is saved locally (`ocr-<index>.json`) and reused on refresh; "↻ 重新识别" re-runs recognition and overwrites;
+- **Lab reports**: recognized text is auto-extracted into an editable **test-item table** (Item / Result / Unit / Reference Range / Status) with "＋ 添加项目"; the **Status column** is auto-judged against reference ranges (High ↑ / Low ↓, Normal left blank);
+- **Examination reports** (CT / MR / DR / ultrasound, etc.): whole-text recognition + AI parsing into findings / impression / plain-language summary (parsing can be saved);
+- **AI parsing**: the text model parses based on recognized content (for lab reports, based on the table);
+- If no model is configured, a clear message guides you to the profile page.
+
+<p align="center">
+  <img src="docs/screenshots/06-report-detail.png" width="640" alt="Report Detail">
+</p>
+
+#### 7. Light / Dark Theme
+
+- Sun / moon buttons on the top-right of every page switch between light and dark with a 600ms color transition;
+- The choice is remembered and applied before rendering to avoid white flashes.
+
+### Notes
+
+- **A local server is required** (`start.bat` or `python server.py`, port 8081); opening the HTML directly will not work.
+- **Data lives in the local `data/` directory**: profile `profile.json`, cases `data/cases/<id>/case.json`, report images `images/`, recognition results `ocr-<index>.json`, AI config `ai-config.json`. Clearing browser data does not affect it, but **deleting / moving the `data/` folder loses everything** — back it up regularly.
+- **AI features need your own API keys**: the vision (recognition) and text (parsing) models are configured separately; keys are stored only in local `data/ai-config.json` (gitignored, never committed). AI calls may incur third-party API costs.
+- **AI results are for reference only**: recognition and parsing can be wrong — always verify against the original report. This project does not constitute medical advice.
+- **File limits**: jpg / png / webp / gif / pdf, up to 2MB each.
+- **Browser support**: recent Chrome / Edge / Firefox recommended.
