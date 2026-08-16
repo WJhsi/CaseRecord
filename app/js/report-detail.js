@@ -391,6 +391,42 @@
       .replace(/'/g, "&#39;");
   }
 
+  // 根据结果和参考范围判断状态：正常 / 偏高 / 偏低
+  function calcRowStatus(value, range) {
+    var v = parseFloat(String(value == null ? "" : value).replace(/[^0-9.\-]/g, ""));
+    if (isNaN(v)) return "";
+    var r = String(range == null ? "" : range).replace(/\s/g, "");
+    // 支持 "lo-hi"、"<n"、">n"、"lo~hi" 等格式
+    var m = r.match(/^([<>]?)(\d+(?:\.\d+)?)(?:[-~](\d+(?:\.\d+)?))?$/);
+    if (!m) return "";
+    if (m[1] === "<") {
+      var hi = parseFloat(m[2]);
+      if (v > hi) return "偏高";
+      if (v <= hi) return "正常";
+    }
+    if (m[1] === ">") {
+      var lo = parseFloat(m[2]);
+      if (v < lo) return "偏低";
+      if (v >= lo) return "正常";
+    }
+    if (!m[1] && m[3]) {
+      var lo2 = parseFloat(m[2]);
+      var hi2 = parseFloat(m[3]);
+      if (v < lo2) return "偏低";
+      if (v > hi2) return "偏高";
+      return "正常";
+    }
+    return "";
+  }
+
+  function statusCell(value, range) {
+    var s = calcRowStatus(value, range);
+    if (!s) return '<td class="lab-status"></td>';
+    var cls = s === "偏高" ? "up" : s === "偏低" ? "down" : "ok";
+    var arrow = s === "偏高" ? "↑" : s === "偏低" ? "↓" : "✓";
+    return '<td class="lab-status ' + cls + '">' + arrow + " " + s + "</td>";
+  }
+
   function renderLabTable(rows) {
     labRows = rows;
     var html = "";
@@ -402,6 +438,7 @@
         '<td><input type="text" class="lab-input lab-value" data-i="' + i + '" value="' + esc(r.value || "") + '" placeholder="结果"></td>' +
         '<td><input type="text" class="lab-input lab-unit" data-i="' + i + '" value="' + esc(r.unit || "") + '" placeholder="单位"></td>' +
         '<td><input type="text" class="lab-input lab-range" data-i="' + i + '" value="' + esc(r.range || "") + '" placeholder="参考范围"></td>' +
+        statusCell(r.value, r.range) +
         "</tr>";
     }
     labTbody.innerHTML = html;
@@ -413,6 +450,28 @@
       }
       countEl.textContent = "共 " + filled + " 项";
     }
+  }
+
+  // 表格输入时实时更新该行状态
+  if (labTbody) {
+    labTbody.addEventListener("input", function (e) {
+      var tr = e.target.closest("tr");
+      if (!tr) return;
+      var value = (tr.querySelector(".lab-value") || {}).value || "";
+      var range = (tr.querySelector(".lab-range") || {}).value || "";
+      var cell = tr.querySelector(".lab-status");
+      if (!cell) return;
+      var s = calcRowStatus(value, range);
+      if (!s) {
+        cell.className = "lab-status";
+        cell.textContent = "";
+      } else {
+        var cls = s === "偏高" ? "up" : s === "偏低" ? "down" : "ok";
+        var arrow = s === "偏高" ? "↑" : s === "偏低" ? "↓" : "✓";
+        cell.className = "lab-status " + cls;
+        cell.textContent = arrow + " " + s;
+      }
+    });
   }
 
   // 检验报告：进入页面即显示表格框架（表头 + 空行占位），识别完成后再填充

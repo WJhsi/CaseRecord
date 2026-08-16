@@ -1563,6 +1563,26 @@ a.btn-add {
   border-bottom: 1px solid var(--line);
 }
 
+/* 状态列 */
+.lab-status {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.lab-status.up {
+  color: var(--danger);
+}
+
+.lab-status.down {
+  color: #b45309;
+}
+
+.lab-status.ok {
+  color: var(--accent);
+}
+
 /* 表格行 hover 反馈 */
 .lab-table tbody tr:hover {
   background: rgba(47, 111, 79, 0.04);
