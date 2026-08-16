@@ -719,6 +719,43 @@ a.btn-add {
   white-space: nowrap;
 }
 
+/* ---------- AI 解析（报告详情页） ---------- */
+.ai-parse {
+  margin-top: 2.4rem;
+}
+
+.ai-parse .section-title-row {
+  margin-bottom: 0.4rem;
+}
+
+.ai-parse textarea {
+  width: 100%;
+  min-height: 260px;
+  resize: none;
+  box-sizing: border-box;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ai-parse textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
+.ai-parse textarea[readonly] {
+  background: #faf9f7;
+  color: var(--ink-2, #555);
+  cursor: default;
+}
+
 .case-tags {
   display: flex;
   flex-wrap: wrap;

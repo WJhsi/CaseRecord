@@ -20,6 +20,17 @@
     return document.getElementById(id);
   }
 
+  var toastEl = document.getElementById("toast");
+  function showToast(msg, type) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.className = "toast " + (type || "ok") + " show";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () {
+      toastEl.classList.remove("show");
+    }, 2800);
+  }
+
   /* ---------- 定位报告 ---------- */
 
   var caseId = null;
@@ -638,5 +649,213 @@
       renderLabTable(rowsData, currentMode);
       startAutoOcr();
     }
+  }
+
+  /* ==========================================================
+     AI 解析：根据已提交的报告结果自动解析
+     ========================================================== */
+
+  var aiParseBtn = document.getElementById("btn-ai-parse");
+  var aiParseResult = document.getElementById("ai-parse-result");
+  var aiMeta = document.getElementById("ai-meta");
+  var aiHint = document.getElementById("ai-hint");
+  var aiTimer = document.getElementById("ai-timer");
+
+  var aiTimerId = null;
+  var aiStartMs = 0;
+
+  function startAiTimer() {
+    aiStartMs = Date.now();
+    aiTimer.hidden = false;
+    aiTimer.textContent = "已用时 0 秒";
+    clearInterval(aiTimerId);
+    aiTimerId = setInterval(function () {
+      var sec = Math.round((Date.now() - aiStartMs) / 1000);
+      aiTimer.textContent = "已用时 " + sec + " 秒";
+    }, 200);
+  }
+
+  function stopAiTimer() {
+    clearInterval(aiTimerId);
+    aiTimerId = null;
+    return Math.round((Date.now() - aiStartMs) / 1000);
+  }
+
+  // 弹窗（与档案页同款：灰遮罩 + 红框完整报错 + 橙框解读）
+  var aiMask = document.getElementById("ai-test-mask");
+  var aiTitle = document.getElementById("ai-test-title");
+  var aiBox = document.getElementById("ai-test-box");
+  var aiInterpret = document.getElementById("ai-test-interpret");
+
+  function interpretAiError(msg) {
+    msg = String(msg || "");
+    if (/authentication_error|invalid.*api\s*key/i.test(msg) || /401/.test(msg)) {
+      return "API Key 无效或已过期。请到「编辑档案」页检查 Key 是否正确（注意不要有多余空格）。";
+    }
+    if (/404|not found/i.test(msg)) {
+      return "接口地址不正确。请到「编辑档案」页检查 API 地址是否填对（如 https://api.deepseek.com/v1）。";
+    }
+    if (/invalid.*model|model.*not.*exist/i.test(msg)) {
+      return "模型名称不正确。请到「编辑档案」页在下拉中选择正确的模型。";
+    }
+    if (/429|rate\s*limit|too\s*many/i.test(msg)) {
+      return "请求过于频繁（触发限流）。请稍后重试。";
+    }
+    if (/failed\s*to\s*fetch|networkerror|network|ERR_NAME/i.test(msg)) {
+      return "无法连接到该地址。请检查：① 网络是否正常；② API 地址是否填写正确；③ 该平台是否允许浏览器直接调用。";
+    }
+    if (/cors|access-control/i.test(msg)) {
+      return "该平台不允许浏览器跨域调用（CORS）。可换用其他兼容 OpenAI 接口的平台。";
+    }
+    return "解析失败。请检查 API 地址、Key 和模型是否都填写正确。";
+  }
+
+  function showAiModal(title, text, isError) {
+    aiTitle.textContent = title;
+    aiBox.textContent = text;
+    aiBox.className = "ai-test-box" + (isError ? " error" : "");
+    if (isError) {
+      aiInterpret.textContent = interpretAiError(text);
+      aiInterpret.hidden = false;
+    } else {
+      aiInterpret.hidden = true;
+    }
+    aiMask.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeAiModal() {
+    aiMask.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("ai-test-ok").addEventListener("click", closeAiModal);
+  document.getElementById("ai-test-close").addEventListener("click", closeAiModal);
+  aiMask.addEventListener("click", function (e) {
+    if (e.target === aiMask) closeAiModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !aiMask.hidden) closeAiModal();
+  });
+
+  // 收集当前报告内容（优先用页面上已填写/识别的内容）
+  function collectReportContent() {
+    if (isCheckReport) {
+      var text = ocrTextarea.value.trim();
+      var impression = ocrImpression.value.trim();
+      if (!text && !impression) return null;
+      return "【影像表现】\n" + (text || "（空）") + "\n\n【影像判断】\n" + (impression || "（空）");
+    }
+    // 检验报告：读取表格当前值
+    var rows = collectFromTable();
+    var lines = [];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (r.value) {
+        lines.push(r.name + "：" + r.value + (r.unit ? " " + r.unit : "") + (r.range ? "（参考 " + r.range + "）" : "") + (r.status ? " " + r.status : ""));
+      }
+    }
+    if (!lines.length) return null;
+    return lines.join("\n");
+  }
+
+  aiParseBtn.addEventListener("click", function () {
+    var content = collectReportContent();
+    if (!content) {
+      showToast("请先识别或填写报告内容后再解析。", "err");
+      return;
+    }
+
+    fetch("/api/ai-config")
+      .then(function (res) {
+        if (!res.ok) throw new Error("无法读取 AI 配置（HTTP " + res.status + "）");
+        return res.json();
+      })
+      .then(function (cfg) {
+        if (!cfg || !cfg.base || !cfg.key || !cfg.model) {
+          throw new Error("尚未配置 AI 大模型，请先到「编辑档案」页填写 API 地址、Key 和模型。");
+        }
+        return callAiParse(cfg, content);
+      })
+      .then(function (result) {
+        var elapsed = stopAiTimer();
+        aiParseResult.value = result.text;
+        var parts = [];
+        if (elapsed != null) parts.push("本次解析耗时 " + elapsed + " 秒");
+        var usage = aiParseBtn._lastUsage || null;
+        if (usage && usage.total_tokens != null) {
+          parts.push("Token 用量：" + usage.total_tokens + (usage.prompt_tokens != null ? "（输入 " + usage.prompt_tokens + " / 输出 " + usage.completion_tokens + "）" : ""));
+        }
+        parts.push("生成时间：" + new Date().toLocaleString("zh-CN"));
+        aiMeta.textContent = parts.join(" · ");
+        aiTimer.textContent = "";
+        aiTimer.hidden = true;
+        aiHint.textContent = "本次解析，未保存";
+        showToast("AI 解析完成 ✓");
+      })
+      .catch(function (err) {
+        stopAiTimer();
+        aiTimer.textContent = "";
+        aiTimer.hidden = true;
+        showAiModal("AI 解析失败", String(err && err.message ? err.message : err), true);
+      })
+      .finally(function () {
+        aiParseBtn.disabled = false;
+        aiParseBtn.textContent = "✦ AI 解析";
+      });
+
+    aiParseBtn.disabled = true;
+    aiParseBtn.textContent = "AI 解析中…";
+    startAiTimer();
+  });
+
+  function callAiParse(cfg, content) {
+    var url = cfg.base.replace(/\/+$/, "") + "/chat/completions";
+    var prompt =
+      "你是一位专业的医疗助理。以下是患者报告的内容（识别结果可能不准确，仅供参考）：\n" +
+      content +
+      "\n\n请根据报告内容做解析，要求：\n" +
+      "1. 用简洁、专业、通俗的中文解读报告关键信息；\n" +
+      "2. 指出异常或需要关注的地方；\n" +
+      "3. 给出就医或复查建议（如需要）；\n" +
+      "4. 不要使用 Markdown 符号（不要用 # * - 等）；\n" +
+      "5. 只依据上面给出的信息，不要虚构内容；\n" +
+      "6. 控制在 300～500 字。";
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + cfg.key
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        messages: [
+          { role: "system", content: "你是专业的医疗助理，输出中文。" },
+          { role: "user", content: prompt }
+        ]
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            var msg = t.slice(0, 300);
+            throw new Error("HTTP " + res.status + (msg ? "：" + msg : ""));
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (data && data.error) {
+          var em = data.error.message || JSON.stringify(data.error);
+          throw new Error(String(em).slice(0, 200));
+        }
+        if (!data || !data.choices || !data.choices.length) {
+          throw new Error("响应格式异常（未返回内容）");
+        }
+        var contentText = data.choices[0].message && data.choices[0].message.content;
+        if (!contentText) throw new Error("AI 未返回内容");
+        aiParseBtn._lastUsage = data.usage || null;
+        return { text: String(contentText).trim() };
+      });
   }
 })();

@@ -59,7 +59,7 @@
               <tbody id="ocr-tbody"></tbody>
             </table>
             <div class="ocr-actions">
-              <button type="button" class="btn-save-ocr" id="ocr-save">保存识别结果</button>
+              <button type="button" class="btn-save-ocr" id="ocr-save">提交结果</button>
               <button type="button" class="btn-rerun" id="ocr-rerun">重新识别</button>
             </div>
           </div>
@@ -77,7 +77,7 @@
               </div>
             </div>
             <div class="ocr-actions">
-              <button type="button" class="btn-save-ocr" id="ocr-save-text">保存识别结果</button>
+              <button type="button" class="btn-save-ocr" id="ocr-save-text">提交结果</button>
               <button type="button" class="btn-rerun" id="ocr-rerun-text">重新识别</button>
             </div>
           </div>
@@ -90,7 +90,43 @@
         </div>
       </div>
     </section>
+
+    <!-- AI 解析：根据已提交的结果自动解析 -->
+    <section class="card ai-parse" id="ai-parse-section">
+      <div class="section-title-row">
+        <span class="section-title">AI 解析</span>
+        <div class="case-note-head-actions">
+          <span class="note-timer" id="ai-timer" hidden></span>
+          <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
+        </div>
+      </div>
+      <p class="case-note-tip">由 AI 根据下方已提交的报告结果自动解析，仅本次展示、不保存。</p>
+      <textarea id="ai-parse-result" rows="10" readonly placeholder="点击「AI 解析」，AI 将根据报告结果自动生成解析…"></textarea>
+      <div class="case-note-foot">
+        <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
+        <span class="case-note-hint" id="ai-hint"></span>
+      </div>
+    </section>
   </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <!-- AI 解析结果弹窗（灰色遮罩 + 屏幕上方） -->
+  <div class="modal-mask" id="ai-test-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="AI 解析">
+      <div class="modal-head">
+        <div class="modal-title" id="ai-test-title">AI 解析</div>
+        <button type="button" class="modal-close" id="ai-test-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-test-box" id="ai-test-box"></div>
+        <div class="ai-test-interpret" id="ai-test-interpret" hidden></div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn-cancel ai-test-ok" id="ai-test-ok">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="js/report-ocr.js"></script>
   <script src="js/report-detail.js"></script>
