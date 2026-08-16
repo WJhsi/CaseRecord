@@ -21,9 +21,8 @@
 
   var REVEAL_MS = 650;
 
-  // 以药丸中心为圆心，背景层辐射扩散圆（z-index:0，在内容下）
-  // 背景：扩散期间锁定为旧色，仅圆内显示新背景色（圆扩散效果）
-  // 卡片：扩散同时启用全局颜色过渡，卡片随圆扩散同步渐变变色
+  // 以药丸中心为圆心，圆短暂盖屏辐射扩散（z-index 高，盖住内容，扩散最明显）
+  // 扩散同时切换主题类并启用全局过渡，卡片在圆下同步渐变；扩散结束移除圆露出新主题
   function revealAndSwitch(theme) {
     var rect = toggle.getBoundingClientRect();
     var cx = rect.left + rect.width / 2;
@@ -41,13 +40,13 @@
     circle.className = "theme-reveal";
     circle.style.cssText =
       "position:fixed;left:0;top:0;width:100vw;height:100vh;" +
-      "z-index:0;pointer-events:none;" +
+      "z-index:9998;pointer-events:none;" +
       "background:" + BG[theme] + ";" +
       "clip-path:circle(0px at " + cx + "px " + cy + "px);" +
       "transition:clip-path " + REVEAL_MS + "ms cubic-bezier(0.4,0,0.2,1);";
     document.body.appendChild(circle);
 
-    // 启用全局颜色过渡（卡片/文字/边框随圆扩散同步变色）
+    // 启用全局颜色过渡（卡片/文字/边框在圆下同步渐变）
     root.classList.add("theme-transitioning");
 
     // 强制回流后触发扩散，同时切换主题类（卡片渐变与圆扩散同步）
@@ -55,7 +54,7 @@
     circle.style.clipPath = "circle(" + r + "px at " + cx + "px " + cy + "px)";
     root.classList.toggle("dark", theme === "dark");
 
-    // 动画结束：解锁背景（回落到新主题色）、移除圆、关闭全局过渡
+    // 动画结束：解锁背景、移除圆（露出已渐变的新主题）、关闭全局过渡
     setTimeout(function () {
       root.style.backgroundColor = "";
       circle.remove();
