@@ -626,7 +626,7 @@ a.btn-add {
 .case-note textarea {
   width: 100%;
   min-height: 140px;
-  resize: vertical;
+  resize: none;
   box-sizing: border-box;
   padding: 0.9rem 1rem;
   border: 1px solid var(--line);
@@ -1814,7 +1814,7 @@ fieldset + fieldset {
 }
 
 .field textarea {
-  resize: vertical;
+  resize: none;
   min-height: 3.4rem;
 }
 
@@ -2204,4 +2204,9 @@ fieldset + fieldset {
 
 .toast.err {
   background: var(--danger);
+}
+
+/* 全局兜底：所有输入栏（含只读）禁止右下角拖拽改尺寸 */
+textarea {
+  resize: none !important;
 }
