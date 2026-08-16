@@ -977,7 +977,7 @@ a.btn-add {
   left: 0.25rem;
   width: calc(50% - 0.4rem);
   height: calc(100% - 0.5rem);
-  background: #fff;
+  background: var(--card, #fff);
   border-radius: 9px;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.12);
   z-index: 0;
@@ -986,6 +986,12 @@ a.btn-add {
   transform: translateX(var(--tx));
   transform-origin: center;
   animation: topnav-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 深色模式下导航滑块用稍亮的卡片色，避免刺眼纯白 */
+html.dark .topnav-slider {
+  background: #2e2e30;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 /* 当前页为第二个按钮（添加病例页）时滑块右移 */
@@ -1610,12 +1616,18 @@ a.btn-add {
   left: 3px;
   width: calc(50% - 4.5px);
   height: calc(100% - 6px);
-  background: #fff;
+  background: var(--card, #fff);
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.12);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
   pointer-events: none;
+}
+
+/* 深色模式下自动/手动切换滑块用稍亮卡片色 */
+html.dark .mode-slider {
+  background: #2e2e30;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .ocr-mode.manual .mode-slider {
