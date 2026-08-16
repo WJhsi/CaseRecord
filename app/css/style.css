@@ -1395,6 +1395,41 @@ a.btn-add {
   overflow-y: auto;
 }
 
+/* 检查报告：整段文字识别框 */
+#ocr-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+#ocr-text-wrap textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 260px;
+  resize: none;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfcfa;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#ocr-text-wrap textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
+#ocr-text-wrap textarea[readonly] {
+  background: #faf9f7;
+  color: var(--ink-2, #555);
+  cursor: default;
+}
+
 .ocr-table thead th {
   position: sticky;
   top: 0;

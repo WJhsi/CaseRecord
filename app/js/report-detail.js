@@ -47,6 +47,9 @@
     return;
   }
 
+  // 检查报告（影像类：CT / MR / DR / 超声等）：OCR 识别整段文字，不做血常规解析
+  var isCheckReport = img.kind === "检查报告";
+
   /* ---------- 渲染 ---------- */
 
   $("back-link").href = "case-detail.html?id=" + c.id;
@@ -88,6 +91,8 @@
   var ocrStatus = document.getElementById("ocr-status");
   var ocrTableWrap = document.getElementById("ocr-table-wrap");
   var ocrTbody = document.getElementById("ocr-tbody");
+  var ocrTextWrap = document.getElementById("ocr-text-wrap");
+  var ocrTextarea = document.getElementById("ocr-textarea");
   var ocrRawWrap = document.getElementById("ocr-raw-wrap");
   var ocrRaw = document.getElementById("ocr-raw");
 
@@ -171,19 +176,27 @@
           return;
         }
         ocrRaw.textContent = text;
-        var parsed = parseLabReport(text);
-        rowsData = rowsFromMap(parsed);
-        renderLabTable(rowsData, currentMode);
-        var count = 0;
-        for (var k in parsed) {
-          if (parsed.hasOwnProperty(k)) count++;
-        }
-        // 识别完成后自动保存到本地（下次打开直接显示，不再重新识别）
-        autoSaveOcr(rowsData);
-        if (count) {
-          showOcrStatus("识别完成，已填入 " + count + " 项并自动保存到本地（下次打开直接显示），可手动修改后再次保存。");
+        if (isCheckReport) {
+          // 检查报告：识别整段文字，填入文本框（自动模式只读）
+          ocrTextarea.value = text;
+          ocrTextarea.readOnly = currentMode === "auto";
+          autoSaveOcrText(text);
+          showOcrStatus("识别完成，报告文字已填入并自动保存到本地（下次打开直接显示），可切换手动输入修改后再次保存。");
         } else {
-          showOcrStatus("识别完成，但未识别到血常规指标，可直接手动填写后保存。");
+          var parsed = parseLabReport(text);
+          rowsData = rowsFromMap(parsed);
+          renderLabTable(rowsData, currentMode);
+          var count = 0;
+          for (var k in parsed) {
+            if (parsed.hasOwnProperty(k)) count++;
+          }
+          // 识别完成后自动保存到本地（下次打开直接显示，不再重新识别）
+          autoSaveOcr(rowsData);
+          if (count) {
+            showOcrStatus("识别完成，已填入 " + count + " 项并自动保存到本地（下次打开直接显示），可手动修改后再次保存。");
+          } else {
+            showOcrStatus("识别完成，但未识别到血常规指标，可直接手动填写后保存。");
+          }
         }
       })
       .catch(function (err) {
@@ -439,6 +452,24 @@
     }
   }
 
+  // 检查报告：自动保存整段文字
+  function autoSaveOcrText(text) {
+    if (!text || !String(text).trim()) return;
+    img.ocr = { text: String(text).trim(), savedAt: new Date().toISOString() };
+    var list = readCases();
+    for (var j = 0; j < list.length; j++) {
+      if (String(list[j].id) === String(c.id) && list[j].images && list[j].images[idx]) {
+        list[j].images[idx] = img;
+        break;
+      }
+    }
+    try {
+      localStorage.setItem(CASES_KEY, JSON.stringify(list));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
   function calcStatus(value, range) {
     if (!value || isNaN(parseFloat(value))) return "";
     var v = parseFloat(value);
@@ -477,6 +508,20 @@
 
   function switchMode(mode) {
     if (mode === currentMode) return;
+    if (isCheckReport) {
+      // 检查报告：仅切换文本框只读状态
+      currentMode = mode;
+      document.getElementById("mode-auto").classList.toggle("active", mode === "auto");
+      document.getElementById("mode-manual").classList.toggle("active", mode === "manual");
+      document.getElementById("ocr-mode").classList.toggle("manual", mode === "manual"); // 滑块滑动
+      ocrTextarea.readOnly = mode === "auto";
+      if (mode === "manual") {
+        showOcrStatus("手动输入模式：可直接编辑报告文字，修改后点击保存。");
+      } else {
+        showOcrStatus("自动输入模式：显示识别结果，可切换手动输入修改。");
+      }
+      return;
+    }
     rowsData = collectFromTable(); // 保留当前内容（含手动修改）
     currentMode = mode;
     document.getElementById("mode-auto").classList.toggle("active", mode === "auto");
@@ -499,6 +544,8 @@
 
   var saveBtn = document.getElementById("ocr-save");
   var rerunBtn = document.getElementById("ocr-rerun");
+  var saveTextBtn = document.getElementById("ocr-save-text");
+  var rerunTextBtn = document.getElementById("ocr-rerun-text");
 
   saveBtn.addEventListener("click", function () {
     var rows = collectFromTable();
@@ -536,12 +583,41 @@
     }
   });
 
-  // 检查报告（影像类：CT / MR / DR / 超声等）：不做 OCR，仅保留报告展示
-  if (img.kind === "检查报告") {
-    ocrSection.hidden = true;
+  // 检查报告：保存 / 重新识别整段文字
+  saveTextBtn.addEventListener("click", function () {
+    var text = ocrTextarea.value.trim();
+    if (!text) {
+      showOcrStatus("请先填写或识别出报告文字后再保存。", true);
+      return;
+    }
+    autoSaveOcrText(text);
+    showOcrStatus("报告文字已保存 ✓ 刷新后仍保留，可继续修改。");
+  });
+
+  rerunTextBtn.addEventListener("click", function () {
+    if (typeof window.runPaddleOCR === "function") {
+      runOcr();
+    } else {
+      showOcrStatus("识别引擎尚未就绪，请稍后再试。", true);
+    }
+  });
+
+  // 检验报告：显示血常规表格；检查报告：显示整段文字文本框，均自动识别
+  ocrSection.hidden = false;
+  if (isCheckReport) {
+    ocrTableWrap.hidden = true;
+    ocrTextWrap.hidden = false;
+    var savedText = img.ocr && img.ocr.text;
+    if (savedText) {
+      ocrTextarea.value = savedText;
+      var savedAt = img.ocr.savedAt ? "（" + new Date(img.ocr.savedAt).toLocaleString("zh-CN") + "）" : "";
+      showOcrStatus("已载入上次保存的报告文字" + savedAt + "，可切换手动输入修改。");
+    } else {
+      ocrTextarea.value = "";
+      startAutoOcr();
+    }
   } else {
-    // 检验报告：显示识别区；有已保存结果则载入，否则显示空白表格并自动识别预填
-    ocrSection.hidden = false;
+    ocrTextWrap.hidden = true;
     var savedOcr = img.ocr && img.ocr.rows;
     if (savedOcr) {
       rowsData = savedOcr;
