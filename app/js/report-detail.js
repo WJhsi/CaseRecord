@@ -399,9 +399,24 @@
         "</tr>";
     }
     labTbody.innerHTML = html;
-    labBlock.hidden = rows.length === 0;
     var countEl = document.getElementById("lab-count");
-    if (countEl) countEl.textContent = "共 " + rows.length + " 项";
+    if (countEl) {
+      var filled = 0;
+      for (var j = 0; j < rows.length; j++) {
+        if (rows[j] && (rows[j].name || rows[j].value)) filled++;
+      }
+      countEl.textContent = "共 " + filled + " 项";
+    }
+  }
+
+  // 检验报告：进入页面即显示表格框架（表头 + 空行占位），识别完成后再填充
+  function showLabTablePlaceholder() {
+    var rows = [];
+    for (var i = 0; i < 6; i++) {
+      rows.push({ name: "", value: "", unit: "", range: "" });
+    }
+    renderLabTable(rows);
+    labBlock.hidden = false;
   }
 
   // 读取表格当前值
@@ -463,8 +478,15 @@
         } catch (e) {
           /* JSON 解析失败则保留空表 */
         }
+        // 不足 6 行时用空行补齐，保持表格框架常驻可见
+        while (rows.length < 6) rows.push({ name: "", value: "", unit: "", range: "" });
         renderLabTable(rows);
-        showRecogStatus(rows.length ? "检验项目已提取：共 " + rows.length + " 项，可修改后点击「AI 解析」。" : "识别完成，但未能提取出检验项目，可手动添加后解析。");
+        labBlock.hidden = false;
+        var filledCount = 0;
+        for (var fi = 0; fi < rows.length; fi++) {
+          if (rows[fi] && (rows[fi].name || rows[fi].value)) filledCount++;
+        }
+        showRecogStatus(filledCount ? "检验项目已提取：共 " + filledCount + " 项，可修改后点击「AI 解析」。" : "识别完成，但未能提取出检验项目，可手动添加后解析。");
         aiHint.textContent = "识别完成，未保存";
       })
       .catch(function (err) {
@@ -551,6 +573,10 @@
       });
   });
 
-  /* ---------- 初始化：进入页面自动识别 ---------- */
+  /* ---------- 初始化 ---------- */
+  // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
+  if (!isCheckReport) {
+    showLabTablePlaceholder();
+  }
   autoRecognize();
 })();
