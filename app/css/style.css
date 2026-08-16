@@ -2797,9 +2797,10 @@ textarea {
   pointer-events: none;
 }
 
-/* 深色激活时滑块右移（由 JS 控制像素位移，此处仅保留过渡） */
+/* 深色激活时滑块右移（由 JS 控制像素位移）；滑块深色下用深灰，与激活高亮同色 */
 .theme-toggle.dark .theme-slider {
-  /* transform 由 theme.js 内联设置 */
+  background: #2e2e30;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .theme-btn {
@@ -2830,15 +2831,15 @@ textarea {
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.18);
 }
 
-/* 深色模式下：非激活图标淡灰，激活图标白底高亮 */
+/* 深色模式下：非激活图标淡灰，激活图标深色系高亮（不用白底） */
 .theme-toggle.dark .theme-btn {
   color: rgba(255, 255, 255, 0.45);
 }
 
 .theme-toggle.dark .theme-btn.active {
-  color: #2f6f4f;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  color: #8ad2ab;
+  background: #2e2e30;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .theme-btn:hover:not(:disabled) {
