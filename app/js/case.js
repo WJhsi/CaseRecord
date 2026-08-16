@@ -561,7 +561,7 @@
     '<div class="drop-overlay-box">' +
     '<div class="drop-overlay-icon">📄</div>' +
     '<div class="drop-overlay-title">松开即可上传报告文件</div>' +
-    '<div class="drop-overlay-sub">支持 jpg / png / webp / gif / pdf，单个不超过 2MB</div>' +
+    '<div class="drop-overlay-sub">在页面任意位置松开即可；支持 jpg / png / webp / gif / pdf，单个不超过 2MB</div>' +
     "</div>";
   document.body.appendChild(dropOverlay);
 
@@ -616,13 +616,18 @@
     }
   });
 
-  // 松在页面其他位置：移除遮罩
+  // 松在页面任意位置：若正处于拖拽状态（遮罩显示）则上传文件
   document.addEventListener("drop", function (e) {
     preventDefaults(e);
+    var wasDragging = dropOverlay.classList.contains("show");
     dragDepth = 0;
     dragOverUpload = false;
+    uploadTrigger.classList.remove("drag-over");
     dropOverlay.classList.remove("over-upload");
     dropOverlay.classList.remove("show");
+    if (wasDragging && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      handleFiles(e.dataTransfer.files);
+    }
   });
 
   function renderPreview() {
