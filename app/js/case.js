@@ -758,9 +758,34 @@
     });
 
     var nowIso = new Date().toISOString();
-    var caseData;
+    var savedId;
+    var submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "保存中…";
+    }
+
+    var doSave = function (caseData) {
+      savedId = caseData.id;
+      Store.saveCase(savedId, caseData)
+        .then(function () {
+          showToast(editing ? "病例已更新 ✓" : "病例已保存 ✓");
+          // 保存后直达病例详情页
+          setTimeout(function () {
+            window.location.href = "case-detail.html?id=" + savedId;
+          }, 700);
+        })
+        .catch(function (err) {
+          showToast("保存失败：" + (err && err.message ? err.message : err), "err");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = editing ? "更新病例" : "保存病例";
+          }
+        });
+    };
+
     if (editing) {
-      caseData = editing;
+      var caseData = editing;
       caseData.illness = illnessVal;
       caseData.condition = condition;
       caseData.images = imageData;
@@ -768,42 +793,28 @@
       caseData.treatment = treatmentVal;
       caseData.treatmentNote = treatmentNote;
       caseData.updatedAt = nowIso;
-      savedId = editing.id;
+      doSave(caseData);
     } else {
-      caseData = {
-        id: Date.now(),
-        illness: illnessVal,
-        condition: condition,
-        images: imageData,
-        meds: meds,
-        treatment: treatmentVal,
-        treatmentNote: treatmentNote,
-        createdAt: nowIso
-      };
-      savedId = caseData.id;
-    }
-
-    var submitBtn = form.querySelector('[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "保存中…";
-    }
-
-    Store.saveCase(savedId, caseData)
-      .then(function () {
-        showToast(editing ? "病例已更新 ✓" : "病例已保存 ✓");
-        // 保存后直达病例详情页
-        setTimeout(function () {
-          window.location.href = "case-detail.html?id=" + savedId;
-        }, 700);
-      })
-      .catch(function (err) {
-        showToast("保存失败：" + (err && err.message ? err.message : err), "err");
+      // 新病例：ID 用日期形式（如 2026-08-15，同一天自动加序号）
+      Store.nextCaseId().then(function (newId) {
+        doSave({
+          id: newId,
+          illness: illnessVal,
+          condition: condition,
+          images: imageData,
+          meds: meds,
+          treatment: treatmentVal,
+          treatmentNote: treatmentNote,
+          createdAt: nowIso
+        });
+      }).catch(function (err) {
+        showToast("生成病例编号失败：" + (err && err.message ? err.message : err), "err");
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = editing ? "更新病例" : "保存病例";
+          submitBtn.textContent = "保存病例";
         }
       });
+    }
   });
 
   // 输入时清除错误状态

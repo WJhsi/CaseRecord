@@ -62,6 +62,27 @@
     return req("DELETE", "/api/cases/" + id);
   }
 
+  // 生成日期形式的新病例 ID：2026-08-15（同一天第 2 个为 2026-08-15-2，以此类推）
+  function nextCaseId() {
+    var now = new Date();
+    var pad = function (n) {
+      return ("0" + n).slice(-2);
+    };
+    var datePrefix = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+    return listCases().then(function (list) {
+      var count = 0;
+      for (var i = 0; i < list.length; i++) {
+        var id = String(list[i].id || "");
+        if (id === datePrefix) count = Math.max(count, 1);
+        else if (id.indexOf(datePrefix + "-") === 0) {
+          var suffix = parseInt(id.slice(datePrefix.length + 1), 10);
+          if (!isNaN(suffix)) count = Math.max(count, suffix);
+        }
+      }
+      return count >= 1 ? datePrefix + "-" + (count + 1) : datePrefix;
+    });
+  }
+
   /* ---------- 识别结果（每张报告一个 json） ---------- */
 
   function getOcr(caseId, idx) {
@@ -141,6 +162,7 @@
     getCase: getCase,
     saveCase: saveCase,
     deleteCase: deleteCase,
+    nextCaseId: nextCaseId,
     getOcr: getOcr,
     saveOcr: saveOcr,
     migrateOnce: migrateOnce
