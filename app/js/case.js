@@ -541,12 +541,13 @@
       var row = document.createElement("div");
       row.className = "report-row";
 
-      // 缩略图
+      // 缩略图（已有文件用 URL，新文件用 dataUrl）
       var thumb = document.createElement("div");
       thumb.className = "report-thumb";
+      var src = f.file ? Store.imageUrl(EDIT_ID, f.file) : f.dataUrl;
       if (f.type && f.type.indexOf("image/") === 0) {
         var im = document.createElement("img");
-        im.src = f.dataUrl;
+        im.src = src;
         im.alt = "报告";
         thumb.appendChild(im);
       } else {
@@ -752,63 +753,66 @@
       if (name || usage) meds.push({ name: name, usage: usage });
     });
 
-    var savedId;
     var illnessVal = illness.getValue() || "";
     var treatmentVal = treatment.getValue() || "";
     var treatmentNote = form["treatment-note"].value.trim();
-    var imageData = files.map(function (f) {
-      return {
-        name: f.name,
-        type: f.type,
-        dataUrl: f.dataUrl,
-        kind: f.kind,
-        modality: f.modality,
-        ocr: f.ocr || undefined
-      };
-    });
 
     var nowIso = new Date().toISOString();
-    var savedId;
     var submitBtn = form.querySelector('[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "保存中…";
     }
 
-    var doSave = function (caseData) {
-      savedId = caseData.id;
-      Store.saveCase(savedId, caseData)
-        .then(function () {
-          showToast(editing ? "病例已更新 ✓" : "病例已保存 ✓");
-          // 保存后直达病例详情页
-          setTimeout(function () {
-            window.location.href = "case-detail.html?id=" + savedId;
-          }, 700);
-        })
-        .catch(function (err) {
-          showToast("保存失败：" + (err && err.message ? err.message : err), "err");
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = editing ? "更新病例" : "保存病例";
-          }
-        });
+    // 需要保存到指定病例后再上传图片，因此先确定 caseId
+    var resolveCaseId = function () {
+      if (editing) return Promise.resolve(editing.id);
+      return Store.nextCaseId();
     };
 
-    if (editing) {
-      var caseData = editing;
-      caseData.illness = illnessVal;
-      caseData.condition = condition;
-      caseData.images = imageData;
-      caseData.meds = meds;
-      caseData.treatment = treatmentVal;
-      caseData.treatmentNote = treatmentNote;
-      caseData.updatedAt = nowIso;
-      doSave(caseData);
-    } else {
-      // 新病例：ID 用日期形式（如 2026-08-15，同一天自动加序号）
-      Store.nextCaseId().then(function (newId) {
-        doSave({
-          id: newId,
+    // 上传新图片（有 dataUrl 且无 file 的），返回 [{...meta, file}]
+    var prepareImages = function (caseId) {
+      var tasks = files.map(function (f) {
+        if (f.file) {
+          // 已有文件：保留引用
+          return Promise.resolve({
+            name: f.name,
+            type: f.type,
+            kind: f.kind,
+            modality: f.modality,
+            file: f.file,
+            ocr: f.ocr || undefined
+          });
+        }
+        // 新文件：上传到 images/ 目录
+        return Store.uploadImage(caseId, f).then(function (r) {
+          return {
+            name: f.name,
+            type: f.type || r.type,
+            kind: f.kind,
+            modality: f.modality,
+            file: r.file,
+            ocr: f.ocr || undefined
+          };
+        });
+      });
+      return Promise.all(tasks);
+    };
+
+    var doSave = function (caseId, imageData) {
+      var caseData;
+      if (editing) {
+        caseData = editing;
+        caseData.illness = illnessVal;
+        caseData.condition = condition;
+        caseData.images = imageData;
+        caseData.meds = meds;
+        caseData.treatment = treatmentVal;
+        caseData.treatmentNote = treatmentNote;
+        caseData.updatedAt = nowIso;
+      } else {
+        caseData = {
+          id: caseId,
           illness: illnessVal,
           condition: condition,
           images: imageData,
@@ -816,15 +820,29 @@
           treatment: treatmentVal,
           treatmentNote: treatmentNote,
           createdAt: nowIso
+        };
+      }
+      return Store.saveCase(caseId, caseData).then(function () {
+        showToast(editing ? "病例已更新 ✓" : "病例已保存 ✓");
+        setTimeout(function () {
+          window.location.href = "case-detail.html?id=" + caseId;
+        }, 700);
+      });
+    };
+
+    resolveCaseId()
+      .then(function (caseId) {
+        return prepareImages(caseId).then(function (imageData) {
+          return doSave(caseId, imageData);
         });
-      }).catch(function (err) {
-        showToast("生成病例编号失败：" + (err && err.message ? err.message : err), "err");
+      })
+      .catch(function (err) {
+        showToast("保存失败：" + (err && err.message ? err.message : err), "err");
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = "保存病例";
+          submitBtn.textContent = editing ? "更新病例" : "保存病例";
         }
       });
-    }
   });
 
   // 输入时清除错误状态

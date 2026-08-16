@@ -61,7 +61,7 @@
         thumb.className = "report-thumb";
         if (img.type && img.type.indexOf("image/") === 0) {
           var im = document.createElement("img");
-          im.src = img.dataUrl;
+          im.src = img.file ? Store.imageUrl(c.id, img.file) : img.dataUrl;
           im.alt = "报告";
           thumb.appendChild(im);
         } else {

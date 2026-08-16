@@ -60,20 +60,21 @@
       if (img.type && img.type.indexOf("image/") === 0) {
         var im = document.createElement("img");
         im.className = "report-img";
-        im.src = img.dataUrl;
+        im.src = img.file ? Store.imageUrl(c.id, img.file) : img.dataUrl;
         im.alt = img.name || "报告";
         content.appendChild(im);
       } else {
         // PDF：内嵌预览 + 打开链接
+        var pdfSrc = img.file ? Store.imageUrl(c.id, img.file) : img.dataUrl;
         var iframe = document.createElement("iframe");
         iframe.className = "report-pdf-frame";
-        iframe.src = img.dataUrl;
+        iframe.src = pdfSrc;
         iframe.title = img.name || "PDF 报告";
         content.appendChild(iframe);
 
         var link = document.createElement("a");
         link.className = "report-open";
-        link.href = img.dataUrl;
+        link.href = pdfSrc;
         link.target = "_blank";
         link.rel = "noopener";
         link.textContent = "在新标签页打开 / 下载";

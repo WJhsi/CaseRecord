@@ -16,6 +16,8 @@ import os
 import json
 import re
 import shutil
+import time
+import base64
 
 PORT = 8081
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -98,6 +100,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         m = re.match(r"^/api/cases/([^/]+)/ocr/(\d+)$", p)
         if m:
             return self._get_ocr(m.group(1), m.group(2))
+        m = re.match(r"^/api/cases/([^/]+)/images/([^/]+)$", p)
+        if m:
+            return self._get_image(m.group(1), m.group(2))
         super().do_GET()
 
     def do_POST(self):
@@ -116,6 +121,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         m = re.match(r"^/api/cases/([^/]+)/ocr/(\d+)$", p)
         if m:
             return self._save_ocr(m.group(1), m.group(2))
+        m = re.match(r"^/api/cases/([^/]+)/images$", p)
+        if m:
+            return self._upload_image(m.group(1))
         send_json(self, 404, {"ok": False, "error": "not found"})
 
     def do_DELETE(self):
@@ -188,6 +196,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if isinstance(ocr, dict) and (ocr.get("text") or ocr.get("rows")):
                     ocr["savedAt"] = ocr.get("savedAt") or ""
                     write_json(os.path.join(d, "ocr-%d.json" % i), ocr)
+            # 清理未被 case.json 引用的孤儿图片文件
+            imgs_dir = os.path.join(d, "images")
+            if os.path.isdir(imgs_dir):
+                referenced = set()
+                for im in images:
+                    if isinstance(im, dict) and im.get("file"):
+                        referenced.add(im["file"])
+                for name in os.listdir(imgs_dir):
+                    if name not in referenced:
+                        try:
+                            os.remove(os.path.join(imgs_dir, name))
+                        except OSError:
+                            pass
         return send_json(self, 200, {"ok": True, "id": cid})
 
     def _delete_case(self, cid):
@@ -223,6 +244,69 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         data["savedAt"] = data.get("savedAt") or ""
         write_json(f, data)
         return send_json(self, 200, {"ok": True})
+
+    # ---------- 报告图片文件（独立存储，JSON 只存引用） ----------
+
+    def _images_dir(self, cid):
+        d = self._case_dir(cid)
+        if d is None:
+            return None
+        return os.path.join(d, "images")
+
+    def _upload_image(self, cid):
+        d = self._images_dir(cid)
+        if d is None:
+            return send_json(self, 400, {"ok": False, "error": "bad id"})
+        data = read_body(self)
+        if not isinstance(data, dict) or not data.get("dataUrl"):
+            return send_json(self, 400, {"ok": False, "error": "invalid image data"})
+        data_url = str(data["dataUrl"])
+        # 解析 dataUrl 中的 base64 部分与 mime
+        m = re.match(r"^data:([^;]+);base64,(.*)$", data_url, re.S)
+        if not m:
+            return send_json(self, 400, {"ok": False, "error": "invalid data url"})
+        mime = m.group(1)
+        raw = m.group(2)
+        try:
+            content = base64.b64decode(raw)
+        except Exception:
+            return send_json(self, 400, {"ok": False, "error": "invalid base64"})
+        # 文件名：时间戳 + 序号，扩展名按 mime 推断
+        ext_map = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/gif": "gif",
+            "application/pdf": "pdf"
+        }
+        ext = ext_map.get(mime, "bin")
+        os.makedirs(d, exist_ok=True)
+        fname = "%d-%d.%s" % (int(time.time() * 1000), len(os.listdir(d)) + 1, ext)
+        with open(os.path.join(d, fname), "wb") as f:
+            f.write(content)
+        return send_json(self, 200, {"ok": True, "file": fname, "type": mime})
+
+    def _get_image(self, cid, fname):
+        d = self._images_dir(cid)
+        if d is None or not re.match(r"^[A-Za-z0-9_.-]+$", fname or ""):
+            return send_json(self, 400, {"ok": False, "error": "bad file name"})
+        fp = os.path.join(d, fname)
+        if not os.path.isfile(fp):
+            return send_json(self, 404, {"ok": False, "error": "image not found"})
+        mime_map = {
+            "jpg": "image/jpeg", "jpeg": "image/jpeg",
+            "png": "image/png", "webp": "image/webp",
+            "gif": "image/gif", "pdf": "application/pdf", "bin": "application/octet-stream"
+        }
+        ext = fname.rsplit(".", 1)[-1].lower()
+        with open(fp, "rb") as f:
+            body = f.read()
+        handler = self
+        handler.send_response(200)
+        handler.send_header("Content-Type", mime_map.get(ext, "application/octet-stream"))
+        handler.send_header("Content-Length", str(len(body)))
+        handler.end_headers()
+        handler.wfile.write(body)
 
     def log_message(self, format, *args):
         pass

@@ -95,6 +95,21 @@
     return req("POST", "/api/cases/" + caseId + "/ocr/" + idx, data || {});
   }
 
+  /* ---------- 报告图片文件 ---------- */
+
+  // 上传图片文件（base64 dataUrl），返回 {file, type}
+  function uploadImage(caseId, image) {
+    return req("POST", "/api/cases/" + caseId + "/images", {
+      dataUrl: image.dataUrl,
+      type: image.type || ""
+    });
+  }
+
+  // 图片访问 URL（独立文件存储）
+  function imageUrl(caseId, file) {
+    return "/api/cases/" + caseId + "/images/" + encodeURIComponent(file);
+  }
+
   /* ---------- 旧数据迁移（localStorage → JSON，只执行一次） ---------- */
 
   var MIGRATED_KEY = "caseRecord.migratedToJson";
@@ -165,6 +180,8 @@
     nextCaseId: nextCaseId,
     getOcr: getOcr,
     saveOcr: saveOcr,
+    uploadImage: uploadImage,
+    imageUrl: imageUrl,
     migrateOnce: migrateOnce
   };
 })();
