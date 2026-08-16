@@ -756,6 +756,27 @@ a.btn-add {
   cursor: default;
 }
 
+/* 识别文字 / AI 解析 小节标题 */
+.ocr-text-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.ocr-check-tag {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+}
+
 .case-tags {
   display: flex;
   flex-wrap: wrap;
