@@ -425,8 +425,8 @@
 
   function statusCell(value, range) {
     var s = calcRowStatus(value, range);
-    if (!s) return '<td class="lab-status"></td>';
-    var cls = s === "偏高" ? "up" : "down"; // 正常不显示
+    if (!s || s === "正常") return '<td class="lab-status"></td>'; // 正常不显示
+    var cls = s === "偏高" ? "up" : "down";
     var arrow = s === "偏高" ? "↑" : "↓";
     return '<td class="lab-status ' + cls + '">' + arrow + " " + s + "</td>";
   }
