@@ -950,6 +950,24 @@ a.btn-add {
   padding: 0.35rem 0.9rem;
 }
 
+.illness-label {
+  color: var(--ink-2);
+}
+
+/* 病情类型：可点击跳转搜索 */
+.illness-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(47, 111, 79, 0.4);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.illness-link:hover {
+  color: var(--accent-deep);
+  border-bottom-color: var(--accent-deep);
+}
+
 .detail-images {
   display: block; /* 报告块容器：占满整行 */
 }
