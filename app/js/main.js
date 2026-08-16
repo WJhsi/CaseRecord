@@ -273,43 +273,26 @@
   /* ---------- AI 大模型配置：模型下拉 ---------- */
 
   var MODEL_OPTIONS = [
-    // DeepSeek
-    { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（deepseek-v4-pro）" },
-    { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（deepseek-v4-flash）" },
-    { value: "deepseek-v4", label: "DeepSeek V4（deepseek-v4）" },
-    { value: "deepseek-reasoner", label: "DeepSeek R1（deepseek-reasoner）" },
-    // Kimi（月之暗面）
-    { value: "kimi-k3", label: "Kimi K3（kimi-k3）" },
-    { value: "kimi-k2", label: "Kimi K2（kimi-k2）" },
-    { value: "moonshot-v1-8k", label: "Kimi（moonshot-v1-8k）" },
-    // OpenAI
-    { value: "gpt-5.5", label: "GPT-5.5" },
-    { value: "gpt-5.2", label: "GPT-5.2" },
-    { value: "gpt-5", label: "GPT-5" },
-    { value: "gpt-4o", label: "GPT-4o" },
-    // Anthropic Claude
-    { value: "claude-4.5", label: "Claude 4.5" },
-    { value: "claude-4-5-sonnet", label: "Claude 4.5 Sonnet" },
-    // Google Gemini
-    { value: "gemini-3-pro", label: "Gemini 3 Pro" },
-    { value: "gemini-3-flash", label: "Gemini 3 Flash" },
-    // xAI
-    { value: "grok-4", label: "Grok 4" },
-    // Meta
-    { value: "llama-4", label: "Llama 4" },
+    // OpenAI（支持图片输入）
+    { value: "gpt-5.5", label: "GPT-5.5（看图）" },
+    { value: "gpt-5.2", label: "GPT-5.2（看图）" },
+    { value: "gpt-5", label: "GPT-5（看图）" },
+    { value: "gpt-4o", label: "GPT-4o（看图）" },
+    // Anthropic Claude（支持图片输入）
+    { value: "claude-4.5", label: "Claude 4.5（看图）" },
+    { value: "claude-4-5-sonnet", label: "Claude 4.5 Sonnet（看图）" },
+    // Google Gemini（支持图片输入）
+    { value: "gemini-3-pro", label: "Gemini 3 Pro（看图）" },
+    { value: "gemini-3-flash", label: "Gemini 3 Flash（看图）" },
+    // xAI（支持图片输入）
+    { value: "grok-4", label: "Grok 4（看图）" },
+    // Meta（原生多模态）
+    { value: "llama-4", label: "Llama 4（看图）" },
     // 阿里通义千问（百炼 DashScope：https://dashscope.aliyuncs.com/compatible-mode/v1）
     { value: "qwen-vl-max", label: "通义千问 VL-Max（qwen-vl-max，看图）" },
     { value: "qwen-vl-plus", label: "通义千问 VL-Plus（qwen-vl-plus，看图）" },
-    { value: "qwen-plus", label: "通义千问 Plus（qwen-plus）" },
-    { value: "qwen-turbo", label: "通义千问 Turbo（qwen-turbo）" },
-    // 智谱
-    { value: "glm-4", label: "智谱 GLM-4" },
-    { value: "glm-4v", label: "智谱 GLM-4V" },
-    // 其他主流
-    { value: "ernie-4.0", label: "百度文心（ernie-4.0）" },
-    { value: "doubao-pro-32k", label: "字节豆包（doubao-pro）" },
-    { value: "hunyuan-turbo", label: "腾讯混元（hunyuan-turbo）" },
-    { value: "spark-4.0", label: "讯飞星火（spark-4.0）" }
+    // 智谱（支持图片输入）
+    { value: "glm-4v", label: "智谱 GLM-4V（看图）" }
   ];
 
   var aiModel = createSelect({
