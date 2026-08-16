@@ -175,6 +175,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return send_json(self, 400, {"ok": False, "error": "bad id"})
         data["id"] = cid
         write_json(f, data)
+        # 同步重写 OCR 文件：按新 images 顺序，删除多余文件
+        # （编辑删除报告后，被删报告的 ocr-<idx>.json 也会一并删除）
+        d = self._case_dir(cid)
+        if d and os.path.isdir(d):
+            for name in os.listdir(d):
+                if name.startswith("ocr-") and name.endswith(".json"):
+                    os.remove(os.path.join(d, name))
+            images = data.get("images") or []
+            for i, im in enumerate(images):
+                ocr = im.get("ocr") if isinstance(im, dict) else None
+                if isinstance(ocr, dict) and (ocr.get("text") or ocr.get("rows")):
+                    ocr["savedAt"] = ocr.get("savedAt") or ""
+                    write_json(os.path.join(d, "ocr-%d.json" % i), ocr)
         return send_json(self, 200, {"ok": True, "id": cid})
 
     def _delete_case(self, cid):

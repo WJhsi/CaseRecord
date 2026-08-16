@@ -44,18 +44,27 @@
       pageSub.textContent = "修改病情、影像报告与用药记录。";
       backLink.href = "case-detail.html?id=" + editing.id;
       files = Array.isArray(editing.images) ? editing.images.slice() : [];
-      // 回填表单
-      form.condition.value = editing.condition || "";
-      illness.setValue(editing.illness || "");
-      treatment.setValue(editing.treatment || "");
-      form["treatment-note"].value = editing.treatmentNote || "";
-      renderPreview();
-      if (editing.meds && editing.meds.length) {
-        editing.meds.forEach(function (m) {
-          addMedRow(m.name, m.usage);
+      // 为每张已有报告载入 OCR 识别结果（保存时按新顺序重写文件）
+      var ocrTasks = files.map(function (im, i) {
+        return Store.getOcr(EDIT_ID, i).then(function (ocr) {
+          if (ocr) im.ocr = ocr;
+          return im;
         });
-      }
-      updateModalityVisibility();
+      });
+      return Promise.all(ocrTasks).then(function () {
+        // 回填表单
+        form.condition.value = editing.condition || "";
+        illness.setValue(editing.illness || "");
+        treatment.setValue(editing.treatment || "");
+        form["treatment-note"].value = editing.treatmentNote || "";
+        renderPreview();
+        if (editing.meds && editing.meds.length) {
+          editing.meds.forEach(function (m) {
+            addMedRow(m.name, m.usage);
+          });
+        }
+        updateModalityVisibility();
+      });
     });
   }
 
@@ -753,7 +762,8 @@
         type: f.type,
         dataUrl: f.dataUrl,
         kind: f.kind,
-        modality: f.modality
+        modality: f.modality,
+        ocr: f.ocr || undefined
       };
     });
 
