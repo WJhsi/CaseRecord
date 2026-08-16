@@ -333,6 +333,29 @@
     });
   }
 
+  // 从独立文件加载图片为 base64 dataUrl（图片存 data/cases/<id>/images/）
+  function loadImageDataUrl() {
+    if (img.dataUrl) return Promise.resolve(img.dataUrl); // 兼容旧数据
+    if (!img.file) return Promise.reject(new Error("报告图片文件不存在"));
+    return fetch(Store.imageUrl(c.id, img.file))
+      .then(function (res) {
+        if (!res.ok) throw new Error("图片加载失败（HTTP " + res.status + "）");
+        return res.blob();
+      })
+      .then(function (blob) {
+        return new Promise(function (resolve, reject) {
+          var fr = new FileReader();
+          fr.onload = function () {
+            resolve(fr.result);
+          };
+          fr.onerror = function () {
+            reject(new Error("图片读取失败"));
+          };
+          fr.readAsDataURL(blob);
+        });
+      });
+  }
+
   function autoRecognize() {
     if (recognitionBusy) return;
     // PDF 无法作为图片发送
@@ -345,13 +368,15 @@
     showRecogStatus("正在调用视觉模型识别报告文字…");
     parseResult.placeholder = "正在识别报告文字，请稍候…";
 
-    readAiConfig()
-      .then(function (cfg) {
-        var vision = cfg.vision;
-        if (!vision || !vision.base || !vision.key || !vision.model) {
-          throw new Error("尚未配置「识别模型（视觉）」，请先到「编辑档案」页填写视觉模型的 API 地址、Key 和模型。");
-        }
-        return callAiVision(vision, img.dataUrl, OCR_PROMPT);
+    loadImageDataUrl()
+      .then(function (dataUrl) {
+        return readAiConfig().then(function (cfg) {
+          var vision = cfg.vision;
+          if (!vision || !vision.base || !vision.key || !vision.model) {
+            throw new Error("尚未配置「识别模型（视觉）」，请先到「编辑档案」页填写视觉模型的 API 地址、Key 和模型。");
+          }
+          return callAiVision(vision, dataUrl, OCR_PROMPT);
+        });
       })
       .then(function (result) {
         recognitionBusy = false;
