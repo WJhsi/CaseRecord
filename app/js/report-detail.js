@@ -104,6 +104,7 @@
   var aiMeta = document.getElementById("ai-meta");
   var aiHint = document.getElementById("ai-hint");
   var aiTimer = document.getElementById("ai-timer");
+  var aiParseTimer = document.getElementById("ai-parse-timer");
 
   // 识别出的报告文字（内存中，供解析使用）
   var recognizedText = "";
@@ -112,21 +113,28 @@
   var aiTimerId = null;
   var aiStartMs = 0;
   var aiBusy = false;
+  var activeTimer = null; // 当前计时显示元素
 
-  function startAiTimer() {
+  function startAiTimer(timerEl) {
+    activeTimer = timerEl || aiTimer;
     aiStartMs = Date.now();
-    aiTimer.hidden = false;
-    aiTimer.textContent = "已用时 0 秒";
+    activeTimer.hidden = false;
+    activeTimer.textContent = "已用时 0 秒";
     clearInterval(aiTimerId);
     aiTimerId = setInterval(function () {
       var sec = Math.round((Date.now() - aiStartMs) / 1000);
-      aiTimer.textContent = "已用时 " + sec + " 秒";
+      activeTimer.textContent = "已用时 " + sec + " 秒";
     }, 200);
   }
 
   function stopAiTimer() {
     clearInterval(aiTimerId);
     aiTimerId = null;
+    if (activeTimer) {
+      activeTimer.textContent = "";
+      activeTimer.hidden = true;
+      activeTimer = null;
+    }
     return Math.round((Date.now() - aiStartMs) / 1000);
   }
 
@@ -205,16 +213,14 @@
     }
     parts.push("时间：" + new Date().toLocaleString("zh-CN"));
     aiMeta.textContent = parts.join(" · ");
-    aiTimer.textContent = "";
-    aiTimer.hidden = true;
   }
 
-  function lockButton(btn, label) {
+  function lockButton(btn, label, timerEl) {
     btn.dataset.label = btn.textContent;
     btn.disabled = true;
     btn.textContent = label;
     aiBusy = true;
-    startAiTimer();
+    startAiTimer(timerEl);
   }
 
   function finishButton(btn) {
@@ -435,9 +441,13 @@
   }
 
   // 用文本模型把识别文字提取为检验项目 JSON
+  var extracting = false;
+
   function extractLabTable() {
-    if (aiBusy || !recognizedText.trim()) return;
-    lockButton(btnParse, "提取检验项目中…");
+    if (extracting || aiBusy || !recognizedText.trim()) return;
+    extracting = true;
+    showRecogStatus("正在提取检验项目…");
+    startAiTimer(aiTimer);
 
     readAiConfig()
       .then(function (cfg) {
@@ -494,7 +504,7 @@
         showRecogStatus("检验项目提取失败：" + String(err && err.message ? err.message : err), true);
       })
       .finally(function () {
-        finishButton(btnParse);
+        extracting = false;
       });
   }
 
@@ -547,7 +557,7 @@
       showToast("自动识别未完成或失败，请稍候或检查识别模型配置后刷新重试。", "err");
       return;
     }
-    lockButton(btnParse, "AI 解析中…");
+    lockButton(btnParse, "AI 解析中…", aiParseTimer);
 
     readAiConfig()
       .then(function (cfg) {
