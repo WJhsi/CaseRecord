@@ -662,6 +662,31 @@
     }
   });
 
+  // 兜底：拖拽中途终止（Esc / 窗口失焦 / dragend / 拖出松开）时关闭遮罩提示
+  function hideDropOverlay() {
+    dragDepth = 0;
+    dragOverUpload = false;
+    dragOverOverlay = false;
+    uploadTrigger.classList.remove("drag-over");
+    dropOverlay.classList.remove("over-upload");
+    dropOverlay.classList.remove("show");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") hideDropOverlay();
+  });
+
+  window.addEventListener("blur", hideDropOverlay);
+  document.addEventListener("dragend", hideDropOverlay);
+  document.addEventListener("mouseup", function () {
+    // 拖出窗口松开的兜底：延迟检查遮罩是否仍显示且无拖拽状态
+    setTimeout(function () {
+      if (!dragDepth && dropOverlay.classList.contains("show")) {
+        hideDropOverlay();
+      }
+    }, 100);
+  });
+
   function renderPreview() {
     uploadPreview.innerHTML = "";
     files.forEach(function (f, i) {
