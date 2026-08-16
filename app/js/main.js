@@ -297,8 +297,9 @@
     { value: "grok-4", label: "Grok 4" },
     // Meta
     { value: "llama-4", label: "Llama 4" },
-    // 阿里通义千问
-    { value: "qwen-vl-plus", label: "通义千问 VL（qwen-vl-plus）" },
+    // 阿里通义千问（百炼 DashScope：https://dashscope.aliyuncs.com/compatible-mode/v1）
+    { value: "qwen-vl-max", label: "通义千问 VL-Max（qwen-vl-max，看图）" },
+    { value: "qwen-vl-plus", label: "通义千问 VL-Plus（qwen-vl-plus，看图）" },
     { value: "qwen-plus", label: "通义千问 Plus（qwen-plus）" },
     { value: "qwen-turbo", label: "通义千问 Turbo（qwen-turbo）" },
     // 智谱
