@@ -796,7 +796,7 @@ a.btn-add {
 }
 
 .case-note textarea[readonly] {
-  background: var(--card-2, #faf9f7);
+  background: var(--field-bg, #faf9f7);
   color: var(--ink-2, #555);
   cursor: default;
 }
