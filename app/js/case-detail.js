@@ -167,27 +167,27 @@
       if (img.type && img.type.indexOf("image/") === 0) {
         var im = document.createElement("img");
         im.src = img.dataUrl;
-        im.alt = img.name || "报告";
+        im.alt = "报告";
         thumb.appendChild(im);
       } else {
         thumb.innerHTML = '<span class="report-thumb-pdf">PDF</span>';
       }
 
-      var name = document.createElement("div");
-      name.className = "report-name";
-      name.textContent = img.name || "报告 " + (idx + 1);
+      // 标签组：报告类型 + 检查方式（靠右对齐在箭头左侧）
+      var tags = document.createElement("span");
+      tags.className = "report-tags";
 
-      // 报告类型标签
       var kind = document.createElement("span");
       kind.className = "report-kind-chip";
       kind.textContent = img.kind || "检验报告";
+      tags.appendChild(kind);
 
       // 检查方式标签（检查报告时显示，如 CT / MR / 超声）
       if (img.modality) {
         var mod = document.createElement("span");
         mod.className = "report-kind-chip modality-chip";
         mod.textContent = img.modality;
-        a.appendChild(mod);
+        tags.appendChild(mod);
       }
 
       var arrow = document.createElement("span");
@@ -195,8 +195,7 @@
       arrow.textContent = "›";
 
       a.appendChild(thumb);
-      a.appendChild(name);
-      a.appendChild(kind);
+      a.appendChild(tags);
       a.appendChild(arrow);
       listEl.appendChild(a);
     });

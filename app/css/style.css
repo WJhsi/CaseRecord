@@ -758,12 +758,11 @@ a.btn-add {
 }
 
 .detail-block {
-  padding-top: 2.2rem;
-  min-height: 320px; /* 三栏统一高度，一样长 */
+  padding: 2.2rem 0; /* 上下留白，分割线与上下内容都有距离 */
 }
 
 .detail-block:first-child {
-  padding-top: 0.8rem;
+  padding-top: 0.4rem;
 }
 
 .detail-block + .detail-block {
@@ -793,9 +792,7 @@ a.btn-add {
 }
 
 .detail-images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.2rem;
+  display: block; /* 报告块容器：占满整行 */
 }
 
 .detail-images img {
@@ -867,13 +864,17 @@ a.btn-add {
 .report-list {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.8rem; /* 每个报告占满整行 */
+}
+
+.report-list .report-row {
+  width: 100%;
 }
 
 .report-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.7rem;
   padding: 0.8rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -924,9 +925,9 @@ a.btn-add {
   min-width: 0;
   font-size: 0.95rem;
   color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 /* 报告类型标签（检验报告 / 检查报告） */
@@ -951,6 +952,15 @@ a.btn-add {
   font-size: 1.3rem;
   color: var(--ink-3);
   line-height: 1;
+}
+
+/* 标签组：靠右对齐，紧贴箭头左侧 */
+.report-tags {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 /* ---------- 删除确认弹窗 ---------- */

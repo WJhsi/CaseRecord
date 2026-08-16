@@ -52,8 +52,7 @@
   $("back-link").href = "case-detail.html?id=" + c.id;
 
   var d = new Date(c.createdAt);
-  $("report-meta").textContent =
-    (img.name || "报告 " + (idx + 1)) + " · 记录于 " + d.toLocaleString("zh-CN");
+  $("report-meta").textContent = "记录于 " + d.toLocaleString("zh-CN");
 
   var content = $("report-content");
 
@@ -537,17 +536,22 @@
     }
   });
 
-  // 总是显示表格与切换按钮；有已保存结果则载入，否则显示空白表格并自动识别预填
-  ocrSection.hidden = false;
-  var savedOcr = img.ocr && img.ocr.rows;
-  if (savedOcr) {
-    rowsData = savedOcr;
-    renderLabTable(rowsData, currentMode);
-    var savedAt = img.ocr.savedAt ? "（" + new Date(img.ocr.savedAt).toLocaleString("zh-CN") + "）" : "";
-    showOcrStatus("已载入上次保存的识别结果" + savedAt + "，可切换手动输入修改。");
+  // 检查报告（影像类：CT / MR / DR / 超声等）：不做 OCR，仅保留报告展示
+  if (img.kind === "检查报告") {
+    ocrSection.hidden = true;
   } else {
-    rowsData = emptyRows();
-    renderLabTable(rowsData, currentMode);
-    startAutoOcr();
+    // 检验报告：显示识别区；有已保存结果则载入，否则显示空白表格并自动识别预填
+    ocrSection.hidden = false;
+    var savedOcr = img.ocr && img.ocr.rows;
+    if (savedOcr) {
+      rowsData = savedOcr;
+      renderLabTable(rowsData, currentMode);
+      var savedAt = img.ocr.savedAt ? "（" + new Date(img.ocr.savedAt).toLocaleString("zh-CN") + "）" : "";
+      showOcrStatus("已载入上次保存的识别结果" + savedAt + "，可切换手动输入修改。");
+    } else {
+      rowsData = emptyRows();
+      renderLabTable(rowsData, currentMode);
+      startAutoOcr();
+    }
   }
 })();

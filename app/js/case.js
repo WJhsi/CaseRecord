@@ -539,16 +539,11 @@
       if (f.type && f.type.indexOf("image/") === 0) {
         var im = document.createElement("img");
         im.src = f.dataUrl;
-        im.alt = f.name;
+        im.alt = "报告";
         thumb.appendChild(im);
       } else {
         thumb.innerHTML = '<span class="report-thumb-pdf">PDF</span>';
       }
-
-      // 文件名
-      var name = document.createElement("div");
-      name.className = "report-name";
-      name.textContent = f.name;
 
       // 报告类型标签
       var kind = document.createElement("span");
@@ -564,7 +559,6 @@
       del.textContent = "×";
 
       row.appendChild(thumb);
-      row.appendChild(name);
       row.appendChild(kind);
       row.appendChild(del);
       uploadPreview.appendChild(row);
@@ -572,10 +566,11 @@
   }
 
   uploadPreview.addEventListener("click", function (e) {
-    var btn = e.target.closest(".thumb-remove");
+    var btn = e.target.closest(".report-remove, .thumb-remove");
     if (!btn) return;
     files.splice(parseInt(btn.getAttribute("data-i"), 10), 1);
     renderPreview();
+    showToast("已移除该报告 ✓");
   });
 
   /* ---------- 药物行 ---------- */
@@ -755,7 +750,13 @@
     var treatmentVal = treatment.getValue() || "";
     var treatmentNote = form["treatment-note"].value.trim();
     var imageData = files.map(function (f) {
-      return { name: f.name, type: f.type, dataUrl: f.dataUrl };
+      return {
+        name: f.name,
+        type: f.type,
+        dataUrl: f.dataUrl,
+        kind: f.kind,
+        modality: f.modality
+      };
     });
 
     if (editing) {
