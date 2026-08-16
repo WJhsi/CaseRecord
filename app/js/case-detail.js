@@ -108,10 +108,11 @@
         var row = document.createElement("div");
         row.className = "detail-med";
         var medName = escapeHtml(m.name || "未命名");
-        var searchUrl = "https://www.baidu.com/s?wd=" + encodeURIComponent(m.name || "");
+        // 权威药学平台：丁香园用药助手
+        var searchUrl = "https://drugs.dxy.cn/pc/search?keyword=" + encodeURIComponent(m.name || "");
         row.innerHTML =
           '<a class="detail-med-name med-search" href="' + searchUrl +
-          '" target="_blank" rel="noopener" title="搜索「' + medName + '」的药品信息">' + medName + "</a>" +
+          '" target="_blank" rel="noopener" title="在「丁香园用药助手」中查询「' + medName + '」的药品信息">' + medName + "</a>" +
           '<span class="detail-med-usage">' + escapeHtml(m.usage || "") + "</span>";
         medsEl.appendChild(row);
       });
