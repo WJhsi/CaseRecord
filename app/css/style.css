@@ -2470,7 +2470,7 @@ fieldset + fieldset {
   margin: 0;
   padding: 5px;
   list-style: none;
-  background: #fff;
+  background: var(--card, #fff);
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: 0 10px 34px rgba(28, 25, 23, 0.14);
@@ -2507,7 +2507,7 @@ fieldset + fieldset {
 .cselect-search-li {
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--card, #fff);
   z-index: 2;
   padding: 4px 4px 6px;
 }
