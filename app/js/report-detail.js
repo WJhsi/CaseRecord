@@ -689,9 +689,17 @@
       .then(function (result) {
         var elapsed = stopAiTimer();
         target.resultEl.value = result.text;
-        if (target.hintEl) target.hintEl.textContent = "本次解析，未保存";
+        if (target.hintEl) {
+          target.hintEl.textContent = target.quiet && isCheckReport ? "已保存解析结果" : "本次解析，未保存";
+        }
         setMeta(elapsed, result.usage, target.metaEl);
         if (!target.quiet) showToast("AI 解析完成 ✓");
+        // 可选：解析完成后回调（如保存到本地）
+        if (target.onDone) {
+          return target.onDone(result).then(function () {
+            return result;
+          });
+        }
         return result;
       })
       .catch(function (err) {
@@ -705,7 +713,7 @@
       });
   }
 
-  // 检查报告：识别完成后自动解析
+  // 检查报告：识别完成后自动解析（结果保存到本地 ocr 文件）
   function autoParseCheck() {
     if (!isCheckReport || !recognizedText.trim()) return;
     runParse({
@@ -713,7 +721,20 @@
       metaEl: aiMeta,
       hintEl: aiHint,
       timer: aiTimer,
-      quiet: true
+      quiet: true,
+      onDone: function (result) {
+        // 保存解析结果到 ocr-<idx>.json 的 parse 字段
+        return Store.getOcr(caseId, idx).then(function (ocr) {
+          ocr = ocr || {};
+          ocr.parse = {
+            text: result.text,
+            savedAt: new Date().toISOString()
+          };
+          return Store.saveOcr(caseId, idx, ocr);
+        }).catch(function () {
+          /* 保存失败静默 */
+        });
+      }
     }).catch(function () {
       /* 失败已在弹窗展示 */
     });
@@ -756,8 +777,17 @@
         showRecogStatus("已载入上次识别结果" + savedAtStr + "，无需重新识别；可修改表格后点击「AI 解析」。");
         parseResult.placeholder = "已载入识别结果，点击「AI 解析」生成解析…";
         aiHint.textContent = "已载入本地识别结果";
-        // 检查报告：载入识别结果后自动解析
-        if (isCheckReport) autoParseCheck();
+        // 检查报告：有已保存解析结果则直接载入，否则自动解析
+        if (isCheckReport) {
+          if (savedOcr.parse && savedOcr.parse.text) {
+            parseResult.value = savedOcr.parse.text;
+            aiHint.textContent = "已载入保存的解析结果";
+            var pSavedAt = savedOcr.parse.savedAt ? "（" + new Date(savedOcr.parse.savedAt).toLocaleString("zh-CN") + "）" : "";
+            aiMeta.textContent = "解析保存于 " + pSavedAt;
+          } else {
+            autoParseCheck();
+          }
+        }
       } else {
         // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
         if (!isCheckReport) {
