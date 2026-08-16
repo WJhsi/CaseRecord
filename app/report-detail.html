@@ -13,7 +13,8 @@
     <div class="brand">CaseRecord · 病例档案</div>
 
     <nav class="topnav">
-      <a class="topnav-link" href="dashboard.html">我的档案</a>
+      <span class="topnav-slider" aria-hidden="true"></span>
+      <a class="topnav-link active" href="dashboard.html">我的档案</a>
       <a class="topnav-link" href="case.html">添加病例</a>
     </nav>
 
@@ -35,7 +36,14 @@
         <div class="section-title">OCR 识别结果</div>
         <div id="ocr-section">
           <div class="ocr-warning">⚠ OCR 可能无法完全或错误识别，可能会影响 AI 判断，请注意辨别。</div>
-          <div class="ocr-note">目前仅支持血常规识别。</div>
+          <div class="ocr-note-row">
+            <div class="ocr-note">目前仅支持血常规识别。</div>
+            <div class="ocr-mode" id="ocr-mode">
+              <span class="mode-slider" aria-hidden="true"></span>
+              <button type="button" class="mode-btn active" id="mode-auto">自动输入</button>
+              <button type="button" class="mode-btn" id="mode-manual">手动输入</button>
+            </div>
+          </div>
           <div id="ocr-status" class="ocr-status" hidden></div>
 
           <div id="ocr-table-wrap" hidden>
@@ -51,6 +59,10 @@
               </thead>
               <tbody id="ocr-tbody"></tbody>
             </table>
+            <div class="ocr-actions">
+              <button type="button" class="btn-save-ocr" id="ocr-save">保存识别结果</button>
+              <button type="button" class="btn-rerun" id="ocr-rerun">重新识别</button>
+            </div>
           </div>
 
           <!-- 识别原文：默认折叠，点击展开 -->

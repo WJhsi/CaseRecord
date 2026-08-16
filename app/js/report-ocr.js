@@ -18,14 +18,19 @@ window.paddleOcrStatus = function () {
   return "loading";
 };
 
-// 动态加载本地打包的引擎（首次从网络下载模型文件，约 10-30 秒）
+// 动态加载本地打包的引擎（模型已本地化，完全离线可用）
 import("../assets/ocr/paddle/ocr.bundle.mjs")
   .then(function (m) {
     ocrMod = m;
-    // 预加载模型（det + rec），后台进行，识别时若未完成会等待
-    return m.init().then(function () {
-      initialized = true;
-    });
+    // 加载本地模型（检测 + 识别），无需网络
+    return m
+      .init(
+        "assets/ocr/paddle/models/det/model.json",
+        "assets/ocr/paddle/models/rec/model.json"
+      )
+      .then(function () {
+        initialized = true;
+      });
   })
   .catch(function (e) {
     loadError = (e && e.message) ? e.message : String(e);

@@ -11,7 +11,8 @@
     <a class="back" href="dashboard.html" id="back-link">← 返回个人主页</a>
     <div class="brand">CaseRecord · 病例档案</div>
 
-    <nav class="topnav">
+    <nav class="topnav" id="topnav">
+      <span class="topnav-slider" aria-hidden="true"></span>
       <a class="topnav-link" href="dashboard.html">我的档案</a>
       <a class="topnav-link active" href="case.html">添加病例</a>
     </nav>
@@ -72,5 +73,14 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script src="js/case.js"></script>
+  <script>
+    (function () {
+      var nav = document.getElementById("topnav");
+      if (!nav) return;
+      var links = nav.querySelectorAll(".topnav-link");
+      var active = nav.querySelector(".topnav-link.active");
+      if (active && links[0] && active !== links[0]) nav.classList.add("second");
+    })();
+  </script>
 </body>
 </html>

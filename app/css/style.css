@@ -43,7 +43,6 @@ body {
   max-width: 860px;
   margin: 0 auto;
   padding: 3.5rem 1.5rem 4.5rem;
-  animation: fade 0.5s ease both;
 }
 
 @keyframes fade {
@@ -142,6 +141,8 @@ header {
 
 .secondary:hover {
   color: var(--accent);
+  background: var(--bg);
+  border-radius: 6px;
 }
 
 /* ---------- 个人界面：宽幅容器 ---------- */
@@ -545,6 +546,7 @@ a.btn-add {
 
 /* ---------- 顶部导航栏 ---------- */
 .topnav {
+  position: relative;
   display: flex;
   gap: 0.3rem;
   width: fit-content;
@@ -554,13 +556,47 @@ a.btn-add {
   border-radius: 12px;
 }
 
+/* 导航滑块：页面加载时滑到当前页对应按钮 */
+/* 导航滑块：JS 定位 + 在目标位置从中心展开 */
+.topnav-slider {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: calc(50% - 0.4rem);
+  height: calc(100% - 0.5rem);
+  background: #fff;
+  border-radius: 9px;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.12);
+  z-index: 0;
+  pointer-events: none;
+  --tx: 0;
+  transform: translateX(var(--tx));
+  transform-origin: center;
+  animation: topnav-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 当前页为第二个按钮（添加病例页）时滑块右移 */
+.topnav.second .topnav-slider {
+  --tx: calc(100% + 0.3rem);
+}
+
+/* 在目标位置从中心向两侧展开，无左右位移感 */
+@keyframes topnav-slide-in {
+  from {
+    transform: translateX(var(--tx)) scaleX(0);
+  }
+}
+
 .topnav-link {
+  position: relative;
+  z-index: 1;
   padding: 0.5rem 1.1rem;
   border-radius: 9px;
   font-size: 0.9rem;
   color: var(--ink-2);
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  transition: color 0.15s ease;
 }
 
 .topnav-link:hover {
@@ -568,10 +604,8 @@ a.btn-add {
 }
 
 .topnav-link.active {
-  background: #fff;
   color: var(--ink);
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.1);
 }
 
 @media (max-width: 640px) {
@@ -1020,7 +1054,74 @@ a.btn-add {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.4rem 0.8rem;
+}
+
+/* 提示 + 输入模式切换 */
+.ocr-note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+.ocr-mode {
+  position: relative;
+  display: flex;
+  background: #f1f0ed;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+/* 滑动指示器：点击时丝滑滑到目标按钮 */
+.mode-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 4.5px);
+  height: calc(100% - 6px);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.12);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ocr-mode.manual .mode-slider {
+  transform: translateX(calc(100% + 3px));
+}
+
+.mode-btn {
+  position: relative;
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--ink-2);
+  cursor: pointer;
+  z-index: 1;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.mode-btn:hover {
+  color: var(--ink);
+}
+
+.mode-btn.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ocr-table .ocr-result {
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .ocr-status {
@@ -1038,6 +1139,19 @@ a.btn-add {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.92rem;
+}
+
+/* 表格区域限高滚动，表头固定（项目列始终可见） */
+#ocr-table-wrap {
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.ocr-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
 }
 
 .ocr-table th,
@@ -1058,6 +1172,68 @@ a.btn-add {
 .ocr-table .status {
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* 结果列手动输入框（高度与文本行一致，行距不变） */
+.ocr-table input.ocr-value {
+  width: 88px;
+  height: 22px;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fcfcfa;
+  color: var(--ink);
+  vertical-align: middle;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ocr-table input.ocr-value:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.1);
+}
+
+/* 保存 / 重新识别按钮 */
+.ocr-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.btn-save-ocr {
+  padding: 0.65rem 1.4rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-save-ocr:hover {
+  background: var(--accent-deep);
+}
+
+.btn-rerun {
+  padding: 0.65rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-rerun:hover {
+  background: var(--bg);
 }
 
 .ocr-table .status.ok {
@@ -1262,6 +1438,8 @@ a.btn-add {
 
 .back:hover {
   color: var(--accent);
+  background: var(--bg);
+  border-radius: 6px;
 }
 
 .brand {
@@ -1670,6 +1848,7 @@ fieldset + fieldset {
 
 .segmented label:hover {
   color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .segmented input:checked + label {
@@ -1742,6 +1921,8 @@ fieldset + fieldset {
 
 .clear:hover {
   color: var(--danger);
+  background: rgba(185, 28, 28, 0.08);
+  border-radius: 6px;
 }
 
 /* ---------- Toast ---------- */

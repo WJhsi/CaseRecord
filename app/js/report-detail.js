@@ -114,12 +114,11 @@
   // 打开页面自动识别
   function startAutoOcr() {
     ocrSection.hidden = false;
-    ocrTableWrap.hidden = true;
     ocrStatus.hidden = true;
 
     // PDF 报告不支持 OCR
     if (img.type && img.type.indexOf("image/") !== 0) {
-      showOcrStatus("PDF 报告暂不支持自动识别，可直接查看或下载。", true);
+      showOcrStatus("PDF 报告不支持自动识别，可切换「手动输入」直接填写。", true);
       return;
     }
 
@@ -174,15 +173,18 @@
         }
         ocrRaw.textContent = text;
         var parsed = parseLabReport(text);
-        renderLabTable(parsed);
+        rowsData = rowsFromMap(parsed);
+        renderLabTable(rowsData, currentMode);
         var count = 0;
         for (var k in parsed) {
           if (parsed.hasOwnProperty(k)) count++;
         }
+        // 识别完成后自动保存到本地（下次打开直接显示，不再重新识别）
+        autoSaveOcr(rowsData);
         if (count) {
-          showOcrStatus("识别完成，已填入 " + count + " 项血常规指标，可对照原文核对。");
+          showOcrStatus("识别完成，已填入 " + count + " 项并自动保存到本地（下次打开直接显示），可手动修改后再次保存。");
         } else {
-          showOcrStatus("识别完成，但未识别到血常规指标，请对照下方原文查看。");
+          showOcrStatus("识别完成，但未识别到血常规指标，可直接手动填写后保存。");
         }
       })
       .catch(function (err) {
@@ -355,26 +357,197 @@
     return null;
   }
 
-  function renderLabTable(parsed) {
-    var html = "";
+  var currentMode = "auto"; // auto=自动输入（只读） / manual=手动输入（可编辑）
+  var rowsData = emptyRows();
+
+  function rowsFromMap(parsed) {
+    var rows = [];
     for (var i = 0; i < CBC_ITEMS.length; i++) {
+      var r = parsed[CBC_ITEMS[i].name] || {};
+      rows.push({
+        name: CBC_ITEMS[i].name,
+        value: r.value || "",
+        unit: r.unit || CBC_ITEMS[i].unit,
+        range: r.range || pickRange(CBC_ITEMS[i]),
+        status: r.status || ""
+      });
+    }
+    return rows;
+  }
+
+  function emptyRows() {
+    var rows = [];
+    for (var i = 0; i < CBC_ITEMS.length; i++) {
+      rows.push({
+        name: CBC_ITEMS[i].name,
+        value: "",
+        unit: CBC_ITEMS[i].unit,
+        range: pickRange(CBC_ITEMS[i]),
+        status: ""
+      });
+    }
+    return rows;
+  }
+
+  function renderLabTable(rows, mode) {
+    var manual = mode === "manual";
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
       var item = CBC_ITEMS[i];
-      var r = parsed[item.name] || {};
-      var status = r.status || "—";
+      var r = rows[i] || {};
+      var status = r.status || "";
       var cls = status === "偏高" ? "up" : status === "偏低" ? "down" : status === "正常" ? "ok" : "";
+      var valueCell = manual
+        ? '<td><input type="text" class="ocr-value" data-name="' + item.name + '" value="' + esc(r.value || "") + '"></td>'
+        : '<td class="ocr-result">' + (r.value || "—") + "</td>";
       html +=
         "<tr>" +
         "<td>" + item.name + "</td>" +
-        "<td>" + (r.value || "—") + "</td>" +
+        valueCell +
         "<td>" + item.unit + "</td>" +
         "<td>" + rangeText(item) + "</td>" +
-        '<td class="status ' + cls + '">' + status + "</td>" +
+        '<td class="status ' + cls + '">' + (status || "—") + "</td>" +
         "</tr>";
     }
     ocrTbody.innerHTML = html;
     ocrTableWrap.hidden = false;
   }
 
-  // 打开页面后自动开始识别
-  startAutoOcr();
+  /* ---------- 手动修正与保存 ---------- */
+
+  // 识别完成后自动保存到本地（数据仅存本机浏览器，不会进入 GitHub）
+  function autoSaveOcr(rows) {
+    var hasAny = false;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].value) {
+        hasAny = true;
+        break;
+      }
+    }
+    if (!hasAny) return;
+    img.ocr = { rows: rows, savedAt: new Date().toISOString() };
+    var list = readCases();
+    for (var j = 0; j < list.length; j++) {
+      if (String(list[j].id) === String(c.id) && list[j].images && list[j].images[idx]) {
+        list[j].images[idx] = img;
+        break;
+      }
+    }
+    try {
+      localStorage.setItem(CASES_KEY, JSON.stringify(list));
+    } catch (e) {
+      /* 存储空间不足时静默失败，下次打开会重新识别 */
+    }
+  }
+
+  function calcStatus(value, range) {
+    if (!value || isNaN(parseFloat(value))) return "";
+    var v = parseFloat(value);
+    var r = parseRange(range);
+    if (!r) return "";
+    if (r.op === "range") {
+      if (v > r.hi) return "偏高";
+      if (v < r.lo) return "偏低";
+      return "正常";
+    }
+    if (r.op === "lt" && v >= r.num) return "偏高";
+    if (r.op === "gt" && v <= r.num) return "偏低";
+    return "";
+  }
+
+  function collectFromTable() {
+    if (currentMode === "manual") {
+      var rows = [];
+      for (var i = 0; i < CBC_ITEMS.length; i++) {
+        var item = CBC_ITEMS[i];
+        var input = ocrTbody.querySelector('input.ocr-value[data-name="' + item.name + '"]');
+        var value = input ? input.value.trim() : "";
+        var range = pickRange(item);
+        rows.push({
+          name: item.name,
+          value: value,
+          unit: item.unit,
+          range: range,
+          status: calcStatus(value, range)
+        });
+      }
+      return rows;
+    }
+    return rowsData;
+  }
+
+  function switchMode(mode) {
+    if (mode === currentMode) return;
+    rowsData = collectFromTable(); // 保留当前内容（含手动修改）
+    currentMode = mode;
+    document.getElementById("mode-auto").classList.toggle("active", mode === "auto");
+    document.getElementById("mode-manual").classList.toggle("active", mode === "manual");
+    document.getElementById("ocr-mode").classList.toggle("manual", mode === "manual"); // 滑块滑动
+    renderLabTable(rowsData, currentMode);
+    if (mode === "manual") {
+      showOcrStatus("手动输入模式：可直接编辑各项结果，修改后点击保存。");
+    } else {
+      showOcrStatus("自动输入模式：显示识别结果，可切换手动输入修改。");
+    }
+  }
+
+  document.getElementById("mode-auto").addEventListener("click", function () {
+    switchMode("auto");
+  });
+  document.getElementById("mode-manual").addEventListener("click", function () {
+    switchMode("manual");
+  });
+
+  var saveBtn = document.getElementById("ocr-save");
+  var rerunBtn = document.getElementById("ocr-rerun");
+
+  saveBtn.addEventListener("click", function () {
+    var rows = collectFromTable();
+    var hasAny = false;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].value) {
+        hasAny = true;
+        break;
+      }
+    }
+    if (!hasAny) {
+      showOcrStatus("请至少填写一项结果后再保存。", true);
+      return;
+    }
+    img.ocr = { rows: rows, savedAt: new Date().toISOString() };
+    // 写回 localStorage 中的病例数据
+    var list = readCases();
+    for (var j = 0; j < list.length; j++) {
+      if (String(list[j].id) === String(c.id) && list[j].images && list[j].images[idx]) {
+        list[j].images[idx] = img;
+        break;
+      }
+    }
+    localStorage.setItem(CASES_KEY, JSON.stringify(list));
+    rowsData = rows;
+    renderLabTable(rowsData, currentMode);
+    showOcrStatus("识别结果已保存 ✓ 刷新后仍保留，可继续修改。");
+  });
+
+  rerunBtn.addEventListener("click", function () {
+    if (typeof window.runPaddleOCR === "function") {
+      runOcr();
+    } else {
+      showOcrStatus("识别引擎尚未就绪，请稍后再试。", true);
+    }
+  });
+
+  // 总是显示表格与切换按钮；有已保存结果则载入，否则显示空白表格并自动识别预填
+  ocrSection.hidden = false;
+  var savedOcr = img.ocr && img.ocr.rows;
+  if (savedOcr) {
+    rowsData = savedOcr;
+    renderLabTable(rowsData, currentMode);
+    var savedAt = img.ocr.savedAt ? "（" + new Date(img.ocr.savedAt).toLocaleString("zh-CN") + "）" : "";
+    showOcrStatus("已载入上次保存的识别结果" + savedAt + "，可切换手动输入修改。");
+  } else {
+    rowsData = emptyRows();
+    renderLabTable(rowsData, currentMode);
+    startAutoOcr();
+  }
 })();
