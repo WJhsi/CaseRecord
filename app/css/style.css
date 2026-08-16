@@ -602,7 +602,6 @@ a.btn-add {
   background: rgba(21, 21, 23, 0.78);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  pointer-events: none; /* 不拦截拖拽事件本身 */
 }
 
 .drop-overlay.show {
@@ -615,23 +614,11 @@ a.btn-add {
   align-items: center;
   gap: 0.6rem;
   padding: 2.2rem 3rem;
-  border: 2px dashed rgba(47, 111, 79, 0.9);
+  border: 2px dashed rgba(255, 255, 255, 0.55);
   border-radius: 18px;
-  background: rgba(47, 111, 79, 0.22);
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
   text-align: center;
-  box-shadow: 0 0 0 6px rgba(47, 111, 79, 0.18), 0 12px 40px rgba(0, 0, 0, 0.35);
-  animation: drop-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes drop-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.03);
-  }
 }
 
 .drop-overlay-icon {
@@ -643,7 +630,7 @@ a.btn-add {
   font-size: 1.15rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: #8ad2ab;
+  color: #fff;
 }
 
 .drop-overlay-sub {
@@ -651,12 +638,12 @@ a.btn-add {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* 拖到上传区域：提示更高亮 */
+/* 拖到遮罩/上传区域：提示框变绿高亮 */
 .drop-overlay.over-upload .drop-overlay-box {
   border-color: #8ad2ab;
   border-style: solid;
   background: rgba(47, 111, 79, 0.4);
-  animation: none;
+  box-shadow: 0 0 0 6px rgba(47, 111, 79, 0.18), 0 12px 40px rgba(0, 0, 0, 0.35);
   transform: scale(1.05);
 }
 

@@ -565,7 +565,7 @@
     "</div>";
   document.body.appendChild(dropOverlay);
 
-  // 文件拖入页面：显示遮罩（dragover 冒泡无法可靠计数，用 depth 计数 dragenter/dragleave）
+  // 文件拖入页面：显示遮罩（不亮），拖到遮罩/提示框上时提示框才高亮
   document.addEventListener("dragenter", function (e) {
     preventDefaults(e);
     if (!hasFiles(e)) return;
@@ -580,12 +580,42 @@
   document.addEventListener("dragleave", function (e) {
     preventDefaults(e);
     dragDepth = Math.max(0, dragDepth - 1);
-    if (dragDepth === 0 && !dragOverUpload) {
+    if (dragDepth === 0 && !dragOverUpload && !dragOverOverlay) {
       dropOverlay.classList.remove("show");
     }
   });
 
-  // 拖到上传区域：遮罩提示"可放置"，高亮按钮
+  // 拖到遮罩中央提示框：提示框变绿高亮（提示框即主要放置区）
+  var dragOverOverlay = false;
+  var dropBox = dropOverlay.querySelector(".drop-overlay-box");
+  ["dragenter", "dragover"].forEach(function (evt) {
+    dropBox.addEventListener(evt, function (e) {
+      preventDefaults(e);
+      dragOverOverlay = true;
+      dropOverlay.classList.add("over-upload");
+    });
+  });
+
+  ["dragleave", "dragend"].forEach(function (evt) {
+    dropBox.addEventListener(evt, function (e) {
+      preventDefaults(e);
+      dragOverOverlay = false;
+      dropOverlay.classList.remove("over-upload");
+    });
+  });
+
+  dropBox.addEventListener("drop", function (e) {
+    preventDefaults(e);
+    dragOverOverlay = false;
+    dropOverlay.classList.remove("over-upload");
+    dropOverlay.classList.remove("show");
+    dragDepth = 0;
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      handleFiles(e.dataTransfer.files);
+    }
+  });
+
+  // 拖到上传区域：高亮按钮（遮罩提示同步高亮）
   ["dragenter", "dragover"].forEach(function (evt) {
     uploadTrigger.addEventListener(evt, function (e) {
       preventDefaults(e);
@@ -607,6 +637,7 @@
   uploadTrigger.addEventListener("drop", function (e) {
     preventDefaults(e);
     dragOverUpload = false;
+    dragOverOverlay = false;
     uploadTrigger.classList.remove("drag-over");
     dropOverlay.classList.remove("over-upload");
     dropOverlay.classList.remove("show");
@@ -622,6 +653,7 @@
     var wasDragging = dropOverlay.classList.contains("show");
     dragDepth = 0;
     dragOverUpload = false;
+    dragOverOverlay = false;
     uploadTrigger.classList.remove("drag-over");
     dropOverlay.classList.remove("over-upload");
     dropOverlay.classList.remove("show");
