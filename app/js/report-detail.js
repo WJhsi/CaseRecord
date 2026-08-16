@@ -6,17 +6,6 @@
 (function () {
   "use strict";
 
-  var CASES_KEY = "caseRecord.cases";
-
-  function readCases() {
-    try {
-      var arr = JSON.parse(localStorage.getItem(CASES_KEY));
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
   function $(id) {
     return document.getElementById(id);
   }
@@ -32,7 +21,7 @@
     }, 2800);
   }
 
-  /* ---------- 定位报告 ---------- */
+  /* ---------- 定位报告（异步加载 JSON 文件） ---------- */
 
   var caseId = null;
   var idx = -1;
@@ -44,54 +33,54 @@
     /* ignore */
   }
 
-  var list = readCases();
   var c = null;
-  for (var i = 0; i < list.length; i++) {
-    if (String(list[i].id) === String(caseId)) {
-      c = list[i];
-      break;
-    }
-  }
+  var img = null;
+  var isCheckReport = false;
 
-  var img = c && c.images && !isNaN(idx) ? c.images[idx] : null;
-  if (!c || !img) {
-    window.location.replace("dashboard.html");
-    return;
-  }
+  function loadReport() {
+    return Store.getCase(caseId).then(function (caseData) {
+      c = caseData;
+      if (!c || !c.images || isNaN(idx) || !c.images[idx]) {
+        window.location.replace("dashboard.html");
+        return false;
+      }
+      img = c.images[idx];
+      // 检查报告（影像类）：让 AI 分「影像表现 / 影像判断」输出
+      isCheckReport = img.kind === "检查报告";
 
-  // 检查报告（影像类：CT / MR / DR / 超声等）：让 AI 分「影像表现 / 影像判断」输出
-  var isCheckReport = img.kind === "检查报告";
+      /* ---------- 渲染 ---------- */
 
-  /* ---------- 渲染 ---------- */
+      $("back-link").href = "case-detail.html?id=" + c.id;
 
-  $("back-link").href = "case-detail.html?id=" + c.id;
+      var d = new Date(c.createdAt);
+      $("report-meta").textContent = "记录于 " + d.toLocaleString("zh-CN");
 
-  var d = new Date(c.createdAt);
-  $("report-meta").textContent = "记录于 " + d.toLocaleString("zh-CN");
+      var content = $("report-content");
 
-  var content = $("report-content");
+      if (img.type && img.type.indexOf("image/") === 0) {
+        var im = document.createElement("img");
+        im.className = "report-img";
+        im.src = img.dataUrl;
+        im.alt = img.name || "报告";
+        content.appendChild(im);
+      } else {
+        // PDF：内嵌预览 + 打开链接
+        var iframe = document.createElement("iframe");
+        iframe.className = "report-pdf-frame";
+        iframe.src = img.dataUrl;
+        iframe.title = img.name || "PDF 报告";
+        content.appendChild(iframe);
 
-  if (img.type && img.type.indexOf("image/") === 0) {
-    var im = document.createElement("img");
-    im.className = "report-img";
-    im.src = img.dataUrl;
-    im.alt = img.name || "报告";
-    content.appendChild(im);
-  } else {
-    // PDF：内嵌预览 + 打开链接
-    var iframe = document.createElement("iframe");
-    iframe.className = "report-pdf-frame";
-    iframe.src = img.dataUrl;
-    iframe.title = img.name || "PDF 报告";
-    content.appendChild(iframe);
-
-    var link = document.createElement("a");
-    link.className = "report-open";
-    link.href = img.dataUrl;
-    link.target = "_blank";
-    link.rel = "noopener";
-    link.textContent = "在新标签页打开 / 下载";
-    content.appendChild(link);
+        var link = document.createElement("a");
+        link.className = "report-open";
+        link.href = img.dataUrl;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = "在新标签页打开 / 下载";
+        content.appendChild(link);
+      }
+      return true;
+    });
   }
 
   /* ==========================================================
@@ -330,25 +319,18 @@
 
   var recognitionBusy = false;
 
-  // 保存识别文字 + 检验表格到本地（AI 解析结果不保存）
+  // 保存识别文字 + 检验表格到独立 JSON 文件（data/cases/<id>/ocr-<idx>.json）
   function saveOcrData() {
-    img.ocr = {
+    var data = {
       text: recognizedText || "",
-      rows: labRows.length ? labRows : undefined,
+      rows: labRows && labRows.length ? labRows : undefined,
       savedAt: new Date().toISOString()
     };
-    var list = readCases();
-    for (var j = 0; j < list.length; j++) {
-      if (String(list[j].id) === String(c.id) && list[j].images && list[j].images[idx]) {
-        list[j].images[idx] = img;
-        break;
-      }
-    }
-    try {
-      localStorage.setItem(CASES_KEY, JSON.stringify(list));
-    } catch (e) {
-      /* 存储空间不足时静默失败 */
-    }
+    if (img.ocr) data.savedAt = img.ocr.savedAt || data.savedAt;
+    img.ocr = data;
+    return Store.saveOcr(c.id, idx, data).catch(function () {
+      /* 保存失败静默 */
+    });
   }
 
   function autoRecognize() {
@@ -671,26 +653,39 @@
   });
 
   /* ---------- 初始化 ---------- */
-  // 已有本地保存的识别数据：直接载入，不再识别；否则自动识别
-  var savedOcr = img.ocr || null;
-  if (savedOcr && (savedOcr.text || (savedOcr.rows && savedOcr.rows.length))) {
-    recognizedText = savedOcr.text || "";
-    recognitionDone = !!recognizedText;
-    if (!isCheckReport) {
-      var savedRows = (savedOcr.rows && savedOcr.rows.slice()) || [];
-      while (savedRows.length < 6) savedRows.push({ name: "", value: "", unit: "", range: "" });
-      renderLabTable(savedRows);
-      labBlock.hidden = false;
-    }
-    var savedAtStr = savedOcr.savedAt ? "（" + new Date(savedOcr.savedAt).toLocaleString("zh-CN") + "）" : "";
-    showRecogStatus("已载入上次识别结果" + savedAtStr + "，无需重新识别；可修改表格后点击「AI 解析」。");
-    parseResult.placeholder = "已载入识别结果，点击「AI 解析」生成解析…";
-    aiHint.textContent = "已载入本地识别结果";
-  } else {
-    // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
-    if (!isCheckReport) {
-      showLabTablePlaceholder();
-    }
-    autoRecognize();
-  }
+  Store.migrateOnce()
+    .then(function () {
+      return loadReport();
+    })
+    .then(function (ok) {
+      if (!ok) return;
+      return Store.getOcr(caseId, idx);
+    })
+    .then(function (savedOcr) {
+      if (savedOcr) img.ocr = savedOcr;
+      // 已有本地保存的识别数据：直接载入，不再识别；否则自动识别
+      if (savedOcr && (savedOcr.text || (savedOcr.rows && savedOcr.rows.length))) {
+        recognizedText = savedOcr.text || "";
+        recognitionDone = !!recognizedText;
+        if (!isCheckReport) {
+          var savedRows = (savedOcr.rows && savedOcr.rows.slice()) || [];
+          while (savedRows.length < 6) savedRows.push({ name: "", value: "", unit: "", range: "" });
+          renderLabTable(savedRows);
+          labBlock.hidden = false;
+        }
+        var savedAtStr = savedOcr.savedAt ? "（" + new Date(savedOcr.savedAt).toLocaleString("zh-CN") + "）" : "";
+        showRecogStatus("已载入上次识别结果" + savedAtStr + "，无需重新识别；可修改表格后点击「AI 解析」。");
+        parseResult.placeholder = "已载入识别结果，点击「AI 解析」生成解析…";
+        aiHint.textContent = "已载入本地识别结果";
+      } else {
+        // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
+        if (!isCheckReport) {
+          showLabTablePlaceholder();
+        }
+        autoRecognize();
+      }
+    })
+    .catch(function () {
+      /* 未通过本地服务器打开时忽略 */
+    });
 })();

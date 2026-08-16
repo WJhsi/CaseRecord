@@ -1,19 +1,9 @@
 /* ==========================================================
    CaseRecord · 个人界面
-   渲染已保存的个人档案；无档案时回到首页
+   档案与病例数据均存本地 JSON 文件（server.py API）
    ========================================================== */
 (function () {
   "use strict";
-
-  var STORAGE_KEY = "caseRecord.profile";
-
-  function readSaved() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY));
-    } catch (e) {
-      return null;
-    }
-  }
 
   function $(id) {
     return document.getElementById(id);
@@ -32,57 +22,6 @@
     }, 2800);
   }
 
-  var p = readSaved();
-  if (!p || !p.name) {
-    window.location.replace("index.html");
-    return;
-  }
-
-  // 头像：姓名首字
-  $("avatar").textContent = p.name.charAt(0);
-  $("p-name").textContent = p.name;
-
-  // 标签：性别 · 年龄 · 血型
-  var chips = [];
-  if (p.gender) chips.push(p.gender);
-  if (p.age != null) chips.push(p.age + " 岁");
-  if (p.blood && p.blood !== "未知") chips.push(p.blood + " 型");
-  $("p-chips").innerHTML = chips
-    .map(function (c) {
-      return '<span class="chip">' + c + "</span>";
-    })
-    .join("");
-
-  // 体征信息
-  $("p-gender").textContent = p.gender || "—";
-  $("p-birth").textContent = p.birth || "—";
-  $("p-blood").textContent = p.blood && p.blood !== "未知" ? p.blood + " 型" : "—";
-  $("p-height").textContent = p.height ? p.height + " cm" : "—";
-  $("p-weight").textContent = p.weight ? p.weight + " kg" : "—";
-
-  // 病史信息
-  $("p-history").textContent = p.history || "—";
-  $("p-allergy").textContent = p.allergy || "—";
-  $("p-notes").textContent = p.notes || "—";
-
-  // 保存时间
-  if (p.savedAt) {
-    var d = new Date(p.savedAt);
-    $("saved-at").textContent = "档案保存于 " + d.toLocaleString("zh-CN");
-  }
-
-  var STORAGE_KEY = "caseRecord.profile";
-  var CASES_KEY = "caseRecord.cases";
-
-  function readCases() {
-    try {
-      var arr = JSON.parse(localStorage.getItem(CASES_KEY));
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
   function escapeHtml(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")
@@ -92,13 +31,54 @@
       .replace(/'/g, "&#39;");
   }
 
+  /* ---------- 加载档案 ---------- */
+
+  function renderProfile(p) {
+    if (!p || !p.name) {
+      window.location.replace("index.html");
+      return false;
+    }
+    // 头像：姓名首字
+    $("avatar").textContent = p.name.charAt(0);
+    $("p-name").textContent = p.name;
+
+    // 标签：性别 · 年龄 · 血型
+    var chips = [];
+    if (p.gender) chips.push(p.gender);
+    if (p.age != null) chips.push(p.age + " 岁");
+    if (p.blood && p.blood !== "未知") chips.push(p.blood + " 型");
+    $("p-chips").innerHTML = chips
+      .map(function (c) {
+        return '<span class="chip">' + c + "</span>";
+      })
+      .join("");
+
+    // 体征信息
+    $("p-gender").textContent = p.gender || "—";
+    $("p-birth").textContent = p.birth || "—";
+    $("p-blood").textContent = p.blood && p.blood !== "未知" ? p.blood + " 型" : "—";
+    $("p-height").textContent = p.height ? p.height + " cm" : "—";
+    $("p-weight").textContent = p.weight ? p.weight + " kg" : "—";
+
+    // 病史信息
+    $("p-history").textContent = p.history || "—";
+    $("p-allergy").textContent = p.allergy || "—";
+    $("p-notes").textContent = p.notes || "—";
+
+    // 保存时间
+    if (p.savedAt) {
+      var d = new Date(p.savedAt);
+      $("saved-at").textContent = "档案保存于 " + d.toLocaleString("zh-CN");
+    }
+    return true;
+  }
+
   /* ---------- 病例列表 ---------- */
 
-  function renderCases() {
-    var list = readCases();
+  function renderCases(list) {
     var section = $("cases-section");
     if (!section) return;
-    if (!list.length) {
+    if (!list || !list.length) {
       section.hidden = true;
       return;
     }
@@ -106,8 +86,6 @@
     $("cases-count").textContent = "共 " + list.length + " 条";
 
     var html = list
-      .slice()
-      .reverse()
       .map(function (c) {
         var d = new Date(c.createdAt);
         var dateStr =
@@ -115,8 +93,8 @@
           " " +
           d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
         var tags = [];
-        if (c.images && c.images.length) tags.push(c.images.length + " 份报告");
-        if (c.meds && c.meds.length) tags.push(c.meds.length + " 种药物");
+        if (c.imagesCount) tags.push(c.imagesCount + " 份报告");
+        if (c.medsCount) tags.push(c.medsCount + " 种药物");
         var tagsHtml = tags
           .map(function (t) {
             return '<span class="chip">' + t + "</span>";
@@ -136,17 +114,34 @@
     $("cases-list").innerHTML = html;
   }
 
-  // 从添加病例页保存后跳转回来时提示
-  if (/[?&]saved=1/.test(window.location.search)) {
-    showToast("病例已保存 ✓");
+  function init() {
+    // 从添加病例页保存后跳转回来时提示
+    if (/[?&]saved=1/.test(window.location.search)) {
+      showToast("病例已保存 ✓");
+    }
+    // 删除病例后跳转回来时提示
+    if (/[?&]deleted=1/.test(window.location.search)) {
+      showToast("病例已删除");
+    }
+
+    Store.migrateOnce()
+      .then(function () {
+        return Store.getProfile();
+      })
+      .then(function (p) {
+        if (!renderProfile(p)) return Promise.reject("no profile");
+        return Store.listCases();
+      })
+      .then(function (list) {
+        renderCases(list);
+      })
+      .catch(function (e) {
+        if (e === "no profile") return; // 已跳转首页
+        /* 未通过本地服务器打开时忽略 */
+      });
   }
 
-  // 删除病例后跳转回来时提示
-  if (/[?&]deleted=1/.test(window.location.search)) {
-    showToast("病例已删除");
-  }
-
-  renderCases();
+  init();
 
   /* ==========================================================
      病例说明：AI 自动生成（仅本次展示，不保存）
@@ -263,10 +258,37 @@
     if (e.key === "Escape" && !aiMask.hidden) closeAiModal();
   });
 
-  // 将病例整理成 AI 可读的摘要
-  function buildCaseSummary() {
-    var cases = readCases();
-    if (!cases.length) return null;
+  // 读取全部病例（含 OCR 结果）整理成 AI 可读摘要
+  function loadAllCases() {
+    return Store.listCases().then(function (list) {
+      var ids = list.map(function (c) {
+        return c.id;
+      });
+      return Promise.all(
+        ids.map(function (id) {
+          return Store.getCase(id).then(function (c) {
+            // 附加每张报告的 OCR 识别结果
+            if (c && c.images && c.images.length) {
+              return Promise.all(
+                c.images.map(function (im, idx) {
+                  return Store.getOcr(c.id, idx).then(function (ocr) {
+                    im.ocr = ocr || (im.ocr || null);
+                    return im;
+                  });
+                })
+              ).then(function () {
+                return c;
+              });
+            }
+            return c;
+          });
+        })
+      );
+    });
+  }
+
+  function buildCaseSummary(cases) {
+    if (!cases || !cases.length) return null;
     return cases.map(function (c, i) {
       var d = new Date(c.createdAt);
       var line = {
@@ -292,28 +314,31 @@
   }
 
   noteAiBtn.addEventListener("click", function () {
-    var summary = buildCaseSummary();
-    if (!summary) {
-      showToast("暂无可说明的病例", "err");
-      return;
-    }
-
-    // 读取 AI 配置（本地 JSON；病例说明用「解析模型（文本）」）
-    fetch("/api/ai-config")
-      .then(function (res) {
-        if (!res.ok) throw new Error("无法读取 AI 配置（HTTP " + res.status + "）");
-        return res.json();
-      })
-      .then(function (cfg) {
-        if (!cfg) throw new Error("尚未配置 AI 大模型，请先到「编辑档案」页填写。");
-        var parse = cfg.parse || (cfg.base ? { base: cfg.base, key: cfg.key, model: cfg.model } : null);
-        if (!parse || !parse.base || !parse.key || !parse.model) {
-          throw new Error("尚未配置「解析模型（文本）」，请先到「编辑档案」页填写 API 地址、Key 和模型。");
+    loadAllCases()
+      .then(function (cases) {
+        var summary = buildCaseSummary(cases);
+        if (!summary) {
+          showToast("暂无可说明的病例", "err");
+          return null;
         }
-        showNoteModel(parse);
-        return callAi(parse, summary);
+        // 读取 AI 配置（本地 JSON；病例说明用「解析模型（文本）」）
+        return fetch("/api/ai-config")
+          .then(function (res) {
+            if (!res.ok) throw new Error("无法读取 AI 配置（HTTP " + res.status + "）");
+            return res.json();
+          })
+          .then(function (cfg) {
+            if (!cfg) throw new Error("尚未配置 AI 大模型，请先到「编辑档案」页填写。");
+            var parse = cfg.parse || (cfg.base ? { base: cfg.base, key: cfg.key, model: cfg.model } : null);
+            if (!parse || !parse.base || !parse.key || !parse.model) {
+              throw new Error("尚未配置「解析模型（文本）」，请先到「编辑档案」页填写 API 地址、Key 和模型。");
+            }
+            showNoteModel(parse);
+            return callAi(parse, summary);
+          });
       })
       .then(function (text) {
+        if (!text) return;
         var elapsed = stopNoteTimer();
         noteInput.value = text;
         var now = new Date().toLocaleString("zh-CN");

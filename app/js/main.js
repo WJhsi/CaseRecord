@@ -5,8 +5,7 @@
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "caseRecord.profile";
-  var YEAR_BACK = 100; // 出生年可选范围：今年往前 100 年
+   var YEAR_BACK = 100; // 出生年可选范围：今年往前 100 年
 
   var form = document.getElementById("profile-form");
   var toast = document.getElementById("toast");
@@ -199,11 +198,7 @@
   }
 
   function readSaved() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY));
-    } catch (e) {
-      return null;
-    }
+    return null; // 档案已改为 JSON 文件存储，见 Store.getProfile
   }
 
   function showToast(msg, type) {
@@ -550,8 +545,10 @@
         return testAiConnection(aiCfg.parse);
       })
       .then(function () {
-        // 连接成功：自动保存并跳转，无需点击
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+        // 连接成功：档案保存到本地 JSON 文件并跳转，无需点击
+        return Store.saveProfile(p);
+      })
+      .then(function () {
         updateSummary(p);
         submitBtn.disabled = false;
         showToast("AI 连接正常，档案已保存 ✓");
@@ -561,7 +558,7 @@
       })
       .catch(function (err) {
         submitBtn.disabled = false;
-        submitBtn.textContent = readSaved() ? "更新档案" : "保存档案";
+        submitBtn.textContent = hasSaved ? "更新档案" : "保存档案";
         showAiTest("AI 连接失败", String(err && err.message ? err.message : err), true);
       });
   });
@@ -731,8 +728,8 @@
   }
 
   function doClear() {
-    localStorage.removeItem(STORAGE_KEY);
-    // 同时清除 AI 大模型配置（本地 JSON）
+    // 清除本地 JSON 档案 + AI 配置
+    Store.saveProfile({}).catch(function () {});
     fetch("/api/ai-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -772,12 +769,20 @@
   birthMonth.setOptions(monthOptions());
   renderDays();
 
-  var saved = readSaved();
-  fillForm(saved);
-  updateSummary(saved);
-
-  // 从本地 JSON 读取 AI 配置回填（不存浏览器；兼容旧格式 base/key/model）
-  fetch("/api/ai-config")
+  // 先迁移旧 localStorage 数据，再从 JSON 读取档案回填
+  var hasSaved = false;
+  Store.migrateOnce()
+    .then(function () {
+      return Store.getProfile();
+    })
+    .then(function (saved) {
+      hasSaved = !!saved;
+      fillForm(saved);
+      updateSummary(saved);
+      submitBtn.textContent = saved ? "更新档案" : "保存档案";
+      // 从本地 JSON 读取 AI 配置回填（不存浏览器；兼容旧格式 base/key/model）
+      return fetch("/api/ai-config");
+    })
     .then(function (res) {
       return res.json();
     })

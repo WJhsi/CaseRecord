@@ -1,12 +1,11 @@
 /* ==========================================================
    CaseRecord · 添加 / 编辑病例
-   功能：输入病情、上传影像报告、录入药物，保存到 localStorage
+   功能：输入病情、上传影像报告、录入药物，数据存本地 JSON 文件
    支持 ?id=xxx 编辑已有病例；保存后直达病例详情页
    ========================================================== */
 (function () {
   "use strict";
 
-  var CASES_KEY = "caseRecord.cases";
   var MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
   var ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "gif", "pdf"];
 
@@ -21,7 +20,7 @@
   var pageSub = document.getElementById("page-sub");
   var backLink = document.getElementById("back-link");
 
-  /* ---------- 编辑模式 ---------- */
+  /* ---------- 编辑模式（异步读取 JSON 文件） ---------- */
 
   var EDIT_ID = null;
   try {
@@ -31,25 +30,34 @@
   }
 
   var editing = null;
-  if (EDIT_ID) {
-    var all = readCases();
-    for (var i = 0; i < all.length; i++) {
-      if (String(all[i].id) === String(EDIT_ID)) {
-        editing = all[i];
-        break;
+  var files = []; // 编辑模式：预置已有影像
+
+  function initEdit() {
+    if (!EDIT_ID) return Promise.resolve();
+    return Store.getCase(EDIT_ID).then(function (c) {
+      if (!c) {
+        showToast("病例不存在，请返回重试", "err");
+        return;
       }
-    }
+      editing = c;
+      pageTitle.textContent = "编辑病例";
+      pageSub.textContent = "修改病情、影像报告与用药记录。";
+      backLink.href = "case-detail.html?id=" + editing.id;
+      files = Array.isArray(editing.images) ? editing.images.slice() : [];
+      // 回填表单
+      form.condition.value = editing.condition || "";
+      illness.setValue(editing.illness || "");
+      treatment.setValue(editing.treatment || "");
+      form["treatment-note"].value = editing.treatmentNote || "";
+      renderPreview();
+      if (editing.meds && editing.meds.length) {
+        editing.meds.forEach(function (m) {
+          addMedRow(m.name, m.usage);
+        });
+      }
+      updateModalityVisibility();
+    });
   }
-
-  if (editing) {
-    pageTitle.textContent = "编辑病例";
-    pageSub.textContent = "修改病情、影像报告与用药记录。";
-    backLink.href = "case-detail.html?id=" + editing.id;
-  }
-
-  // 编辑模式：预置已有影像
-  var files =
-    editing && Array.isArray(editing.images) ? editing.images.slice() : [];
 
   /* ---------- 工具 ---------- */
 
@@ -69,15 +77,6 @@
     } else {
       input.classList.remove("error");
       input.removeAttribute("aria-invalid");
-    }
-  }
-
-  function readCases() {
-    try {
-      var arr = JSON.parse(localStorage.getItem(CASES_KEY));
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
     }
   }
 
@@ -744,7 +743,6 @@
       if (name || usage) meds.push({ name: name, usage: usage });
     });
 
-    var cases = readCases();
     var savedId;
     var illnessVal = illness.getValue() || "";
     var treatmentVal = treatment.getValue() || "";
@@ -759,28 +757,20 @@
       };
     });
 
+    var nowIso = new Date().toISOString();
+    var caseData;
     if (editing) {
-      var idx = -1;
-      for (var j = 0; j < cases.length; j++) {
-        if (String(cases[j].id) === String(editing.id)) {
-          idx = j;
-          break;
-        }
-      }
-      if (idx === -1) {
-        showToast("病例不存在，请返回重试", "err");
-        return;
-      }
-      cases[idx].illness = illnessVal;
-      cases[idx].condition = condition;
-      cases[idx].images = imageData;
-      cases[idx].meds = meds;
-      cases[idx].treatment = treatmentVal;
-      cases[idx].treatmentNote = treatmentNote;
-      cases[idx].updatedAt = new Date().toISOString();
-      savedId = cases[idx].id;
+      caseData = editing;
+      caseData.illness = illnessVal;
+      caseData.condition = condition;
+      caseData.images = imageData;
+      caseData.meds = meds;
+      caseData.treatment = treatmentVal;
+      caseData.treatmentNote = treatmentNote;
+      caseData.updatedAt = nowIso;
+      savedId = editing.id;
     } else {
-      var newCase = {
+      caseData = {
         id: Date.now(),
         illness: illnessVal,
         condition: condition,
@@ -788,24 +778,32 @@
         meds: meds,
         treatment: treatmentVal,
         treatmentNote: treatmentNote,
-        createdAt: new Date().toISOString()
+        createdAt: nowIso
       };
-      cases.push(newCase);
-      savedId = newCase.id;
+      savedId = caseData.id;
     }
 
-    try {
-      localStorage.setItem(CASES_KEY, JSON.stringify(cases));
-    } catch (err) {
-      showToast("存储空间不足，请移除部分影像文件", "err");
-      return;
+    var submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "保存中…";
     }
 
-    showToast(editing ? "病例已更新 ✓" : "病例已保存 ✓");
-    // 保存后直达病例详情页
-    setTimeout(function () {
-      window.location.href = "case-detail.html?id=" + savedId;
-    }, 700);
+    Store.saveCase(savedId, caseData)
+      .then(function () {
+        showToast(editing ? "病例已更新 ✓" : "病例已保存 ✓");
+        // 保存后直达病例详情页
+        setTimeout(function () {
+          window.location.href = "case-detail.html?id=" + savedId;
+        }, 700);
+      })
+      .catch(function (err) {
+        showToast("保存失败：" + (err && err.message ? err.message : err), "err");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = editing ? "更新病例" : "保存病例";
+        }
+      });
   });
 
   // 输入时清除错误状态
@@ -814,22 +812,17 @@
   });
 
   /* ---------- 初始化 ---------- */
-
-  if (editing) {
-    form.condition.value = editing.condition || "";
-    illness.setValue(editing.illness || "");
-    treatment.setValue(editing.treatment || "");
-    form["treatment-note"].value = editing.treatmentNote || "";
-    renderPreview();
-    if (editing.meds && editing.meds.length) {
-      editing.meds.forEach(function (m) {
-        addMedRow(m.name, m.usage);
-      });
-    }
-    // 编辑时无药物则保持空白，点「添加药物」再出现
-  }
-  // 非编辑模式：默认不显示药物行，点「＋ 添加药物」才添加
-
-  // 初始化报告类型联动（编辑时若为检查报告则显示检查方式）
-  updateModalityVisibility();
+  // 编辑模式从 JSON 文件异步加载回填；非编辑模式直接可用
+  Store.migrateOnce()
+    .then(function () {
+      return initEdit();
+    })
+    .then(function () {
+      // 非编辑模式：默认不显示药物行，点「＋ 添加药物」才添加
+      // 初始化报告类型联动（编辑时若为检查报告则显示检查方式）
+      if (!EDIT_ID) updateModalityVisibility();
+    })
+    .catch(function () {
+      /* 未通过本地服务器打开时忽略 */
+    });
 })();
