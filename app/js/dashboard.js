@@ -273,17 +273,19 @@
       return;
     }
 
-    // 读取 AI 配置（本地 JSON）
+    // 读取 AI 配置（本地 JSON；病例说明用「解析模型（文本）」）
     fetch("/api/ai-config")
       .then(function (res) {
         if (!res.ok) throw new Error("无法读取 AI 配置（HTTP " + res.status + "）");
         return res.json();
       })
       .then(function (cfg) {
-        if (!cfg || !cfg.base || !cfg.key || !cfg.model) {
-          throw new Error("尚未配置 AI 大模型，请先到「编辑档案」页填写 API 地址、Key 和模型。");
+        if (!cfg) throw new Error("尚未配置 AI 大模型，请先到「编辑档案」页填写。");
+        var parse = cfg.parse || (cfg.base ? { base: cfg.base, key: cfg.key, model: cfg.model } : null);
+        if (!parse || !parse.base || !parse.key || !parse.model) {
+          throw new Error("尚未配置「解析模型（文本）」，请先到「编辑档案」页填写 API 地址、Key 和模型。");
         }
-        return callAi(cfg, summary);
+        return callAi(parse, summary);
       })
       .then(function (text) {
         var elapsed = stopNoteTimer();

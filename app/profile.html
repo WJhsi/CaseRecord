@@ -83,20 +83,38 @@
         </div>
       </fieldset>
 
-      <!-- AI 大模型配置 -->
+      <!-- AI 大模型配置：识别模型（视觉，看图转文字） + 解析模型（文本） -->
       <fieldset>
         <div class="group-title">AI 大模型配置</div>
+
+        <div class="sub-group-title">① 识别模型（视觉 · 看图转文字）</div>
         <div class="grid">
           <div class="field span-2">
-            <label for="ai-base" class="required">API 地址</label>
+            <label for="vision-base" class="required">识别模型 API 地址</label>
+            <input type="text" id="vision-base" placeholder="如 https://dashscope.aliyuncs.com/compatible-mode/v1" autocomplete="off">
+          </div>
+          <div class="field span-2">
+            <label class="required">识别模型（视觉，需支持图片）</label>
+            <div id="vision-model-slot"></div>
+          </div>
+          <div class="field span-2">
+            <label for="vision-key" class="required">识别模型 API Key</label>
+            <input type="password" id="vision-key" placeholder="sk-…" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="sub-group-title">② 解析模型（文本 · AI 解析/说明）</div>
+        <div class="grid">
+          <div class="field span-2">
+            <label for="ai-base" class="required">解析模型 API 地址</label>
             <input type="text" id="ai-base" placeholder="如 https://api.deepseek.com/v1" autocomplete="off">
           </div>
           <div class="field span-2">
-            <label class="required">模型</label>
+            <label class="required">解析模型（文本）</label>
             <div id="ai-model-slot"></div>
           </div>
           <div class="field span-2">
-            <label for="ai-key" class="required">API Key</label>
+            <label for="ai-key" class="required">解析模型 API Key</label>
             <input type="password" id="ai-key" placeholder="sk-…" autocomplete="off">
           </div>
         </div>

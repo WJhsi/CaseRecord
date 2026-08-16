@@ -23,7 +23,7 @@
       <p class="sub" id="report-meta"></p>
     </header>
 
-    <!-- 报告 + OCR 识别结果：两栏布局 -->
+    <!-- 报告 + AI 识别/解析：两栏布局 -->
     <section class="card report-layout">
       <!-- 左栏：原始报告 -->
       <div class="report-left">
@@ -31,91 +31,41 @@
         <div id="report-content"></div>
       </div>
 
-      <!-- 右栏：OCR 识别结果 -->
+      <!-- 右栏：AI 识别文字（视觉模型看原图）+ AI 解析（文本模型） -->
       <div class="report-right">
-        <div id="ocr-section">
-          <div class="ocr-warning">⚠ OCR 可能无法完全或错误识别，可能会影响 AI 判断，请注意辨别。</div>
-          <div class="ocr-note-row">
-            <div class="ocr-note">图片报告支持自动识别；检验报告按血常规清单解析，检查报告识别整段报告文字。</div>
-            <div class="ocr-mode" id="ocr-mode">
-              <span class="mode-slider" aria-hidden="true"></span>
-              <button type="button" class="mode-btn active" id="mode-auto">自动输入</button>
-              <button type="button" class="mode-btn" id="mode-manual">手动输入</button>
+        <div class="ai-parse">
+          <div class="section-title-row">
+            <span class="section-title">AI 识别与解析</span>
+            <div class="case-note-head-actions">
+              <span class="note-timer" id="ai-timer" hidden></span>
+              <button type="button" class="btn-ai-note" id="btn-ai-ocr">✦ AI 识别文字</button>
+              <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
             </div>
           </div>
-          <div id="ocr-status" class="ocr-status" hidden></div>
+          <p class="case-note-tip">第一步：视觉模型直接查看报告原图并转为文字（可核对、修正）；第二步：文本模型基于文字进行 AI 解析。结果仅本次展示、不保存。</p>
 
-          <div id="ocr-table-wrap" hidden>
-            <table class="ocr-table">
-              <thead>
-                <tr>
-                  <th>项目</th>
-                  <th>结果</th>
-                  <th>单位</th>
-                  <th>参考范围</th>
-                  <th>状态</th>
-                </tr>
-              </thead>
-              <tbody id="ocr-tbody"></tbody>
-            </table>
-            <div class="ocr-actions">
-              <button type="button" class="btn-save-ocr" id="ocr-save">提交结果</button>
-              <button type="button" class="btn-rerun" id="ocr-rerun">重新识别</button>
-            </div>
+          <div class="ocr-text-title">识别文字 <span class="ocr-check-tag">视觉模型看图转文字</span></div>
+          <textarea id="ai-ocr-text" rows="8" placeholder="点击「AI 识别文字」，视觉模型将把报告原图转为文字，可手动修正…"></textarea>
+
+          <div class="ocr-text-title" style="margin-top:1rem">AI 解析 <span class="ocr-check-tag">文本模型基于文字</span></div>
+          <textarea id="ai-parse-result" rows="8" readonly placeholder="点击「AI 解析」，基于上方识别文字自动解析…"></textarea>
+
+          <div class="case-note-foot">
+            <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
+            <span class="case-note-hint" id="ai-hint"></span>
           </div>
-
-          <!-- 检查报告：影像表现（OCR）+ 影像判断（手动填写，不识别） -->
-          <div id="ocr-text-wrap" hidden>
-            <div class="ocr-check-cols">
-              <div class="ocr-check-col">
-                <div class="ocr-check-title">影像表现 <span class="ocr-check-tag">OCR 识别</span></div>
-                <textarea id="ocr-textarea" rows="12" placeholder="由 OCR 自动识别的影像表现文字，可切换「手动输入」修改…"></textarea>
-              </div>
-              <div class="ocr-check-col">
-                <div class="ocr-check-title">影像判断 <span class="ocr-check-tag">手动填写</span></div>
-                <textarea id="ocr-impression" rows="12" placeholder="影像判断/结论，手动填写，不做 OCR 识别…"></textarea>
-              </div>
-            </div>
-            <div class="ocr-actions">
-              <button type="button" class="btn-save-ocr" id="ocr-save-text">提交结果</button>
-              <button type="button" class="btn-rerun" id="ocr-rerun-text">重新识别</button>
-            </div>
-          </div>
-
-          <!-- 识别原文：默认折叠，点击展开 -->
-          <details class="ocr-raw-details" id="ocr-raw-wrap">
-            <summary>识别原文（点击展开）</summary>
-            <pre class="ocr-raw" id="ocr-raw"></pre>
-          </details>
         </div>
-      </div>
-    </section>
-
-    <!-- AI 解析：根据已提交的结果自动解析 -->
-    <section class="card ai-parse" id="ai-parse-section">
-      <div class="section-title-row">
-        <span class="section-title">AI 解析</span>
-        <div class="case-note-head-actions">
-          <span class="note-timer" id="ai-timer" hidden></span>
-          <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
-        </div>
-      </div>
-      <p class="case-note-tip">由 AI 根据下方已提交的报告结果自动解析，仅本次展示、不保存。</p>
-      <textarea id="ai-parse-result" rows="10" readonly placeholder="点击「AI 解析」，AI 将根据报告结果自动生成解析…"></textarea>
-      <div class="case-note-foot">
-        <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
-        <span class="case-note-hint" id="ai-hint"></span>
       </div>
     </section>
   </main>
 
   <div class="toast" id="toast" role="status"></div>
 
-  <!-- AI 解析结果弹窗（灰色遮罩 + 屏幕上方） -->
+  <!-- AI 识别/解析结果弹窗（灰色遮罩 + 屏幕上方） -->
   <div class="modal-mask" id="ai-test-mask" hidden>
-    <div class="modal" role="dialog" aria-modal="true" aria-label="AI 解析">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="AI 识别与解析">
       <div class="modal-head">
-        <div class="modal-title" id="ai-test-title">AI 解析</div>
+        <div class="modal-title" id="ai-test-title">AI 识别与解析</div>
         <button type="button" class="modal-close" id="ai-test-close" aria-label="关闭">×</button>
       </div>
       <div class="modal-body">
@@ -128,7 +78,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/report-ocr.js"></script>
   <script src="js/report-detail.js"></script>
 </body>
 </html>

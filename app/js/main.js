@@ -270,9 +270,10 @@
   document.getElementById("birth-day-slot").appendChild(birthDay.root);
   document.getElementById("blood-slot").appendChild(blood.root);
 
-  /* ---------- AI 大模型配置：模型下拉 ---------- */
+  /* ---------- AI 大模型配置：模型下拉（识别=视觉，解析=文本） ---------- */
 
-  var MODEL_OPTIONS = [
+  // 视觉模型：用于「AI 识别文字」（看图转文字）
+  var VISION_MODEL_OPTIONS = [
     // OpenAI（支持图片输入）
     { value: "gpt-5.5", label: "GPT-5.5（看图）" },
     { value: "gpt-5.2", label: "GPT-5.2（看图）" },
@@ -295,9 +296,42 @@
     { value: "glm-4v", label: "智谱 GLM-4V（看图）" }
   ];
 
+  // 文本模型：用于「AI 解析」「病例说明」等纯文字任务
+  var TEXT_MODEL_OPTIONS = [
+    // DeepSeek
+    { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（deepseek-v4-pro）" },
+    { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（deepseek-v4-flash）" },
+    { value: "deepseek-v4", label: "DeepSeek V4（deepseek-v4）" },
+    { value: "deepseek-reasoner", label: "DeepSeek R1（deepseek-reasoner）" },
+    // Kimi（月之暗面）
+    { value: "kimi-k3", label: "Kimi K3（kimi-k3）" },
+    { value: "kimi-k2", label: "Kimi K2（kimi-k2）" },
+    { value: "moonshot-v1-8k", label: "Kimi（moonshot-v1-8k）" },
+    // 阿里通义千问（百炼 DashScope）
+    { value: "qwen-plus", label: "通义千问 Plus（qwen-plus）" },
+    { value: "qwen-turbo", label: "通义千问 Turbo（qwen-turbo）" },
+    // 智谱
+    { value: "glm-4", label: "智谱 GLM-4" },
+    // 其他主流
+    { value: "ernie-4.0", label: "百度文心（ernie-4.0）" },
+    { value: "doubao-pro-32k", label: "字节豆包（doubao-pro）" },
+    { value: "hunyuan-turbo", label: "腾讯混元（hunyuan-turbo）" },
+    { value: "spark-4.0", label: "讯飞星火（spark-4.0）" }
+  ];
+
+  var visionModel = createSelect({
+    placeholder: "选择识别模型…",
+    options: VISION_MODEL_OPTIONS,
+    onChange: function () {
+      visionModel.setError(false);
+    }
+  });
+
+  document.getElementById("vision-model-slot").appendChild(visionModel.root);
+
   var aiModel = createSelect({
-    placeholder: "选择模型…",
-    options: MODEL_OPTIONS,
+    placeholder: "选择解析模型…",
+    options: TEXT_MODEL_OPTIONS,
     onChange: function () {
       aiModel.setError(false);
     }
@@ -452,7 +486,17 @@
       markError(form.weight, false);
     }
 
-    // 必填：AI 大模型配置（API 地址 / Key / 模型，存本地 JSON）
+    // 必填：识别模型（视觉）配置
+    var visionBase = form["vision-base"].value.trim();
+    var visionKey = form["vision-key"].value.trim();
+    var visionModelVal = visionModel.getValue();
+    var visionBad = !visionBase || !visionKey || !visionModelVal;
+    markError(form["vision-base"], visionBad);
+    markError(form["vision-key"], visionBad);
+    visionModel.setError(visionBad);
+    if (visionBad) ok = false;
+
+    // 必填：解析模型（文本）配置
     var aiBase = form["ai-base"].value.trim();
     var aiKey = form["ai-key"].value.trim();
     var aiModelVal = aiModel.getValue();
@@ -480,20 +524,30 @@
       return;
     }
 
-    // 收集 AI 配置（存入本地 JSON，不存浏览器）
+    // 收集 AI 配置（识别=视觉 / 解析=文本，存入本地 JSON，不存浏览器）
     var aiCfg = {
-      base: form["ai-base"].value.trim(),
-      key: form["ai-key"].value.trim(),
-      model: aiModel.getValue()
+      vision: {
+        base: form["vision-base"].value.trim(),
+        key: form["vision-key"].value.trim(),
+        model: visionModel.getValue()
+      },
+      parse: {
+        base: form["ai-base"].value.trim(),
+        key: form["ai-key"].value.trim(),
+        model: aiModel.getValue()
+      }
     };
 
     submitBtn.disabled = true;
     submitBtn.textContent = "检测 AI 连接中…";
 
-    // 1) 保存配置到本地 JSON → 2) 检测连接 → 3) 成功自动保存跳转 / 失败弹窗
+    // 1) 保存配置到本地 JSON → 2) 检测连接（先视觉后解析） → 3) 成功自动保存跳转 / 失败弹窗
     saveAiConfig(aiCfg)
       .then(function () {
-        return testAiConnection(aiCfg);
+        return testAiConnection(aiCfg.vision);
+      })
+      .then(function () {
+        return testAiConnection(aiCfg.parse);
       })
       .then(function () {
         // 连接成功：自动保存并跳转，无需点击
@@ -689,6 +743,7 @@
     birthMonth.setValue("");
     renderDays();
     blood.setValue("未知");
+    visionModel.setValue("");
     aiModel.setValue("");
     updateAgeHint();
     updateSummary(null);
@@ -721,16 +776,24 @@
   fillForm(saved);
   updateSummary(saved);
 
-  // 从本地 JSON 读取 AI 配置回填（不存浏览器）
+  // 从本地 JSON 读取 AI 配置回填（不存浏览器；兼容旧格式 base/key/model）
   fetch("/api/ai-config")
     .then(function (res) {
       return res.json();
     })
     .then(function (cfg) {
-      if (cfg && (cfg.base || cfg.model || cfg.key)) {
-        form["ai-base"].value = cfg.base || "";
-        aiModel.setValue(cfg.model || "");
-        form["ai-key"].value = cfg.key || "";
+      if (!cfg) return;
+      var vision = cfg.vision || (cfg.base ? { base: cfg.base, key: cfg.key, model: cfg.model } : null);
+      var parse = cfg.parse || (cfg.base ? { base: cfg.base, key: cfg.key, model: cfg.model } : null);
+      if (vision && (vision.base || vision.model || vision.key)) {
+        form["vision-base"].value = vision.base || "";
+        visionModel.setValue(vision.model || "");
+        form["vision-key"].value = vision.key || "";
+      }
+      if (parse && (parse.base || parse.model || parse.key)) {
+        form["ai-base"].value = parse.base || "";
+        aiModel.setValue(parse.model || "");
+        form["ai-key"].value = parse.key || "";
       }
     })
     .catch(function () {
