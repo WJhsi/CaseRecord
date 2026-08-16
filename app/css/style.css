@@ -61,19 +61,66 @@ header {
   margin-bottom: 2.2rem;
 }
 
-/* ---------- 首页 ---------- */
+/* ---------- 首页（左右两栏：左 30% 标题按钮 / 右 70% 风光照片） ---------- */
 .home {
-  max-width: 580px;
+  max-width: none;
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 30% 70%;
+  padding: 0;
+  margin: 0;
+}
+
+.home-left {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+  padding: 3rem clamp(1.6rem, 4vw, 4rem);
+  min-width: 0;
+}
+
+.home-right {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.home-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .home h1 {
-  font-size: 2.4rem;
+  font-size: clamp(1.9rem, 2.6vw, 2.6rem);
+}
+
+/* 首页覆盖 .page 的宽度/内边距限制 */
+.page.home {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+}
+
+@media (max-width: 900px) {
+  /* 窄屏：上下堆叠，照片放底部 */
+  .home {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .home-left {
+    padding: 2.5rem 1.6rem;
+    min-height: auto;
+  }
+
+  .home-right {
+    min-height: 42vh;
+    order: 2;
+  }
 }
 
 /* 主按钮块 */
