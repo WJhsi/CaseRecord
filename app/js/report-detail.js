@@ -379,6 +379,25 @@
       });
   }
 
+  // 重新识别：清空旧结果后重新调用视觉模型
+  var rerunBtn = document.getElementById("btn-rerun-ocr");
+  if (rerunBtn) {
+    rerunBtn.addEventListener("click", function () {
+      if (recognitionBusy) return;
+      recognizedText = "";
+      recognitionDone = false;
+      parseResult.value = "";
+      aiHint.textContent = "";
+      // 清空表格，恢复占位框架
+      if (!isCheckReport) {
+        labRows = [];
+        renderLabTable([]);
+        showLabTablePlaceholder();
+      }
+      autoRecognize();
+    });
+  }
+
   /* ---------- 检验报告：从识别文字提取检验项目表格 ---------- */
 
   var labBlock = document.getElementById("lab-table-block");
