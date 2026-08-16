@@ -2649,12 +2649,12 @@ textarea {
    ========================================================== */
 .theme-toggle {
   position: fixed;
-  top: 0.9rem;
-  right: 0.9rem;
+  top: 1.1rem;
+  right: 1.1rem;
   z-index: 100;
   display: inline-flex;
   align-items: center;
-  padding: 3px;
+  padding: 5px;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 999px;
@@ -2665,10 +2665,10 @@ textarea {
 
 .theme-slider {
   position: absolute;
-  left: 3px;
-  top: 3px;
-  width: calc(50% - 4px);
-  height: calc(100% - 6px);
+  left: 5px;
+  top: 5px;
+  width: calc(50% - 6px);
+  height: calc(100% - 10px);
   background: #fff;
   border-radius: 999px;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.15);
@@ -2685,22 +2685,31 @@ textarea {
 .theme-btn {
   position: relative;
   z-index: 1;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
   border: none;
   background: transparent;
-  padding: 0.35rem 0.95rem;
-  border-radius: 999px;
+  border-radius: 50%;
   font-family: inherit;
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
   color: var(--ink-2);
   cursor: pointer;
-  transition: color 0.2s ease, opacity 0.2s ease;
-  white-space: nowrap;
+  transition: color 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.theme-btn svg {
+  display: block;
+  width: 20px;
+  height: 20px;
 }
 
 .theme-btn.active {
   color: var(--accent);
-  font-weight: 600;
+}
+
+.theme-btn:hover:not(:disabled) {
+  color: var(--ink);
 }
 
 .theme-btn:disabled {
