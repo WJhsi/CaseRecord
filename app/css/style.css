@@ -638,13 +638,9 @@ a.btn-add {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* 拖到遮罩/上传区域：提示框变绿高亮 */
+/* 拖到提示框上方：仅背景高亮（外观不变） */
 .drop-overlay.over-upload .drop-overlay-box {
-  border-color: #8ad2ab;
-  border-style: solid;
-  background: rgba(47, 111, 79, 0.4);
-  box-shadow: 0 0 0 6px rgba(47, 111, 79, 0.18), 0 12px 40px rgba(0, 0, 0, 0.35);
-  transform: scale(1.05);
+  background: rgba(47, 111, 79, 0.45);
 }
 
 .drop-overlay.over-upload .drop-overlay-title {
