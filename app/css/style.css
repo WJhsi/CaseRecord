@@ -756,27 +756,6 @@ a.btn-add {
   cursor: default;
 }
 
-/* 识别文字 / AI 解析 小节标题 */
-.ocr-text-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 0.5rem;
-}
-
-.ocr-check-tag {
-  font-size: 0.7rem;
-  font-weight: 400;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-radius: 999px;
-  padding: 0.1rem 0.55rem;
-  white-space: nowrap;
-}
-
 .case-tags {
   display: flex;
   flex-wrap: wrap;
@@ -1337,8 +1316,356 @@ a.btn-add {
   word-break: break-all;
 }
 
+/* ---------- OCR 识别区 ---------- */
+.ocr-section {
+  min-width: 0;
+}
+
+.ocr-warning {
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: rgba(185, 28, 28, 0.06);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.ocr-note {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+}
+
+/* 提示 + 输入模式切换 */
+.ocr-note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.ocr-mode {
+  position: relative;
+  display: flex;
+  background: #f1f0ed;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+/* 滑动指示器：点击时丝滑滑到目标按钮 */
+.mode-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 4.5px);
+  height: calc(100% - 6px);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.12);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ocr-mode.manual .mode-slider {
+  transform: translateX(calc(100% + 3px));
+}
+
+.mode-btn {
+  position: relative;
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--ink-2);
+  cursor: pointer;
+  z-index: 1;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.mode-btn:hover {
+  color: var(--ink);
+}
+
+.mode-btn.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ocr-table .ocr-result {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.ocr-status {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+}
+
+.ocr-status.err {
+  color: var(--danger);
+}
+
+.ocr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+/* 表格区域限高滚动，表头固定（项目列始终可见） */
+#ocr-table-wrap {
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+/* 检查报告：影像表现（OCR）+ 影像判断（手动）两栏 */
+#ocr-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.ocr-check-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ocr-check-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ocr-check-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ocr-check-tag {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+}
+
+.ocr-check-col textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 260px;
+  resize: none;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfcfa;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ocr-check-col textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
+}
+
+.ocr-check-col textarea[readonly] {
+  background: #faf9f7;
+  color: var(--ink-2, #555);
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .ocr-check-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ocr-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.ocr-table th,
+.ocr-table td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.ocr-table th {
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.ocr-table .status {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 结果列手动输入框（高度与文本行一致，行距不变） */
+.ocr-table input.ocr-value {
+  width: 88px;
+  height: 22px;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fcfcfa;
+  color: var(--ink);
+  vertical-align: middle;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ocr-table input.ocr-value:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.1);
+}
+
+/* 保存 / 重新识别按钮 */
+.ocr-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.btn-save-ocr {
+  padding: 0.65rem 1.4rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-save-ocr:hover {
+  background: var(--accent-deep);
+}
+
+.btn-rerun {
+  padding: 0.65rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-rerun:hover {
+  background: var(--bg);
+}
+
+.ocr-table .status.ok {
+  color: var(--accent);
+}
+
+.ocr-table .status.up {
+  color: var(--danger);
+}
+
+.ocr-table .status.down {
+  color: #b45309;
+}
+
+/* 识别原文：默认折叠，点击展开 */
+.ocr-raw-details {
+  margin-top: 1.4rem;
+}
+
+.ocr-raw-details summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  transition: color 0.15s ease;
+}
+
+.ocr-raw-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ocr-raw-details summary:hover {
+  color: var(--accent);
+}
+
+.ocr-raw-details summary::before {
+  content: "▸";
+  transition: transform 0.15s ease;
+}
+
+.ocr-raw-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.ocr-raw {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  font-family: inherit;
+}
+
+@media (max-width: 640px) {
+  .ocr-table th,
+  .ocr-table td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.82rem;
+  }
+}
+
 /* ---------- 报告详情页 ---------- */
-/* 两栏：左原始报告 / 右 AI 解析 */
+/* 两栏：左原始报告 / 右 OCR 结果 */
 .report-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
