@@ -16,6 +16,7 @@
   --danger: #b91c1c;
   --field-bg: #fcfcfa;
   --well: #f1f0ed;
+  --field-focus: #ffffff;
   --radius: 14px;
   --shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 10px 28px rgba(28, 25, 23, 0.06);
 }
@@ -34,6 +35,7 @@ html.dark {
   --danger: #e06a5c;
   --field-bg: #1f1f21;
   --well: #242426;
+  --field-focus: #262629;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.35);
   background: var(--bg);
   color: var(--ink);
@@ -1856,7 +1858,7 @@ html.dark .mode-slider {
 .lab-input:focus {
   outline: none;
   border-color: var(--accent);
-  background: #fff;
+  background: var(--field-focus, #fff);
 }
 
 .lab-table-actions {
@@ -2341,7 +2343,7 @@ fieldset + fieldset {
 .field textarea:focus {
   outline: none;
   border-color: var(--accent);
-  background: #fff;
+  background: var(--field-focus, #fff);
   box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
 }
 
@@ -2430,7 +2432,7 @@ fieldset + fieldset {
 .cselect-trigger:focus-visible {
   outline: none;
   border-color: var(--accent);
-  background: #fff;
+  background: var(--field-focus, #fff);
   box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.12);
 }
 
