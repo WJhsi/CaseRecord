@@ -124,6 +124,29 @@ header {
   font-size: clamp(1.9rem, 2.6vw, 2.6rem);
 }
 
+/* 左栏文字统一白色系，与照片背景协调 */
+.home-left .brand {
+  color: #fff;
+}
+
+.home-left h1 {
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.home-left .sub {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+.home-left .secondary {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.home-left .secondary:hover {
+  color: #fff;
+}
+
 /* 首页覆盖 .page 的宽度/内边距限制 */
 .page.home {
   max-width: none;
