@@ -28,9 +28,7 @@
       "--danger": "#b91c1c",
       "--field-bg": "#fcfcfa",
       "--well": "#f1f0ed",
-      "--field-focus": "#ffffff",
-      "--scroll-thumb": "#d4d2ce",
-      "--scroll-thumb-hover": "#b8b5b0"
+      "--field-focus": "#ffffff"
     },
     dark: {
       "--bg": "#151517",
@@ -45,9 +43,7 @@
       "--danger": "#e06a5c",
       "--field-bg": "#1f1f21",
       "--well": "#242426",
-      "--field-focus": "#262629",
-      "--scroll-thumb": "#3a3a3d",
-      "--scroll-thumb-hover": "#4a4a4e"
+      "--field-focus": "#262629"
     }
   };
 

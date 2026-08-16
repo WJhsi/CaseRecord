@@ -17,9 +17,6 @@
   --field-bg: #fcfcfa;
   --well: #f1f0ed;
   --field-focus: #ffffff;
-  --scroll-thumb: #d4d2ce;
-  --scroll-thumb-hover: #b8b5b0;
-  --scroll-track: transparent;
   --radius: 14px;
   --shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 10px 28px rgba(28, 25, 23, 0.06);
 }
@@ -2852,13 +2849,13 @@ textarea {
 }
 
 /* ==========================================================
-   自定义滚动条（不用浏览器默认样式，适配深浅色）
+   自定义滚动条（固定中性灰色，不随主题变化，避免切换滞后）
    ========================================================== */
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--scroll-thumb, #d4d2ce) var(--scroll-track, transparent);
+  scrollbar-color: #b5b3b0 transparent;
 }
 
 /* WebKit / Chromium / Edge */
@@ -2868,31 +2865,24 @@ textarea {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--scroll-track, transparent);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--scroll-thumb, #d4d2ce);
+  background: #b5b3b0;
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--scroll-thumb-hover, #b8b5b0);
+  background: #9e9c98;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-corner {
   background: transparent;
-}
-
-/* 深色模式滚动条 */
-html.dark {
-  --scroll-thumb: #3a3a3d;
-  --scroll-thumb-hover: #4a4a4e;
-  --scroll-track: transparent;
 }
 
 
