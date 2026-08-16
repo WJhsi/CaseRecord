@@ -119,8 +119,11 @@ header {
   border-radius: 50%;
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 1.3rem;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.cta-arrow svg {
+  display: block;
 }
 
 .cta:hover .cta-arrow {
