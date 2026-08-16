@@ -947,7 +947,8 @@ a.btn-add {
   color: var(--accent);
   background: var(--accent-soft);
   border-radius: 999px;
-  padding: 0.35rem 0.9rem;
+  padding: 0; /* 内边距交给链接，保证 hover 高亮与绿块完全重合 */
+  overflow: hidden;
 }
 
 /* 病情类型：整个胶囊块可点击跳转 */
@@ -959,8 +960,7 @@ a.btn-add {
   text-decoration: none;
   cursor: pointer;
   border-radius: 999px;
-  padding: 0.15rem 0.3rem;
-  margin: -0.15rem -0.3rem;
+  padding: 0.35rem 0.9rem; /* 与原胶囊内边距一致 */
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
