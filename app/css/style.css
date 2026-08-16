@@ -619,6 +619,7 @@ a.btn-add {
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
   text-align: center;
+  transition: background-color 0.3s ease;
 }
 
 .drop-overlay-icon {
@@ -631,6 +632,7 @@ a.btn-add {
   font-weight: 600;
   letter-spacing: 0.04em;
   color: #fff;
+  transition: color 0.3s ease;
 }
 
 .drop-overlay-sub {
@@ -638,7 +640,7 @@ a.btn-add {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* 拖到提示框上方：仅背景高亮（外观不变） */
+/* 拖到提示框上方：仅背景高亮渐变（外观不变） */
 .drop-overlay.over-upload .drop-overlay-box {
   background: rgba(47, 111, 79, 0.45);
 }
