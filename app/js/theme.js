@@ -10,8 +10,9 @@
 
   var KEY = "caseRecord.theme";
   var buttons = toggle.querySelectorAll(".theme-btn");
+  var slider = toggle.querySelector(".theme-slider");
 
-  function apply(theme) {
+  function apply(theme, animate) {
     var dark = theme === "dark";
     // 滑块 + 按钮高亮
     toggle.classList.toggle("dark", dark);
@@ -21,6 +22,18 @@
     });
     // 深色配色作用到 body
     document.body.classList.toggle("dark", dark);
+    // JS 直接控制滑块位置（不依赖 CSS transform 百分比）
+    if (slider) {
+      var btnW = 42;
+      var gap = 0;
+      var target = dark ? btnW + gap : 0;
+      if (animate === false) {
+        slider.style.transition = "none";
+      } else {
+        slider.style.transition = "";
+      }
+      slider.style.transform = "translateX(" + target + "px)";
+    }
   }
 
   // 初始状态：读取记忆的选择（默认浅色）
@@ -30,12 +43,12 @@
   } catch (e) {
     /* ignore */
   }
-  apply(saved);
+  apply(saved, false);
 
   buttons.forEach(function (btn) {
     btn.addEventListener("click", function () {
       var theme = btn.getAttribute("data-theme") || "light";
-      apply(theme);
+      apply(theme, true);
       try {
         localStorage.setItem(KEY, theme);
       } catch (e) {
