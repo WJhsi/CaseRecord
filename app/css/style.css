@@ -950,22 +950,44 @@ a.btn-add {
   padding: 0.35rem 0.9rem;
 }
 
+/* 病情类型：整个胶囊块可点击跳转 */
+.illness-block-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.15rem 0.3rem;
+  margin: -0.15rem -0.3rem;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.illness-block-link:hover {
+  background: rgba(47, 111, 79, 0.12);
+  box-shadow: 0 1px 4px rgba(47, 111, 79, 0.18);
+}
+
 .illness-label {
   color: var(--ink-2);
 }
 
-/* 病情类型：可点击跳转搜索 */
-.illness-link {
-  color: var(--accent);
+.illness-name {
   font-weight: 600;
-  text-decoration: none;
-  border-bottom: 1px dashed rgba(47, 111, 79, 0.4);
-  transition: color 0.15s ease, border-color 0.15s ease;
+  color: var(--accent);
 }
 
-.illness-link:hover {
-  color: var(--accent-deep);
-  border-bottom-color: var(--accent-deep);
+.illness-arrow {
+  font-size: 0.75rem;
+  color: var(--accent);
+  opacity: 0.7;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.illness-block-link:hover .illness-arrow {
+  opacity: 1;
+  transform: translate(1px, -1px);
 }
 
 .detail-images {

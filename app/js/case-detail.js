@@ -35,15 +35,23 @@
     var editBtn = $("btn-edit-case");
     if (editBtn) editBtn.href = "case.html?id=" + c.id;
 
-    // 下拉病情类型（可点击跳转百度百科）
+    // 下拉病情类型（整个胶囊块可点击跳转百度百科）
     var illnessEl = $("detail-illness");
     if (c.illness && c.illness !== "未分类") {
       var illnessName = escapeHtml(c.illness);
       var illnessUrl = "https://baike.baidu.com/item/" + encodeURIComponent(c.illness);
-      illnessEl.innerHTML =
+      illnessEl.innerHTML = "";
+      var link = document.createElement("a");
+      link.className = "illness-block-link";
+      link.href = illnessUrl;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.title = "在「百度百科」中查询「" + illnessName + "」的疾病信息";
+      link.innerHTML =
         '<span class="illness-label">病情类型：</span>' +
-        '<a class="illness-link" href="' + illnessUrl +
-        '" target="_blank" rel="noopener" title="在「百度百科」中查询「' + illnessName + '」的疾病信息">' + illnessName + "</a>";
+        '<span class="illness-name">' + illnessName + "</span>" +
+        '<span class="illness-arrow" aria-hidden="true">↗</span>';
+      illnessEl.appendChild(link);
       illnessEl.hidden = false;
     }
 
