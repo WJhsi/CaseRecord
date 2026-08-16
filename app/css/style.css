@@ -1529,7 +1529,8 @@ a.btn-add {
 
 .lab-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.9rem;
 }
 
@@ -1544,12 +1545,30 @@ a.btn-add {
   font-weight: 600;
   letter-spacing: 0.04em;
   border-bottom: 1px solid var(--line);
-  z-index: 1;
+  z-index: 2;
+  box-shadow: 0 1px 0 var(--line);
 }
 
 .lab-table td {
   padding: 0.3rem 0.4rem;
   border-bottom: 1px solid var(--line);
+}
+
+/* 表格行 hover 反馈 */
+.lab-table tbody tr:hover {
+  background: rgba(47, 111, 79, 0.04);
+}
+
+/* 项目计数指示 */
+.lab-count {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.08rem 0.6rem;
+  white-space: nowrap;
 }
 
 .lab-input {

@@ -400,6 +400,8 @@
     }
     labTbody.innerHTML = html;
     labBlock.hidden = rows.length === 0;
+    var countEl = document.getElementById("lab-count");
+    if (countEl) countEl.textContent = "共 " + rows.length + " 项";
   }
 
   // 读取表格当前值
