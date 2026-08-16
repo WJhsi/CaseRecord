@@ -422,8 +422,8 @@
   function statusCell(value, range) {
     var s = calcRowStatus(value, range);
     if (!s) return '<td class="lab-status"></td>';
-    var cls = s === "偏高" ? "up" : s === "偏低" ? "down" : "ok";
-    var arrow = s === "偏高" ? "↑" : s === "偏低" ? "↓" : "✓";
+    var cls = s === "偏高" ? "up" : "down"; // 正常不显示
+    var arrow = s === "偏高" ? "↑" : "↓";
     return '<td class="lab-status ' + cls + '">' + arrow + " " + s + "</td>";
   }
 
@@ -462,12 +462,12 @@
       var cell = tr.querySelector(".lab-status");
       if (!cell) return;
       var s = calcRowStatus(value, range);
-      if (!s) {
+      if (!s || s === "正常") {
         cell.className = "lab-status";
         cell.textContent = "";
       } else {
-        var cls = s === "偏高" ? "up" : s === "偏低" ? "down" : "ok";
-        var arrow = s === "偏高" ? "↑" : s === "偏低" ? "↓" : "✓";
+        var cls = s === "偏高" ? "up" : "down";
+        var arrow = s === "偏高" ? "↑" : "↓";
         cell.className = "lab-status " + cls;
         cell.textContent = arrow + " " + s;
       }
