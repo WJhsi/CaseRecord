@@ -1,6 +1,6 @@
 /* ==========================================================
    CaseRecord · 主题切换（浅色 / 深色）
-   切换效果：以药丸为中心，一个圆圈辐射扩散覆盖屏幕后呈现新主题
+   切换效果：以药丸为中心，圆圈只在背景层辐射扩散（不盖住卡片）
    滑块滑动、按钮高亮、选择记忆、防闪白
    ========================================================== */
 (function () {
@@ -21,12 +21,11 @@
 
   var REVEAL_MS = 520;
 
-  // 以药丸中心为圆心，辐射扩散一个圆盖住屏幕，覆盖后切换主题
+  // 以药丸中心为圆心，背景层辐射扩散圆（z-index:-1，盖住背景但不盖卡片）
   function revealAndSwitch(theme) {
     var rect = toggle.getBoundingClientRect();
     var cx = rect.left + rect.width / 2;
     var cy = rect.top + rect.height / 2;
-    // 覆盖整个视口所需半径（取四角最远距离）
     var w = Math.max(cx, window.innerWidth - cx);
     var h = Math.max(cy, window.innerHeight - cy);
     var r = Math.sqrt(w * w + h * h) + 20;
@@ -35,7 +34,7 @@
     circle.className = "theme-reveal";
     circle.style.cssText =
       "position:fixed;left:0;top:0;width:100vw;height:100vh;" +
-      "z-index:9999;pointer-events:none;" +
+      "z-index:-1;pointer-events:none;" +
       "background:" + BG[theme] + ";" +
       "clip-path:circle(0px at " + cx + "px " + cy + "px);" +
       "transition:clip-path " + REVEAL_MS + "ms cubic-bezier(0.4,0,0.2,1);";
@@ -45,7 +44,7 @@
     void circle.offsetWidth;
     circle.style.clipPath = "circle(" + r + "px at " + cx + "px " + cy + "px)";
 
-    // 动画结束：切换主题类 + 移除圆（露出新主题）
+    // 动画结束：切换主题类 + 移除圆（背景回落到 CSS 规则，卡片同步变色）
     setTimeout(function () {
       document.documentElement.classList.toggle("dark", theme === "dark");
       circle.remove();
@@ -74,7 +73,7 @@
       slider.style.transform = "translateX(" + target + "px)";
     }
 
-    // 用户点击切换：以药丸为中心辐射扩散，扩散完成后再切换 html.dark
+    // 用户点击切换：背景层辐射扩散，扩散完成后再切换 html.dark
     if (animate) {
       revealAndSwitch(theme);
     } else {
