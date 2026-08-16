@@ -2910,6 +2910,13 @@ html.theme-transitioning .theme-toggle * {
   transition: none !important;
 }
 
+/* 滚动条不参与主题过渡：原生组件即时变色，避免滞后 */
+html.theme-transitioning ::-webkit-scrollbar,
+html.theme-transitioning ::-webkit-scrollbar-thumb,
+html.theme-transitioning ::-webkit-scrollbar-track {
+  transition: none !important;
+}
+
 
 
 
