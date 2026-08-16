@@ -87,7 +87,7 @@ header {
   display: block;
 }
 
-/* 左 30%：标题按钮 + 高斯模糊（模糊背后的照片） */
+/* 左 30%：标题按钮 + 高斯模糊背景（同一张照片自身模糊，兼容性最稳） */
 .home-left {
   position: relative;
   z-index: 1;
@@ -98,10 +98,26 @@ header {
   justify-content: center;
   padding: 3rem clamp(1.6rem, 3vw, 3.4rem);
   box-sizing: border-box;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 模糊背景层：同一张照片放大铺满并高斯模糊 */
+.home-left::before {
+  content: "";
+  position: absolute;
+  inset: -24px; /* 向外扩一点，避免边缘漏出未模糊区域 */
+  background: url("../assets/home-landscape.jpg") center / cover no-repeat;
+  filter: blur(18px);
+  -webkit-filter: blur(18px);
+  transform: scale(1.06);
+  z-index: 0;
+}
+
+/* 内容浮在模糊层之上 */
+.home-left > * {
+  position: relative;
+  z-index: 1;
 }
 
 .home h1 {
