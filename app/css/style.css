@@ -625,7 +625,7 @@ a.btn-add {
 
 .case-note textarea {
   width: 100%;
-  min-height: 140px;
+  min-height: 240px;
   resize: none;
   box-sizing: border-box;
   padding: 0.9rem 1rem;
