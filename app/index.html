@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CaseRecord · 病例档案</title>
   <link rel="stylesheet" href="css/style.css">
+<script>
+  // 主题防闪白：渲染前按记忆应用深色模式（加在 <html> 上）
+  (function () {
+    try {
+      if (localStorage.getItem("caseRecord.theme") === "dark") {
+        document.documentElement.classList.add("dark");
+      }
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body>
   <main class="page home">

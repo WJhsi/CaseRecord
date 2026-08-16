@@ -20,8 +20,8 @@
       var active = btn.getAttribute("data-theme") === theme;
       btn.classList.toggle("active", active);
     });
-    // 深色配色作用到 body
-    document.body.classList.toggle("dark", dark);
+    // 深色配色作用到 <html>（页面渲染前即可生效，避免切换页面闪白）
+    document.documentElement.classList.toggle("dark", dark);
     // JS 直接控制滑块位置（不依赖 CSS transform 百分比）
     if (slider) {
       var btnW = 42;
