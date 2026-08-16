@@ -767,6 +767,15 @@ a.btn-add {
   cursor: default;
 }
 
+/* AI 解析：单独整页宽大块 */
+.ai-parse-main {
+  margin-top: 2.4rem;
+}
+
+.ai-parse-main textarea {
+  min-height: 320px;
+}
+
 .case-tags {
   display: flex;
   flex-wrap: wrap;

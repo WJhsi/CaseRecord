@@ -31,17 +31,16 @@
         <div id="report-content"></div>
       </div>
 
-      <!-- 右栏：进入即自动识别（视觉模型看原图）+ 检验项目表格 + AI 解析 -->
+      <!-- 右栏：进入即自动识别（视觉模型看原图）+ 检验项目表格 -->
       <div class="report-right">
         <div class="ai-parse">
           <div class="section-title-row">
-            <span class="section-title">AI 识别与解析</span>
+            <span class="section-title">AI 识别</span>
             <div class="case-note-head-actions">
               <span class="note-timer" id="ai-timer" hidden></span>
-              <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
             </div>
           </div>
-          <p class="case-note-tip" id="ai-tip">进入页面后自动调用视觉模型识别报告原图文字；再点「AI 解析」由文本模型基于识别文字解析。结果仅本次展示、不保存。</p>
+          <p class="case-note-tip" id="ai-tip">进入页面后自动调用视觉模型识别报告原图文字，识别结果用于下方「AI 解析」。仅本次展示、不保存。</p>
 
           <div class="ai-recog-status" id="ai-recog-status" hidden></div>
 
@@ -68,15 +67,23 @@
               <button type="button" class="btn-rerun" id="btn-add-row">＋ 添加项目</button>
             </div>
           </div>
-
-          <div class="ocr-text-title">AI 解析 <span class="ocr-check-tag">文本模型基于识别文字</span></div>
-          <textarea id="ai-parse-result" rows="12" readonly placeholder="正在自动识别报告文字…识别完成后点击「AI 解析」"></textarea>
-
-          <div class="case-note-foot">
-            <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
-            <span class="case-note-hint" id="ai-hint"></span>
-          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- AI 解析：单独一大块 -->
+    <section class="card ai-parse ai-parse-main">
+      <div class="section-title-row">
+        <span class="section-title">AI 解析</span>
+        <div class="case-note-head-actions">
+          <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
+        </div>
+      </div>
+      <p class="case-note-tip">由文本模型基于上方识别结果解析：检验报告逐项判断偏高/偏低/正常，检查报告分「影像表现 / 影像判断」。结果仅本次展示、不保存。</p>
+      <textarea id="ai-parse-result" rows="14" readonly placeholder="自动识别完成后点击「AI 解析」生成解析…"></textarea>
+      <div class="case-note-foot">
+        <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
+        <span class="case-note-hint" id="ai-hint"></span>
       </div>
     </section>
   </main>
