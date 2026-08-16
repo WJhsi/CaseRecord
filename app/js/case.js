@@ -96,6 +96,7 @@
     var value = config.value || "";
     var onChange = config.onChange || function () {};
     var searchable = !!config.searchable;
+    var searchPlaceholder = config.searchPlaceholder || "搜索或自定义输入…";
     var open = false;
     var activeIndex = -1;
     var query = "";
@@ -119,7 +120,7 @@
       "</button>" +
       '<div class="cselect-menu has-options" role="listbox" hidden>' +
       (searchable
-        ? '<li class="cselect-search-li" role="none"><input type="text" class="cselect-search" placeholder="搜索病情，或直接输入自定义…"></li>' +
+        ? '<li class="cselect-search-li" role="none"><input type="text" class="cselect-search" placeholder="' + searchPlaceholder + '"></li>' +
           '<li class="cselect-custom" role="option" hidden><span>使用“<b></b>”</span></li>'
         : "") +
       '<div class="cselect-options"></div>' +
@@ -343,6 +344,10 @@
       },
       setError: function (bad) {
         root.classList.toggle("error", !!bad);
+      },
+      setDisabled: function (disabled) {
+        root.classList.toggle("disabled", !!disabled);
+        trigger.disabled = !!disabled;
       }
     };
   }
@@ -352,6 +357,7 @@
   var illness = createSelect({
     placeholder: "选择病情",
     searchable: true,
+    searchPlaceholder: "搜索病情，或直接输入自定义…",
     options: [
       // 呼吸系统
       { value: "急性上呼吸道感染", label: "急性上呼吸道感染", alias: "感冒" },
@@ -418,9 +424,69 @@
       { value: "检验报告", label: "检验报告" },
       { value: "检查报告", label: "检查报告" }
     ],
-    onChange: function () {}
+    onChange: function () {
+      reportKind.setError(false);
+      updateModalityVisibility();
+    }
   });
   document.getElementById("report-kind-slot").appendChild(reportKind.root);
+
+  /* ---------- 检查方式（仅检查报告时显示：DR / CT / MR / 超声等） ---------- */
+
+  var MODALITY_OPTIONS = [
+    { value: "DR", label: "DR（X光）" },
+    { value: "CT", label: "CT" },
+    { value: "MR", label: "MR（磁共振）" },
+    { value: "超声", label: "超声" },
+    { value: "心电图", label: "心电图" },
+    { value: "内镜", label: "内镜" },
+    { value: "病理", label: "病理" }
+  ];
+
+  var modality = createSelect({
+    placeholder: "检查方式…",
+    searchable: true,
+    searchPlaceholder: "搜索检查方式…",
+    options: MODALITY_OPTIONS,
+    onChange: function () {
+      modality.setError(false);
+    }
+  });
+  var modalitySlot = document.getElementById("modality-slot");
+  modalitySlot.appendChild(modality.root);
+
+  function updateModalityVisibility() {
+    // 检查报告：启用检查方式；检验报告：置灰禁用并清空
+    var enabled = reportKind.getValue() === "检查报告";
+    modality.setDisabled(!enabled);
+    if (!enabled) modality.setValue("");
+  }
+
+  /* ---------- 外科治疗方案 ---------- */
+
+  var TREATMENT_OPTIONS = [
+    { value: "无", label: "无" },
+    { value: "手术", label: "手术" },
+    { value: "清创缝合", label: "清创缝合" },
+    { value: "换药", label: "换药" },
+    { value: "引流", label: "引流" },
+    { value: "石膏固定", label: "石膏固定" },
+    { value: "牵引", label: "牵引" },
+    { value: "穿刺抽液", label: "穿刺抽液" },
+    { value: "理疗", label: "理疗" },
+    { value: "保守治疗", label: "保守治疗" }
+  ];
+
+  var treatment = createSelect({
+    placeholder: "选择治疗方案…",
+    searchable: true,
+    value: "无",
+    options: TREATMENT_OPTIONS,
+    onChange: function () {
+      treatment.setError(false);
+    }
+  });
+  document.getElementById("treatment-slot").appendChild(treatment.root);
 
   /* ---------- 影像上传 ---------- */
 
@@ -446,7 +512,8 @@
           name: f.name,
           type: f.type,
           dataUrl: e.target.result,
-          kind: reportKind.getValue() || "检验报告"
+          kind: reportKind.getValue() || "检验报告",
+          modality: reportKind.getValue() === "检查报告" ? (modality.getValue() || "") : ""
         });
         renderPreview();
       };
@@ -659,19 +726,8 @@
 
   medList.addEventListener("click", function (e) {
     if (!e.target.closest(".med-remove")) return;
-    var row = e.target.closest(".med-row");
-    if (medList.children.length > 1) {
-      row.remove();
-    } else {
-      // 至少保留一行，仅清空内容
-      row.querySelector(".med-name").value = "";
-      if (row._usage) {
-        row._usage.freq.setValue("");
-        row._usage.amount.setValue("");
-        row._usage.unit.setValue("");
-        row._usage.method.setValue("");
-      }
-    }
+    // 允许删除到 0 行（药物可选填）
+    e.target.closest(".med-row").remove();
   });
 
   /* ---------- 提交 ---------- */
@@ -696,6 +752,8 @@
     var cases = readCases();
     var savedId;
     var illnessVal = illness.getValue() || "";
+    var treatmentVal = treatment.getValue() || "";
+    var treatmentNote = form["treatment-note"].value.trim();
     var imageData = files.map(function (f) {
       return { name: f.name, type: f.type, dataUrl: f.dataUrl };
     });
@@ -716,6 +774,8 @@
       cases[idx].condition = condition;
       cases[idx].images = imageData;
       cases[idx].meds = meds;
+      cases[idx].treatment = treatmentVal;
+      cases[idx].treatmentNote = treatmentNote;
       cases[idx].updatedAt = new Date().toISOString();
       savedId = cases[idx].id;
     } else {
@@ -725,6 +785,8 @@
         condition: condition,
         images: imageData,
         meds: meds,
+        treatment: treatmentVal,
+        treatmentNote: treatmentNote,
         createdAt: new Date().toISOString()
       };
       cases.push(newCase);
@@ -755,15 +817,18 @@
   if (editing) {
     form.condition.value = editing.condition || "";
     illness.setValue(editing.illness || "");
+    treatment.setValue(editing.treatment || "");
+    form["treatment-note"].value = editing.treatmentNote || "";
     renderPreview();
     if (editing.meds && editing.meds.length) {
       editing.meds.forEach(function (m) {
         addMedRow(m.name, m.usage);
       });
-    } else {
-      addMedRow();
     }
-  } else {
-    addMedRow();
+    // 编辑时无药物则保持空白，点「添加药物」再出现
   }
+  // 非编辑模式：默认不显示药物行，点「＋ 添加药物」才添加
+
+  // 初始化报告类型联动（编辑时若为检查报告则显示检查方式）
+  updateModalityVisibility();
 })();

@@ -45,7 +45,10 @@
         <div class="grid">
           <div class="field span-2">
             <div class="upload-toolbar">
-              <div class="kind-select" id="report-kind-slot"></div>
+              <div class="report-kind-group">
+                <div class="kind-select" id="report-kind-slot"></div>
+                <div class="modality-select" id="modality-slot"></div>
+              </div>
               <input type="file" id="report-files" name="report-files" accept="image/*,.pdf" multiple hidden>
               <button type="button" class="upload-btn" id="upload-trigger">＋ 选择报告文件（图片 / PDF）</button>
             </div>
@@ -62,6 +65,21 @@
           <!-- 药物行由 JS 生成 -->
         </div>
         <button type="button" class="add-med" id="add-med">＋ 添加药物</button>
+      </fieldset>
+
+      <!-- 外科治疗方案 -->
+      <fieldset>
+        <div class="group-title">外科治疗方案</div>
+        <div class="grid">
+          <div class="field">
+            <label>治疗方案</label>
+            <div id="treatment-slot"></div>
+          </div>
+          <div class="field">
+            <label for="treatment-note">方案说明</label>
+            <textarea id="treatment-note" name="treatment-note" rows="3" placeholder="选填，如手术方式、注意事项、术后处理等…"></textarea>
+          </div>
+        </div>
       </fieldset>
 
       <div class="submit-row">

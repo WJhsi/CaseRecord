@@ -341,13 +341,40 @@ a.btn-add {
   gap: 0.8rem;
 }
 
-.kind-select {
-  flex: 0 0 200px;
+/* 报告类型 + 检查方式：横向并排，检查方式常驻显示 */
+.report-kind-group {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
+.kind-select {
+  flex: 0 0 190px;
+  min-width: 0;
+}
+
+.modality-select {
+  flex: 0 0 240px;
+  min-width: 0;
+}
+
+/* 禁用态（检验报告时检查方式置灰不可选） */
+.cselect.disabled .cselect-trigger {
+  background: #f1f0ed;
+  color: var(--ink-3);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.cselect.disabled .cselect-caret {
+  border-top-color: var(--ink-3);
+  opacity: 0.5;
+}
+
 .upload-toolbar .upload-btn {
-  flex: 1;
+  flex: 1; /* 填满剩余空间 */
   width: auto;
 }
 
@@ -357,8 +384,9 @@ a.btn-add {
     align-items: stretch;
   }
 
-  .kind-select {
-    flex-basis: auto;
+  .report-kind-group {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
@@ -910,6 +938,12 @@ a.btn-add {
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
   white-space: nowrap;
+}
+
+/* 检查方式标签（DR / CT / MR / 超声等） */
+.modality-chip {
+  color: #0f766e;
+  background: #ecfdf5;
 }
 
 .report-arrow {

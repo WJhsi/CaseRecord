@@ -182,6 +182,14 @@
       kind.className = "report-kind-chip";
       kind.textContent = img.kind || "检验报告";
 
+      // 检查方式标签（检查报告时显示，如 CT / MR / 超声）
+      if (img.modality) {
+        var mod = document.createElement("span");
+        mod.className = "report-kind-chip modality-chip";
+        mod.textContent = img.modality;
+        a.appendChild(mod);
+      }
+
       var arrow = document.createElement("span");
       arrow.className = "report-arrow";
       arrow.textContent = "›";
@@ -212,5 +220,19 @@
     });
   } else {
     medsEl.innerHTML = '<span class="detail-empty">未记录药物</span>';
+  }
+
+  // 外科治疗方案
+  var treatmentEl = $("detail-treatment");
+  treatmentEl.innerHTML = "";
+  if (c.treatment) {
+    var tRow = document.createElement("div");
+    tRow.className = "detail-med";
+    tRow.innerHTML =
+      '<span class="detail-med-name">' + escapeHtml(c.treatment) + "</span>" +
+      '<span class="detail-med-usage">' + escapeHtml(c.treatmentNote || "") + "</span>";
+    treatmentEl.appendChild(tRow);
+  } else {
+    treatmentEl.innerHTML = '<span class="detail-empty">未记录治疗方案</span>';
   }
 })();
