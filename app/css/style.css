@@ -115,6 +115,15 @@ header {
   z-index: 0;
 }
 
+/* 深色遮罩层：压暗背景，提升白字可读性 */
+.home-left::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 0;
+}
+
 /* 内容浮在模糊层之上 */
 .home-left > * {
   position: relative;
