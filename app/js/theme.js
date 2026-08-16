@@ -21,8 +21,8 @@
 
   var REVEAL_MS = 650;
 
-  // 以药丸中心为圆心，圆短暂盖屏辐射扩散（z-index 高，盖住内容，扩散最明显）
-  // 扩散同时切换主题类并启用全局过渡，卡片在圆下同步渐变；扩散结束移除圆露出新主题
+  // 以药丸中心为圆心，圆辐射扩散（盖住内容，扩散明显）
+  // 扩散接近覆盖屏幕时圆半透明淡出，卡片在圆下渐变，避免"满屏纯色"突兀
   function revealAndSwitch(theme) {
     var rect = toggle.getBoundingClientRect();
     var cx = rect.left + rect.width / 2;
@@ -43,7 +43,7 @@
       "z-index:9998;pointer-events:none;" +
       "background:" + BG[theme] + ";" +
       "clip-path:circle(0px at " + cx + "px " + cy + "px);" +
-      "transition:clip-path " + REVEAL_MS + "ms cubic-bezier(0.4,0,0.2,1);";
+      "transition:clip-path " + REVEAL_MS + "ms cubic-bezier(0.4,0,0.2,1), opacity 300ms ease;";
     document.body.appendChild(circle);
 
     // 启用全局颜色过渡（卡片/文字/边框在圆下同步渐变）
@@ -54,12 +54,17 @@
     circle.style.clipPath = "circle(" + r + "px at " + cx + "px " + cy + "px)";
     root.classList.toggle("dark", theme === "dark");
 
+    // 圆接近覆盖屏幕时淡出（避免满屏纯色突兀）
+    setTimeout(function () {
+      circle.style.opacity = "0";
+    }, REVEAL_MS - 260);
+
     // 动画结束：解锁背景、移除圆（露出已渐变的新主题）、关闭全局过渡
     setTimeout(function () {
       root.style.backgroundColor = "";
       circle.remove();
       root.classList.remove("theme-transitioning");
-    }, REVEAL_MS + 80);
+    }, REVEAL_MS + 120);
   }
 
   function apply(theme, animate) {
