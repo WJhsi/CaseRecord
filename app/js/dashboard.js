@@ -156,15 +156,33 @@
 
   var noteInput = document.getElementById("case-note-input");
   var noteHint = document.getElementById("case-note-hint");
+  var noteMeta = document.getElementById("case-note-meta");
   var noteAiBtn = document.getElementById("btn-ai-note");
 
   // 回填已保存的说明（只读展示，不可手动修改）
+  function readNoteMeta() {
+    try {
+      var meta = JSON.parse(localStorage.getItem(NOTE_KEY + ".meta"));
+      return meta && typeof meta === "object" ? meta : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   try {
     var savedNote = localStorage.getItem(NOTE_KEY);
     if (savedNote) {
       noteInput.value = savedNote;
-      var savedTime = localStorage.getItem(NOTE_KEY + ".time");
-      noteHint.textContent = savedTime ? "上次生成 " + savedTime : "已生成";
+      var meta = readNoteMeta();
+      if (meta) {
+        var parts = [];
+        if (meta.totalTokens != null) {
+          parts.push("Token 用量：" + meta.totalTokens + (meta.promptTokens != null ? "（输入 " + meta.promptTokens + " / 输出 " + meta.completionTokens + "）" : ""));
+        }
+        if (meta.time) parts.push("生成时间：" + meta.time);
+        if (parts.length) noteMeta.textContent = parts.join(" · ");
+      }
+      noteHint.textContent = meta && meta.time ? "上次生成 " + meta.time : "已生成";
     }
   } catch (e) {
     /* ignore */
@@ -279,12 +297,25 @@
       .then(function (text) {
         noteInput.value = text;
         var now = new Date().toLocaleString("zh-CN");
+        var usage = noteAiBtn._lastUsage || null;
+        var meta = { time: now };
+        if (usage) {
+          meta.totalTokens = usage.total_tokens != null ? usage.total_tokens : null;
+          meta.promptTokens = usage.prompt_tokens != null ? usage.prompt_tokens : null;
+          meta.completionTokens = usage.completion_tokens != null ? usage.completion_tokens : null;
+        }
         try {
           localStorage.setItem(NOTE_KEY, text);
-          localStorage.setItem(NOTE_KEY + ".time", now);
+          localStorage.setItem(NOTE_KEY + ".meta", JSON.stringify(meta));
         } catch (e) {
           /* ignore */
         }
+        var parts = [];
+        if (meta.totalTokens != null) {
+          parts.push("Token 用量：" + meta.totalTokens + (meta.promptTokens != null ? "（输入 " + meta.promptTokens + " / 输出 " + meta.completionTokens + "）" : ""));
+        }
+        if (meta.time) parts.push("生成时间：" + meta.time);
+        if (parts.length) noteMeta.textContent = parts.join(" · ");
         noteHint.textContent = "已自动保存 " + now;
         showToast("AI 说明已生成并自动保存 ✓");
       })
@@ -343,6 +374,7 @@
         }
         var content = data.choices[0].message && data.choices[0].message.content;
         if (!content) throw new Error("AI 未返回内容");
+        noteAiBtn._lastUsage = data.usage || null;
         return String(content).trim();
       });
   }

@@ -659,14 +659,24 @@ a.btn-add {
 .case-note-foot {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 1rem;
   margin-top: 0.8rem;
+}
+
+.case-note-meta {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .case-note-hint {
   font-size: 0.78rem;
   color: var(--ink-3);
+  flex-shrink: 0;
 }
 
 .btn-ai-note {
