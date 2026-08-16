@@ -31,24 +31,22 @@
         <div id="report-content"></div>
       </div>
 
-      <!-- 右栏：AI 识别文字（视觉模型看原图）+ AI 解析（文本模型） -->
+      <!-- 右栏：进入即自动识别（视觉模型看原图）+ AI 解析（文本模型） -->
       <div class="report-right">
         <div class="ai-parse">
           <div class="section-title-row">
             <span class="section-title">AI 识别与解析</span>
             <div class="case-note-head-actions">
               <span class="note-timer" id="ai-timer" hidden></span>
-              <button type="button" class="btn-ai-note" id="btn-ai-ocr">✦ AI 识别文字</button>
               <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
             </div>
           </div>
-          <p class="case-note-tip">第一步：视觉模型直接查看报告原图并转为文字（可核对、修正）；第二步：文本模型基于文字进行 AI 解析。结果仅本次展示、不保存。</p>
+          <p class="case-note-tip">进入页面后自动调用视觉模型识别报告原图文字；再点「AI 解析」由文本模型基于识别文字解析。结果仅本次展示、不保存。</p>
 
-          <div class="ocr-text-title">识别文字 <span class="ocr-check-tag">视觉模型看图转文字</span></div>
-          <textarea id="ai-ocr-text" rows="8" placeholder="点击「AI 识别文字」，视觉模型将把报告原图转为文字，可手动修正…"></textarea>
+          <div class="ai-recog-status" id="ai-recog-status" hidden></div>
 
-          <div class="ocr-text-title" style="margin-top:1rem">AI 解析 <span class="ocr-check-tag">文本模型基于文字</span></div>
-          <textarea id="ai-parse-result" rows="8" readonly placeholder="点击「AI 解析」，基于上方识别文字自动解析…"></textarea>
+          <div class="ocr-text-title">AI 解析 <span class="ocr-check-tag">文本模型基于识别文字</span></div>
+          <textarea id="ai-parse-result" rows="12" readonly placeholder="正在自动识别报告文字…识别完成后点击「AI 解析」"></textarea>
 
           <div class="case-note-foot">
             <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>

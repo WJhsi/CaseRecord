@@ -1,7 +1,7 @@
 /* ==========================================================
    CaseRecord · 报告详情页
    根据 caseId + idx 定位并全屏展示某份检验/检查报告；
-   双模式：视觉模型看原图转文字（识别）→ 文本模型基于文字解析
+   进入页面自动识别（视觉模型看原图转文字）→ 点「AI 解析」用文本模型解析
    ========================================================== */
 (function () {
   "use strict";
@@ -95,16 +95,19 @@
   }
 
   /* ==========================================================
-     AI 识别文字（视觉模型看原图）→ AI 解析（文本模型基于文字）
+     进入页面自动识别（视觉模型看原图转文字）→ AI 解析（文本模型）
      ========================================================== */
 
-  var btnOcr = document.getElementById("btn-ai-ocr");
   var btnParse = document.getElementById("btn-ai-parse");
-  var ocrText = document.getElementById("ai-ocr-text");
   var parseResult = document.getElementById("ai-parse-result");
+  var recogStatus = document.getElementById("ai-recog-status");
   var aiMeta = document.getElementById("ai-meta");
   var aiHint = document.getElementById("ai-hint");
   var aiTimer = document.getElementById("ai-timer");
+
+  // 识别出的报告文字（内存中，供解析使用）
+  var recognizedText = "";
+  var recognitionDone = false; // true=识别成功 / false=未成功
 
   var aiTimerId = null;
   var aiStartMs = 0;
@@ -187,6 +190,13 @@
     if (e.key === "Escape" && !aiMask.hidden) closeAiModal();
   });
 
+  function showRecogStatus(msg, isError) {
+    if (!recogStatus) return;
+    recogStatus.textContent = msg;
+    recogStatus.className = "ai-recog-status" + (isError ? " err" : " ok");
+    recogStatus.hidden = false;
+  }
+
   function setMeta(elapsed, usage) {
     var parts = [];
     if (elapsed != null) parts.push("本次耗时 " + elapsed + " 秒");
@@ -199,18 +209,18 @@
     aiTimer.hidden = true;
   }
 
-  function finishButton(btn) {
-    btn.disabled = false;
-    btn.textContent = btn.dataset.label || btn.textContent;
-    aiBusy = false;
-  }
-
   function lockButton(btn, label) {
     btn.dataset.label = btn.textContent;
     btn.disabled = true;
     btn.textContent = label;
     aiBusy = true;
     startAiTimer();
+  }
+
+  function finishButton(btn) {
+    btn.disabled = false;
+    btn.textContent = btn.dataset.label || btn.textContent;
+    aiBusy = false;
   }
 
   // 读取 AI 配置（兼容新结构 {vision, parse} 与旧结构 {base, key, model}）
@@ -248,7 +258,7 @@
   }
 
   // 多模态请求：文本 + 报告原图（OpenAI 兼容 image_url 格式）
-  function callAiVision(cfg, dataUrl, promptText, usageKey) {
+  function callAiVision(cfg, dataUrl, promptText) {
     var url = cfg.base.replace(/\/+$/, "") + "/chat/completions";
     return fetch(url, {
       method: "POST",
@@ -272,7 +282,6 @@
     })
       .then(parseResponse)
       .then(function (data) {
-        btnOcr._lastUsage = data.usage || null;
         var contentText = data.choices[0].message && data.choices[0].message.content;
         if (!contentText) throw new Error("AI 未返回内容");
         return { text: String(contentText).trim(), usage: data.usage || null };
@@ -298,14 +307,13 @@
     })
       .then(parseResponse)
       .then(function (data) {
-        btnParse._lastUsage = data.usage || null;
         var contentText = data.choices[0].message && data.choices[0].message.content;
         if (!contentText) throw new Error("AI 未返回内容");
         return { text: String(contentText).trim(), usage: data.usage || null };
       });
   }
 
-  /* ---------- 第一步：AI 识别文字（视觉模型看原图转文字） ---------- */
+  /* ---------- 自动识别：进入页面即调用视觉模型 ---------- */
 
   var OCR_PROMPT =
     "请仔细查看这张报告原图，把图中所有文字内容完整、准确地转写出来。要求：\n" +
@@ -314,13 +322,19 @@
     "3. 不要使用 Markdown 符号（不要用 # * - 等）；\n" +
     "4. 看不清楚的内容用「？？」标记，不要编造。";
 
-  btnOcr.addEventListener("click", function () {
-    if (aiBusy) return;
+  var recognitionBusy = false;
+
+  function autoRecognize() {
+    if (recognitionBusy) return;
+    // PDF 无法作为图片发送
     if (img.type && img.type.indexOf("image/") !== 0) {
-      showAiModal("AI 识别文字失败", "PDF 报告无法直接发送给 AI 查看，请先在左栏打开 PDF 查看内容，或将 PDF 转为图片后重新上传。", true);
+      showRecogStatus("PDF 报告无法自动识别，请先在左栏查看内容，或转为图片后重新上传。", true);
+      parseResult.placeholder = "PDF 报告无法自动识别文字…";
       return;
     }
-    lockButton(btnOcr, "AI 识别中…");
+    recognitionBusy = true;
+    showRecogStatus("正在调用视觉模型识别报告文字…");
+    parseResult.placeholder = "正在识别报告文字，请稍候…";
 
     readAiConfig()
       .then(function (cfg) {
@@ -331,25 +345,30 @@
         return callAiVision(vision, img.dataUrl, OCR_PROMPT);
       })
       .then(function (result) {
-        var elapsed = stopAiTimer();
-        ocrText.value = result.text;
+        recognitionBusy = false;
+        recognizedText = result.text;
+        recognitionDone = true;
+        var n = recognizedText.length;
+        var parts = ["识别完成：共 " + n + " 字"];
+        if (result.usage && result.usage.total_tokens != null) {
+          parts.push("识别 Token " + result.usage.total_tokens);
+        }
+        showRecogStatus(parts.join("，"));
+        parseResult.placeholder = "识别完成，点击「AI 解析」生成解析…";
         aiHint.textContent = "识别完成，未保存";
-        setMeta(elapsed, result.usage);
-        showToast("AI 识别文字完成 ✓");
       })
       .catch(function (err) {
-        stopAiTimer();
-        showAiModal("AI 识别文字失败", String(err && err.message ? err.message : err), true);
-      })
-      .finally(function () {
-        finishButton(btnOcr);
+        recognitionBusy = false;
+        recognitionDone = false;
+        showRecogStatus("识别失败：" + String(err && err.message ? err.message : err), true);
+        parseResult.placeholder = "识别失败，可检查识别模型配置后刷新重试…";
       });
-  });
+  }
 
-  /* ---------- 第二步：AI 解析（文本模型基于识别文字） ---------- */
+  /* ---------- AI 解析（文本模型基于识别文字） ---------- */
 
   function buildParsePrompt() {
-    var text = ocrText.value.trim();
+    var text = recognizedText.trim();
     if (isCheckReport) {
       return (
         "你是一位专业的医学影像科医生。以下是检查报告的识别文字（可能不准确，仅供参考）：\n" +
@@ -376,8 +395,8 @@
 
   btnParse.addEventListener("click", function () {
     if (aiBusy) return;
-    if (!ocrText.value.trim()) {
-      showToast("请先点击「AI 识别文字」获取报告文字。", "err");
+    if (!recognizedText.trim()) {
+      showToast("自动识别未完成或失败，请稍候或检查识别模型配置后刷新重试。", "err");
       return;
     }
     lockButton(btnParse, "AI 解析中…");
@@ -405,4 +424,7 @@
         finishButton(btnParse);
       });
   });
+
+  /* ---------- 初始化：进入页面自动识别 ---------- */
+  autoRecognize();
 })();

@@ -1482,6 +1482,39 @@ a.btn-add {
   white-space: nowrap;
 }
 
+/* AI 识别/解析 小节标题 */
+.ocr-text-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+/* 自动识别状态条 */
+.ai-recog-status {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  margin-bottom: 0.8rem;
+  word-break: break-all;
+}
+
+.ai-recog-status.ok {
+  color: var(--accent);
+  background: rgba(47, 111, 79, 0.08);
+  border: 1px solid rgba(47, 111, 79, 0.25);
+}
+
+.ai-recog-status.err {
+  color: var(--danger);
+  background: rgba(185, 28, 28, 0.06);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+}
+
 .ocr-check-col textarea {
   width: 100%;
   box-sizing: border-box;
