@@ -156,7 +156,7 @@ python server.py
 
 - **必须通过本地服务器访问**（`start.bat` 或 `python server.py`，端口 8081），直接打开 HTML 无法使用。
 - **数据存于本机 `data/` 目录**：档案 `profile.json`、病例 `data/cases/<id>/case.json`、报告图片 `images/`、识别结果 `ocr-<序号>.json`、AI 配置 `ai-config.json`。清除浏览器数据不影响数据，但**删除 / 移动 `data/` 目录会丢失全部数据**，请定期备份该目录。
-- **AI 功能需自备 API Key**：识别（视觉模型）与解析（文本模型）分别配置，密钥仅存本地 `data/ai-config.json`（已加入 `.gitignore`，不会提交到仓库）；AI 调用会产生第三方 API 费用，请留意用量。
+- **AI 功能需自备 API Key**：识别（视觉模型）与解析（文本模型）分别配置；AI 调用会产生第三方 API 费用，请留意用量。
 - **AI 结果仅供参考**：识别与解析可能出错，请务必对照报告原文核对；本项目不构成医疗建议。
 - **文件限制**：报告文件支持 jpg / png / webp / gif / pdf，单个不超过 2MB。
 - **浏览器兼容**：建议使用较新的 Chrome / Edge / Firefox。
@@ -315,7 +315,7 @@ Two-column layout: title and entry buttons on the left, a landscape photo on the
 
 - **A local server is required** (`start.bat` or `python server.py`, port 8081); opening the HTML directly will not work.
 - **Data lives in the local `data/` directory**: profile `profile.json`, cases `data/cases/<id>/case.json`, report images `images/`, recognition results `ocr-<index>.json`, AI config `ai-config.json`. Clearing browser data does not affect it, but **deleting / moving the `data/` folder loses everything** — back it up regularly.
-- **AI features need your own API keys**: the vision (recognition) and text (parsing) models are configured separately; keys are stored only in local `data/ai-config.json` (gitignored, never committed). AI calls may incur third-party API costs.
+- **AI features need your own API keys**: the vision (recognition) and text (parsing) models are configured separately;  AI calls may incur third-party API costs.
 - **AI results are for reference only**: recognition and parsing can be wrong — always verify against the original report. This project does not constitute medical advice.
 - **File limits**: jpg / png / webp / gif / pdf, up to 2MB each.
 - **Browser support**: recent Chrome / Edge / Firefox recommended.
