@@ -93,12 +93,6 @@
   var aiMeta = document.getElementById("ai-meta");
   var aiHint = document.getElementById("ai-hint");
   var aiTimer = document.getElementById("ai-timer");
-  var aiParseTimer = document.getElementById("ai-parse-timer");
-  // 检查报告：内联解析区（识别下方）
-  var checkParseInline = document.getElementById("check-parse-inline");
-  var checkParseResult = document.getElementById("check-parse-result");
-  var checkMeta = document.getElementById("check-meta");
-  var checkHint = document.getElementById("check-hint");
 
   // 识别出的报告文字（内存中，供解析使用）
   var recognizedText = "";
@@ -395,8 +389,6 @@
       recognitionDone = false;
       parseResult.value = "";
       aiHint.textContent = "";
-      if (checkParseResult) checkParseResult.value = "";
-      if (checkHint) checkHint.textContent = "";
       // 清空表格，恢复占位框架
       if (!isCheckReport) {
         labRows = [];
@@ -687,14 +679,13 @@
       });
   }
 
-  // 检查报告：识别完成后自动解析（显示在识别下方）
+  // 检查报告：识别完成后自动解析
   function autoParseCheck() {
     if (!isCheckReport || !recognizedText.trim()) return;
-    if (checkParseInline) checkParseInline.hidden = false;
     runParse({
-      resultEl: checkParseResult,
-      metaEl: checkMeta,
-      hintEl: checkHint,
+      resultEl: parseResult,
+      metaEl: aiMeta,
+      hintEl: aiHint,
       timer: aiTimer,
       quiet: true
     }).catch(function () {
@@ -707,7 +698,7 @@
       resultEl: parseResult,
       metaEl: aiMeta,
       hintEl: aiHint,
-      timer: aiParseTimer,
+      timer: aiTimer,
       btn: btnParse
     }).catch(function () {});
   });
@@ -719,12 +710,8 @@
     })
     .then(function (ok) {
       if (!ok) return;
-      // 检查报告：AI 解析显示在识别下方（隐藏下方独立大块），识别后自动解析
-      if (isCheckReport) {
-        var mainParse = document.querySelector(".ai-parse-main");
-        if (mainParse) mainParse.hidden = true;
-        if (checkParseInline) checkParseInline.hidden = false;
-      }
+      // 检验报告显示「✦ AI 解析」按钮（先核对表格再手动解析）；检查报告自动解析
+      if (btnParse) btnParse.hidden = isCheckReport;
       return Store.getOcr(caseId, idx);
     })
     .then(function (savedOcr) {

@@ -31,7 +31,7 @@
         <div id="report-content"></div>
       </div>
 
-      <!-- 右栏：进入即自动识别（视觉模型看原图）+ 检验项目表格 -->
+      <!-- 右栏：进入即自动识别（视觉模型看原图）+ 检验项目表格 + AI 解析 -->
       <div class="report-right">
         <div class="ai-parse">
           <div class="section-title-row">
@@ -39,6 +39,7 @@
             <div class="case-note-head-actions">
               <span class="note-timer" id="ai-timer" hidden></span>
               <button type="button" class="btn-rerun" id="btn-rerun-ocr">↻ 重新识别</button>
+              <button type="button" class="btn-ai-note" id="btn-ai-parse" hidden>✦ AI 解析</button>
             </div>
           </div>
           <p class="case-note-tip" id="ai-tip">进入页面后自动调用视觉模型识别报告原图文字，识别结果已保存到本地、刷新不重复识别；点「↻ 重新识别」可重新识别并覆盖。AI 解析仅本次展示、不保存。</p>
@@ -70,33 +71,14 @@
             </div>
           </div>
 
-          <!-- 检查报告：AI 解析（识别下方，自动识别后自动解析） -->
-          <div id="check-parse-inline" hidden>
-            <div class="ocr-text-title">AI 解析 <span class="ocr-check-tag">文本模型基于识别文字</span></div>
-            <textarea id="check-parse-result" rows="10" readonly placeholder="识别完成后自动解析…"></textarea>
-            <div class="case-note-foot">
-              <span class="case-note-meta" id="check-meta">Token 用量：— · 生成时间：—</span>
-              <span class="case-note-hint" id="check-hint"></span>
-            </div>
+          <!-- AI 解析：合并到识别下方（检验手动 / 检查自动） -->
+          <div class="ocr-text-title" style="margin-top:1.2rem">AI 解析 <span class="ocr-check-tag">文本模型基于识别文字</span></div>
+          <textarea id="ai-parse-result" rows="12" readonly placeholder="识别完成后点击「✦ AI 解析」生成解析…"></textarea>
+          <div class="case-note-foot">
+            <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
+            <span class="case-note-hint" id="ai-hint"></span>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- AI 解析：单独一大块 -->
-    <section class="card ai-parse ai-parse-main">
-      <div class="section-title-row">
-        <span class="section-title">AI 解析</span>
-        <div class="case-note-head-actions">
-          <span class="note-timer" id="ai-parse-timer" hidden></span>
-          <button type="button" class="btn-ai-note" id="btn-ai-parse">✦ AI 解析</button>
-        </div>
-      </div>
-      <p class="case-note-tip">由文本模型基于上方识别结果解析：检验报告逐项判断偏高/偏低/正常，检查报告分「影像表现 / 影像判断」。结果仅本次展示、不保存。</p>
-      <textarea id="ai-parse-result" rows="14" readonly placeholder="自动识别完成后点击「AI 解析」生成解析…"></textarea>
-      <div class="case-note-foot">
-        <span class="case-note-meta" id="ai-meta">Token 用量：— · 生成时间：—</span>
-        <span class="case-note-hint" id="ai-hint"></span>
       </div>
     </section>
   </main>
