@@ -69,6 +69,16 @@
               <button type="button" class="btn-rerun" id="btn-add-row">＋ 添加项目</button>
             </div>
           </div>
+
+          <!-- 检查报告：AI 解析（识别下方，自动识别后自动解析） -->
+          <div id="check-parse-inline" hidden>
+            <div class="ocr-text-title">AI 解析 <span class="ocr-check-tag">文本模型基于识别文字</span></div>
+            <textarea id="check-parse-result" rows="10" readonly placeholder="识别完成后自动解析…"></textarea>
+            <div class="case-note-foot">
+              <span class="case-note-meta" id="check-meta">Token 用量：— · 生成时间：—</span>
+              <span class="case-note-hint" id="check-hint"></span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

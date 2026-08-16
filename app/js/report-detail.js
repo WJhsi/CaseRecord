@@ -94,6 +94,11 @@
   var aiHint = document.getElementById("ai-hint");
   var aiTimer = document.getElementById("ai-timer");
   var aiParseTimer = document.getElementById("ai-parse-timer");
+  // 检查报告：内联解析区（识别下方）
+  var checkParseInline = document.getElementById("check-parse-inline");
+  var checkParseResult = document.getElementById("check-parse-result");
+  var checkMeta = document.getElementById("check-meta");
+  var checkHint = document.getElementById("check-hint");
 
   // 识别出的报告文字（内存中，供解析使用）
   var recognizedText = "";
@@ -194,14 +199,14 @@
     recogStatus.hidden = false;
   }
 
-  function setMeta(elapsed, usage) {
+  function setMeta(elapsed, usage, metaEl) {
     var parts = [];
     if (elapsed != null) parts.push("本次耗时 " + elapsed + " 秒");
     if (usage && usage.total_tokens != null) {
       parts.push("Token 用量：" + usage.total_tokens + (usage.prompt_tokens != null ? "（输入 " + usage.prompt_tokens + " / 输出 " + usage.completion_tokens + "）" : ""));
     }
     parts.push("时间：" + new Date().toLocaleString("zh-CN"));
-    aiMeta.textContent = parts.join(" · ");
+    (metaEl || aiMeta).textContent = parts.join(" · ");
   }
 
   function lockButton(btn, label, timerEl) {
@@ -366,9 +371,11 @@
         parseResult.placeholder = "识别完成，点击「AI 解析」生成解析…";
         aiHint.textContent = "识别完成，已保存";
         saveOcrData();
-        // 检验报告：识别完成后自动提取检验项目表格
+        // 检验报告：识别完成后自动提取检验项目表格；检查报告：识别完成后自动解析
         if (!isCheckReport) {
           extractLabTable();
+        } else {
+          autoParseCheck();
         }
       })
       .catch(function (err) {
@@ -388,6 +395,8 @@
       recognitionDone = false;
       parseResult.value = "";
       aiHint.textContent = "";
+      if (checkParseResult) checkParseResult.value = "";
+      if (checkHint) checkHint.textContent = "";
       // 清空表格，恢复占位框架
       if (!isCheckReport) {
         labRows = [];
@@ -639,15 +648,19 @@
     );
   }
 
-  btnParse.addEventListener("click", function () {
-    if (aiBusy) return;
+  // 通用解析：目标结果框 / meta / hint / 计时 / 可选按钮
+  var parseInFlight = false;
+
+  function runParse(target) {
+    if (parseInFlight) return Promise.reject("busy");
     if (!recognizedText.trim()) {
       showToast("自动识别未完成或失败，请稍候或检查识别模型配置后刷新重试。", "err");
-      return;
+      return Promise.reject("no text");
     }
-    lockButton(btnParse, "AI 解析中…", aiParseTimer);
+    parseInFlight = true;
+    if (target.btn) lockButton(target.btn, "AI 解析中…", target.timer);
 
-    readAiConfig()
+    return readAiConfig()
       .then(function (cfg) {
         var parse = cfg.parse;
         if (!parse || !parse.base || !parse.key || !parse.model) {
@@ -657,18 +670,46 @@
       })
       .then(function (result) {
         var elapsed = stopAiTimer();
-        parseResult.value = result.text;
-        aiHint.textContent = "本次解析，未保存";
-        setMeta(elapsed, result.usage);
-        showToast("AI 解析完成 ✓");
+        target.resultEl.value = result.text;
+        if (target.hintEl) target.hintEl.textContent = "本次解析，未保存";
+        setMeta(elapsed, result.usage, target.metaEl);
+        if (!target.quiet) showToast("AI 解析完成 ✓");
+        return result;
       })
       .catch(function (err) {
         stopAiTimer();
         showAiModal("AI 解析失败", String(err && err.message ? err.message : err), true);
+        throw err;
       })
       .finally(function () {
-        finishButton(btnParse);
+        parseInFlight = false;
+        if (target.btn) finishButton(target.btn);
       });
+  }
+
+  // 检查报告：识别完成后自动解析（显示在识别下方）
+  function autoParseCheck() {
+    if (!isCheckReport || !recognizedText.trim()) return;
+    if (checkParseInline) checkParseInline.hidden = false;
+    runParse({
+      resultEl: checkParseResult,
+      metaEl: checkMeta,
+      hintEl: checkHint,
+      timer: aiTimer,
+      quiet: true
+    }).catch(function () {
+      /* 失败已在弹窗展示 */
+    });
+  }
+
+  btnParse.addEventListener("click", function () {
+    runParse({
+      resultEl: parseResult,
+      metaEl: aiMeta,
+      hintEl: aiHint,
+      timer: aiParseTimer,
+      btn: btnParse
+    }).catch(function () {});
   });
 
   /* ---------- 初始化 ---------- */
@@ -678,6 +719,12 @@
     })
     .then(function (ok) {
       if (!ok) return;
+      // 检查报告：AI 解析显示在识别下方（隐藏下方独立大块），识别后自动解析
+      if (isCheckReport) {
+        var mainParse = document.querySelector(".ai-parse-main");
+        if (mainParse) mainParse.hidden = true;
+        if (checkParseInline) checkParseInline.hidden = false;
+      }
       return Store.getOcr(caseId, idx);
     })
     .then(function (savedOcr) {
@@ -696,6 +743,8 @@
         showRecogStatus("已载入上次识别结果" + savedAtStr + "，无需重新识别；可修改表格后点击「AI 解析」。");
         parseResult.placeholder = "已载入识别结果，点击「AI 解析」生成解析…";
         aiHint.textContent = "已载入本地识别结果";
+        // 检查报告：载入识别结果后自动解析
+        if (isCheckReport) autoParseCheck();
       } else {
         // 检验报告：进入页面立即显示表格框架（表头 + 空行占位），识别完成后填充
         if (!isCheckReport) {
