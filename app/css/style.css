@@ -706,6 +706,19 @@ a.btn-add {
   cursor: not-allowed;
 }
 
+.case-note-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.note-timer {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .case-tags {
   display: flex;
   flex-wrap: wrap;

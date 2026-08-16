@@ -158,6 +158,28 @@
   var noteHint = document.getElementById("case-note-hint");
   var noteMeta = document.getElementById("case-note-meta");
   var noteAiBtn = document.getElementById("btn-ai-note");
+  var noteTimer = document.getElementById("note-timer");
+
+  // 生成过程实时计时
+  var noteTimerId = null;
+  var noteStartMs = 0;
+
+  function startNoteTimer() {
+    noteStartMs = Date.now();
+    noteTimer.hidden = false;
+    noteTimer.textContent = "已用时 0 秒";
+    clearInterval(noteTimerId);
+    noteTimerId = setInterval(function () {
+      var sec = Math.round((Date.now() - noteStartMs) / 1000);
+      noteTimer.textContent = "已用时 " + sec + " 秒";
+    }, 200);
+  }
+
+  function stopNoteTimer() {
+    clearInterval(noteTimerId);
+    noteTimerId = null;
+    return Math.round((Date.now() - noteStartMs) / 1000);
+  }
 
   // 回填已保存的说明（只读展示，不可手动修改）
   function readNoteMeta() {
@@ -176,6 +198,7 @@
       var meta = readNoteMeta();
       if (meta) {
         var parts = [];
+        if (meta.seconds != null) parts.push("本次生成耗时 " + meta.seconds + " 秒");
         if (meta.totalTokens != null) {
           parts.push("Token 用量：" + meta.totalTokens + (meta.promptTokens != null ? "（输入 " + meta.promptTokens + " / 输出 " + meta.completionTokens + "）" : ""));
         }
@@ -295,10 +318,11 @@
         return callAi(cfg, summary);
       })
       .then(function (text) {
+        var elapsed = stopNoteTimer();
         noteInput.value = text;
         var now = new Date().toLocaleString("zh-CN");
         var usage = noteAiBtn._lastUsage || null;
-        var meta = { time: now };
+        var meta = { time: now, seconds: elapsed };
         if (usage) {
           meta.totalTokens = usage.total_tokens != null ? usage.total_tokens : null;
           meta.promptTokens = usage.prompt_tokens != null ? usage.prompt_tokens : null;
@@ -311,15 +335,21 @@
           /* ignore */
         }
         var parts = [];
+        if (meta.seconds != null) parts.push("本次生成耗时 " + meta.seconds + " 秒");
         if (meta.totalTokens != null) {
           parts.push("Token 用量：" + meta.totalTokens + (meta.promptTokens != null ? "（输入 " + meta.promptTokens + " / 输出 " + meta.completionTokens + "）" : ""));
         }
         if (meta.time) parts.push("生成时间：" + meta.time);
         if (parts.length) noteMeta.textContent = parts.join(" · ");
+        noteTimer.textContent = "";
+        noteTimer.hidden = true;
         noteHint.textContent = "已自动保存 " + now;
         showToast("AI 说明已生成并自动保存 ✓");
       })
       .catch(function (err) {
+        stopNoteTimer();
+        noteTimer.textContent = "";
+        noteTimer.hidden = true;
         showAiModal("AI 生成说明失败", String(err && err.message ? err.message : err), true);
       })
       .finally(function () {
@@ -329,6 +359,7 @@
 
     noteAiBtn.disabled = true;
     noteAiBtn.textContent = "AI 生成中…";
+    startNoteTimer();
   });
 
   function callAi(cfg, summary) {

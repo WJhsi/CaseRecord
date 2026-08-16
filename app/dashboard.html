@@ -81,7 +81,10 @@
     <section class="card case-note" id="case-note-section">
       <div class="section-title-row">
         <span class="section-title">病例说明</span>
-        <button type="button" class="btn-ai-note" id="btn-ai-note">✦ AI 生成说明</button>
+        <div class="case-note-head-actions">
+          <span class="note-timer" id="note-timer" hidden></span>
+          <button type="button" class="btn-ai-note" id="btn-ai-note">✦ AI 生成说明</button>
+        </div>
       </div>
       <p class="case-note-tip">由 AI 根据全部病例自动生成的整体说明，生成后自动保存，不可手动修改。</p>
       <textarea id="case-note-input" rows="6" readonly placeholder="点击「AI 生成说明」，AI 将根据全部病例自动生成说明…"></textarea>
