@@ -1831,6 +1831,22 @@ a.btn-add {
 
 .report-right {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* AI 解析文本框高度匹配整个病例详情框 */
+.report-right .ai-parse {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.report-right #ai-parse-result {
+  flex: 1 1 auto;
+  min-height: 200px;
 }
 
 .report-img {
