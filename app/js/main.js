@@ -270,6 +270,57 @@
   document.getElementById("birth-day-slot").appendChild(birthDay.root);
   document.getElementById("blood-slot").appendChild(blood.root);
 
+  /* ---------- AI 大模型配置：模型下拉 ---------- */
+
+  var MODEL_OPTIONS = [
+    // DeepSeek
+    { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（deepseek-v4-pro）" },
+    { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（deepseek-v4-flash）" },
+    { value: "deepseek-v4", label: "DeepSeek V4（deepseek-v4）" },
+    { value: "deepseek-reasoner", label: "DeepSeek R1（deepseek-reasoner）" },
+    // Kimi（月之暗面）
+    { value: "kimi-k3", label: "Kimi K3（kimi-k3）" },
+    { value: "kimi-k2", label: "Kimi K2（kimi-k2）" },
+    { value: "moonshot-v1-8k", label: "Kimi（moonshot-v1-8k）" },
+    // OpenAI
+    { value: "gpt-5.5", label: "GPT-5.5" },
+    { value: "gpt-5.2", label: "GPT-5.2" },
+    { value: "gpt-5", label: "GPT-5" },
+    { value: "gpt-4o", label: "GPT-4o" },
+    // Anthropic Claude
+    { value: "claude-4.5", label: "Claude 4.5" },
+    { value: "claude-4-5-sonnet", label: "Claude 4.5 Sonnet" },
+    // Google Gemini
+    { value: "gemini-3-pro", label: "Gemini 3 Pro" },
+    { value: "gemini-3-flash", label: "Gemini 3 Flash" },
+    // xAI
+    { value: "grok-4", label: "Grok 4" },
+    // Meta
+    { value: "llama-4", label: "Llama 4" },
+    // 阿里通义千问
+    { value: "qwen-vl-plus", label: "通义千问 VL（qwen-vl-plus）" },
+    { value: "qwen-plus", label: "通义千问 Plus（qwen-plus）" },
+    { value: "qwen-turbo", label: "通义千问 Turbo（qwen-turbo）" },
+    // 智谱
+    { value: "glm-4", label: "智谱 GLM-4" },
+    { value: "glm-4v", label: "智谱 GLM-4V" },
+    // 其他主流
+    { value: "ernie-4.0", label: "百度文心（ernie-4.0）" },
+    { value: "doubao-pro-32k", label: "字节豆包（doubao-pro）" },
+    { value: "hunyuan-turbo", label: "腾讯混元（hunyuan-turbo）" },
+    { value: "spark-4.0", label: "讯飞星火（spark-4.0）" }
+  ];
+
+  var aiModel = createSelect({
+    placeholder: "选择模型…",
+    options: MODEL_OPTIONS,
+    onChange: function () {
+      aiModel.setError(false);
+    }
+  });
+
+  document.getElementById("ai-model-slot").appendChild(aiModel.root);
+
   /* ---------- 出生日期选项 ---------- */
 
   function yearOptions() {
@@ -417,6 +468,16 @@
       markError(form.weight, false);
     }
 
+    // 必填：AI 大模型配置（API 地址 / Key / 模型，存本地 JSON）
+    var aiBase = form["ai-base"].value.trim();
+    var aiKey = form["ai-key"].value.trim();
+    var aiModelVal = aiModel.getValue();
+    var aiBad = !aiBase || !aiKey || !aiModelVal;
+    markError(form["ai-base"], aiBad);
+    markError(form["ai-key"], aiBad);
+    aiModel.setError(aiBad);
+    if (aiBad) ok = false;
+
     return ok;
   }
 
@@ -434,14 +495,155 @@
       showToast("请检查必填项和格式", "err");
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
-    updateSummary(p);
-    showToast("档案已保存 ✓");
-    // 短暂展示成功提示后，直接进入个人界面
-    setTimeout(function () {
-      window.location.href = "dashboard.html";
-    }, 700);
+
+    // 收集 AI 配置（存入本地 JSON，不存浏览器）
+    var aiCfg = {
+      base: form["ai-base"].value.trim(),
+      key: form["ai-key"].value.trim(),
+      model: aiModel.getValue()
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "检测 AI 连接中…";
+
+    // 1) 保存配置到本地 JSON → 2) 检测连接 → 3) 成功自动保存跳转 / 失败弹窗
+    saveAiConfig(aiCfg)
+      .then(function () {
+        return testAiConnection(aiCfg);
+      })
+      .then(function () {
+        // 连接成功：自动保存并跳转，无需点击
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+        updateSummary(p);
+        submitBtn.disabled = false;
+        showToast("AI 连接正常，档案已保存 ✓");
+        setTimeout(function () {
+          window.location.href = "dashboard.html";
+        }, 600);
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = readSaved() ? "更新档案" : "保存档案";
+        showAiTest("AI 连接失败", String(err && err.message ? err.message : err), true);
+      });
   });
+
+  /* ---------- AI 配置本地 JSON 读写（不存浏览器） ---------- */
+
+  function saveAiConfig(cfg) {
+    return fetch("/api/ai-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cfg)
+    }).then(function (res) {
+      if (!res.ok) throw new Error("本地配置保存失败（HTTP " + res.status + "）");
+      return res.json();
+    });
+  }
+
+  /* ---------- AI 连接检测结果弹窗 ---------- */
+
+  var aiTestMask = document.getElementById("ai-test-mask");
+  var aiTestTitle = document.getElementById("ai-test-title");
+  var aiTestBox = document.getElementById("ai-test-box");
+  var aiTestInterpret = document.getElementById("ai-test-interpret");
+
+  // 将原始报错解读为可读信息
+  function interpretAiError(msg) {
+    msg = String(msg || "");
+    if (/authentication_error|invalid.*api\s*key/i.test(msg) || /401/.test(msg)) {
+      return "API Key 无效或已过期。请到对应平台控制台重新生成 Key，并检查填写的 Key 是否正确（注意不要有多余空格）。";
+    }
+    if (/404|not found/i.test(msg)) {
+      return "接口地址不正确。请检查 API 地址是否填对（如 https://api.deepseek.com/v1），并确认该地址支持 /chat/completions 接口。";
+    }
+    if (/invalid.*model|model.*not.*exist/i.test(msg)) {
+      return "模型名称不正确。请在下拉中选择正确的模型，或确认该账号可用此模型。";
+    }
+    if (/429|rate\s*limit|too\s*many/i.test(msg)) {
+      return "请求过于频繁（触发限流）。请稍后重试。";
+    }
+    if (/failed\s*to\s*fetch|networkerror|network|ERR_NAME/i.test(msg)) {
+      return "无法连接到该地址。请检查：① 网络是否正常；② API 地址是否填写正确；③ 该平台是否允许浏览器直接调用（部分平台需经后端中转）。";
+    }
+    if (/cors|access-control/i.test(msg)) {
+      return "该平台不允许浏览器跨域调用（CORS）。可换用其他兼容 OpenAI 接口的平台，或后续接入后端服务。";
+    }
+    return "连接失败。请检查 API 地址、Key 和模型是否都填写正确。";
+  }
+
+  function showAiTest(title, text, isError, onClose) {
+    aiTestTitle.textContent = title;
+    aiTestBox.textContent = text;
+    aiTestBox.className = "ai-test-box" + (isError ? " error" : "");
+    if (isError) {
+      aiTestInterpret.textContent = interpretAiError(text);
+      aiTestInterpret.hidden = false;
+    } else {
+      aiTestInterpret.hidden = true;
+    }
+    aiTestMask.hidden = false;
+    document.body.style.overflow = "hidden";
+    closeAiTest._onClose = onClose || null;
+  }
+
+  function closeAiTest() {
+    aiTestMask.hidden = true;
+    document.body.style.overflow = "";
+    if (closeAiTest._onClose) {
+      var cb = closeAiTest._onClose;
+      closeAiTest._onClose = null;
+      cb();
+    }
+  }
+
+  document.getElementById("ai-test-ok").addEventListener("click", closeAiTest);
+  document.getElementById("ai-test-close").addEventListener("click", closeAiTest);
+  aiTestMask.addEventListener("click", function (e) {
+    if (e.target === aiTestMask) closeAiTest();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !aiTestMask.hidden) closeAiTest();
+  });
+
+  /* ---------- AI 大模型联通性检测 ---------- */
+
+  function testAiConnection(cfg) {
+    var url = cfg.base.replace(/\/+$/, "") + "/chat/completions";
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + cfg.key
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: 1
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            var msg = t.slice(0, 300);
+            throw new Error("HTTP " + res.status + (msg ? "：" + msg : ""));
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        // 响应里带 error（如模型不存在 / key 无效）→ 视为连接失败
+        if (data && data.error) {
+          var em = data.error.message || JSON.stringify(data.error);
+          throw new Error(String(em).slice(0, 200));
+        }
+        // 必须包含有效回复内容
+        if (!data || !data.choices || !data.choices.length) {
+          throw new Error("响应格式异常（未返回内容）");
+        }
+        return data;
+      });
+  }
 
   clearBtn.addEventListener("click", function () {
     localStorage.removeItem(STORAGE_KEY);
@@ -464,4 +666,20 @@
   var saved = readSaved();
   fillForm(saved);
   updateSummary(saved);
+
+  // 从本地 JSON 读取 AI 配置回填（不存浏览器）
+  fetch("/api/ai-config")
+    .then(function (res) {
+      return res.json();
+    })
+    .then(function (cfg) {
+      if (cfg && (cfg.base || cfg.model || cfg.key)) {
+        form["ai-base"].value = cfg.base || "";
+        aiModel.setValue(cfg.model || "");
+        form["ai-key"].value = cfg.key || "";
+      }
+    })
+    .catch(function () {
+      /* 未通过本地服务器打开时忽略 */
+    });
 })();

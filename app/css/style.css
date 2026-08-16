@@ -1125,6 +1125,49 @@ a.btn-add {
   cursor: not-allowed;
 }
 
+/* ---------- AI 连接检测弹窗 ---------- */
+/* 弹窗偏上方显示，灰色遮罩覆盖全屏 */
+#ai-test-mask {
+  align-items: flex-start;
+  padding-top: 22vh;
+}
+
+.ai-test-ok {
+  width: 100%;
+}
+
+.ai-test-box {
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(47, 111, 79, 0.35);
+  color: var(--accent-deep);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* 失败：红色框完整包裹报错文本 */
+.ai-test-box.error {
+  background: rgba(185, 28, 28, 0.07);
+  border: 1.5px solid var(--danger);
+  color: var(--danger);
+}
+
+/* 报错解读（红框下方） */
+.ai-test-interpret {
+  margin-top: 0.8rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  word-break: break-all;
+}
+
 /* ---------- OCR 识别区 ---------- */
 .ocr-section {
   min-width: 0;
@@ -1640,6 +1683,7 @@ fieldset + fieldset {
 .field input[type="tel"],
 .field input[type="date"],
 .field input[type="number"],
+.field input[type="password"],
 .field select,
 .field textarea {
   width: 100%;

@@ -83,6 +83,25 @@
         </div>
       </fieldset>
 
+      <!-- AI 大模型配置 -->
+      <fieldset>
+        <div class="group-title">AI 大模型配置</div>
+        <div class="grid">
+          <div class="field span-2">
+            <label for="ai-base" class="required">API 地址</label>
+            <input type="text" id="ai-base" placeholder="如 https://api.deepseek.com/v1" autocomplete="off">
+          </div>
+          <div class="field span-2">
+            <label class="required">模型</label>
+            <div id="ai-model-slot"></div>
+          </div>
+          <div class="field span-2">
+            <label for="ai-key" class="required">API Key</label>
+            <input type="password" id="ai-key" placeholder="sk-…" autocomplete="off">
+          </div>
+        </div>
+      </fieldset>
+
       <div class="submit-row">
         <button type="submit" class="btn-submit" id="btn-submit">保存档案</button>
       </div>
@@ -99,6 +118,23 @@
   </main>
 
   <div class="toast" id="toast" role="status"></div>
+
+  <!-- AI 连接检测结果弹窗（灰色遮罩 + 屏幕上方） -->
+  <div class="modal-mask" id="ai-test-mask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="AI 连接检测">
+      <div class="modal-head">
+        <div class="modal-title" id="ai-test-title">AI 连接检测</div>
+        <button type="button" class="modal-close" id="ai-test-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="ai-test-box" id="ai-test-box"></div>
+        <div class="ai-test-interpret" id="ai-test-interpret" hidden></div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn-cancel ai-test-ok" id="ai-test-ok">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="js/main.js"></script>
 </body>
