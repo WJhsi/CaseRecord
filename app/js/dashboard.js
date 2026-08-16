@@ -157,6 +157,31 @@
   var noteMeta = document.getElementById("case-note-meta");
   var noteAiBtn = document.getElementById("btn-ai-note");
   var noteTimer = document.getElementById("note-timer");
+  var noteModel = document.getElementById("case-note-model");
+
+  // 显示病例说明调用的模型（解析模型）
+  function showNoteModel(parseCfg) {
+    if (!noteModel) return;
+    if (parseCfg && parseCfg.model) {
+      noteModel.textContent = "调用模型：" + parseCfg.model + (parseCfg.base ? "（" + parseCfg.base + "）" : "");
+    } else {
+      noteModel.textContent = "调用模型：未配置解析模型";
+    }
+  }
+
+  // 页面加载时读取配置并显示调用模型
+  fetch("/api/ai-config")
+    .then(function (res) {
+      return res.json();
+    })
+    .then(function (cfg) {
+      if (!cfg) return;
+      var parse = cfg.parse || (cfg.base ? { base: cfg.base, key: cfg.key, model: cfg.model } : null);
+      showNoteModel(parse);
+    })
+    .catch(function () {
+      /* 未通过本地服务器打开时忽略 */
+    });
 
   // 生成过程实时计时
   var noteTimerId = null;
@@ -285,6 +310,7 @@
         if (!parse || !parse.base || !parse.key || !parse.model) {
           throw new Error("尚未配置「解析模型（文本）」，请先到「编辑档案」页填写 API 地址、Key 和模型。");
         }
+        showNoteModel(parse);
         return callAi(parse, summary);
       })
       .then(function (text) {
