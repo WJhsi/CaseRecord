@@ -149,10 +149,8 @@
   renderCases();
 
   /* ==========================================================
-     病例说明：手动编辑保存 + AI 自动生成
+     病例说明：AI 自动生成（仅本次展示，不保存）
      ========================================================== */
-
-  var NOTE_KEY = "caseRecord.caseNote";
 
   var noteInput = document.getElementById("case-note-input");
   var noteHint = document.getElementById("case-note-hint");
@@ -179,36 +177,6 @@
     clearInterval(noteTimerId);
     noteTimerId = null;
     return Math.round((Date.now() - noteStartMs) / 1000);
-  }
-
-  // 回填已保存的说明（只读展示，不可手动修改）
-  function readNoteMeta() {
-    try {
-      var meta = JSON.parse(localStorage.getItem(NOTE_KEY + ".meta"));
-      return meta && typeof meta === "object" ? meta : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  try {
-    var savedNote = localStorage.getItem(NOTE_KEY);
-    if (savedNote) {
-      noteInput.value = savedNote;
-      var meta = readNoteMeta();
-      if (meta) {
-        var parts = [];
-        if (meta.seconds != null) parts.push("本次生成耗时 " + meta.seconds + " 秒");
-        if (meta.totalTokens != null) {
-          parts.push("Token 用量：" + meta.totalTokens + (meta.promptTokens != null ? "（输入 " + meta.promptTokens + " / 输出 " + meta.completionTokens + "）" : ""));
-        }
-        if (meta.time) parts.push("生成时间：" + meta.time);
-        if (parts.length) noteMeta.textContent = parts.join(" · ");
-      }
-      noteHint.textContent = meta && meta.time ? "上次生成 " + meta.time : "已生成";
-    }
-  } catch (e) {
-    /* ignore */
   }
 
   /* ---------- AI 生成说明 ---------- */
@@ -322,29 +290,17 @@
         noteInput.value = text;
         var now = new Date().toLocaleString("zh-CN");
         var usage = noteAiBtn._lastUsage || null;
-        var meta = { time: now, seconds: elapsed };
-        if (usage) {
-          meta.totalTokens = usage.total_tokens != null ? usage.total_tokens : null;
-          meta.promptTokens = usage.prompt_tokens != null ? usage.prompt_tokens : null;
-          meta.completionTokens = usage.completion_tokens != null ? usage.completion_tokens : null;
-        }
-        try {
-          localStorage.setItem(NOTE_KEY, text);
-          localStorage.setItem(NOTE_KEY + ".meta", JSON.stringify(meta));
-        } catch (e) {
-          /* ignore */
-        }
         var parts = [];
-        if (meta.seconds != null) parts.push("本次生成耗时 " + meta.seconds + " 秒");
-        if (meta.totalTokens != null) {
-          parts.push("Token 用量：" + meta.totalTokens + (meta.promptTokens != null ? "（输入 " + meta.promptTokens + " / 输出 " + meta.completionTokens + "）" : ""));
+        if (elapsed != null) parts.push("本次生成耗时 " + elapsed + " 秒");
+        if (usage && usage.total_tokens != null) {
+          parts.push("Token 用量：" + usage.total_tokens + (usage.prompt_tokens != null ? "（输入 " + usage.prompt_tokens + " / 输出 " + usage.completion_tokens + "）" : ""));
         }
-        if (meta.time) parts.push("生成时间：" + meta.time);
-        if (parts.length) noteMeta.textContent = parts.join(" · ");
+        parts.push("生成时间：" + now);
+        noteMeta.textContent = parts.join(" · ");
         noteTimer.textContent = "";
         noteTimer.hidden = true;
-        noteHint.textContent = "已自动保存 " + now;
-        showToast("AI 说明已生成并自动保存 ✓");
+        noteHint.textContent = "本次生成，未保存";
+        showToast("AI 说明已生成 ✓");
       })
       .catch(function (err) {
         stopNoteTimer();

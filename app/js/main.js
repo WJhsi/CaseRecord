@@ -694,7 +694,6 @@
 
   function doClear() {
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("caseRecord.caseNote"); // 同步清除病例说明
     // 同时清除 AI 大模型配置（本地 JSON）
     fetch("/api/ai-config", {
       method: "POST",
